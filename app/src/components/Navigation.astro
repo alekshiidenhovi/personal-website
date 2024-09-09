@@ -8,9 +8,12 @@ interface Props {
 const { links } = Astro.props;
 ---
 
-<aside class="flex flex-col">
-  <span class="flex text-lg font-semibold text-neutral-400"
+<aside class="sticky flex flex-col">
+  <span
+    class="flex pb-6 text-3xl font-semibold text-primary-500 text-opacity-70"
     >Table of Contents</span
   >
-  {links.map((link) => <SectionLink href={link.href}>{link.text}</SectionLink>)}
+  <div class="flex flex-col gap-2">
+    {links.map((link) => <SectionLink href={link.href} text={link.text} />)}
+  </div>
 </aside>
