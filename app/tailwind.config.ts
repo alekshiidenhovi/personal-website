@@ -1,12 +1,10 @@
-
-
 import type { Config } from "tailwindcss";
 import colors from "tailwindcss/colors";
 import { fontFamily } from "tailwindcss/defaultTheme";
 
 export default {
   darkMode: ["class"],
-	content: ['./src/**/*.{astro,html,js,jsx,svelte,ts,tsx}'],
+  content: ["./src/**/*.{astro,html,js,jsx,svelte,ts,tsx}"],
   theme: {
     container: {
       center: true,
@@ -17,7 +15,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["var(--font-sans)", ...fontFamily.sans],
+        sans: ["Inter", ...fontFamily.sans],
       },
       colors: {
         primary: colors.purple,
