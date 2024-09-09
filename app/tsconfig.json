@@ -6,9 +6,7 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "src/*"
-      ]
+      "@/*": ["src/*"]
     }
   },
   "include": [
@@ -18,9 +16,7 @@
     "**/*.mjs",
     "**/*.astro",
     "**/*.types.d.ts",
-    "**/*.d.ts",
+    "**/*.d.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }

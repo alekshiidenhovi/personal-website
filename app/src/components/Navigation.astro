@@ -9,6 +9,8 @@ const { links } = Astro.props;
 ---
 
 <aside class="flex flex-col">
-  <span class="text-neutral-400 text-lg font-semibold">Table of Contents</span>
+  <span class="flex text-lg font-semibold text-neutral-400"
+    >Table of Contents</span
+  >
   {links.map((link) => <SectionLink href={link.href}>{link.text}</SectionLink>)}
 </aside>
