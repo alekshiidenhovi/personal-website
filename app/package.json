@@ -7,11 +7,26 @@
     "start": "astro dev",
     "build": "astro check && astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "lint:force": "biome lint --apply-unsafe .",
+    "prettify": "prettier . --check",
+    "prettify:fix": "prettier . --write",
+    "cleancode:check": "pnpm lint & pnpm prettify",
+    "cleancode:fix": "pnpm lint:fix & pnpm prettify:fix"
   },
   "dependencies": {
-    "astro": "^4.15.4",
     "@astrojs/check": "^0.9.3",
+    "@astrojs/tailwind": "^5.1.0",
+    "astro": "^4.15.4",
+    "tailwindcss": "^3.4.10",
     "typescript": "^5.5.4"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.8.3",
+    "@trivago/prettier-plugin-sort-imports": "^4.3.0",
+    "prettier": "^3.3.3",
+    "prettier-plugin-tailwindcss": "^0.6.6"
   }
 }
