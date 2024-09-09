@@ -1,0 +1,19 @@
+{
+  "folders": [
+    {
+      "name": "root",
+      "path": "."
+    },
+    {
+      "name": "app",
+      "path": "app"
+    },
+    {
+      "name": "video-hub",
+      "path": "video-hub"
+    },
+  ],
+  "settings": {
+    "typescript.tsdk": "app/node_modules/typescript/lib",
+  }
+}
