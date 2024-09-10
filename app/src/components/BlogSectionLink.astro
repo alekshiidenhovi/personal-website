@@ -10,10 +10,9 @@ const styles = cva("w-fit text-lg font-medium transition-all", {
   },
 });
 
-export interface Link {
+export interface Link extends VariantProps<typeof styles> {
   href: string;
   text: string;
-  isActive?: boolean;
 }
 
 type Props = Link;
