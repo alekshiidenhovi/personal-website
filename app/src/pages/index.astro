@@ -3,7 +3,4 @@ import * as TransformerBlog from "@/posts/friendly-introduction-on-transformer-c
 import BlogArticle from "@/components/BlogArticle.astro";
 ---
 
-<BlogArticle
-  title={TransformerBlog.frontmatter.title}
-  Markdown={TransformerBlog.Content}
-/>
+<BlogArticle Blog={TransformerBlog} />
