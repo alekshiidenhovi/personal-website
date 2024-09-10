@@ -2,6 +2,8 @@ import type { Config } from "tailwindcss";
 import colors from "tailwindcss/colors";
 import { fontFamily } from "tailwindcss/defaultTheme";
 
+import typography from "@tailwindcss/typography";
+
 export default {
   darkMode: ["class"],
   content: ["./src/**/*.{astro,html,js,jsx,svelte,ts,tsx}"],
@@ -26,5 +28,5 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [typography()],
 } satisfies Config;
