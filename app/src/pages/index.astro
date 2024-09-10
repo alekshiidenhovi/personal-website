@@ -1,6 +1,22 @@
 ---
 import * as TransformerBlog from "@/posts/friendly-introduction-on-transformer-circuits.md";
 import BlogArticle from "@/components/BlogArticle.astro";
+import type { MarkdownInstance } from "astro";
+
+export interface FrontMatter {
+  title: string;
+  date: string;
+  description: string;
+  tags: string[];
+}
+
+type Blog = MarkdownInstance<FrontMatter>;
+
+const blog = TransformerBlog as unknown as Blog;
 ---
 
-<BlogArticle Blog={TransformerBlog} />
+<BlogArticle
+  frontmatter={blog.frontmatter}
+  Content={blog.Content}
+  headings={blog.getHeadings()}
+/>;

@@ -3,30 +3,28 @@ import BlogLayout from "@/layouts/BlogLayout.astro";
 import BlogContent from "@/components/BlogContent.astro";
 import BlogNavigation from "@/components/BlogNavigation.astro";
 import BlogTitle from "@/components/BlogTitle.astro";
-import type { MarkdownInstance } from "astro";
-
-type Blog = MarkdownInstance<{
-  title: string;
-  author: string;
-  date?: string;
-}>;
+import type { FrontMatter } from "@/pages/index.astro";
+import type { AstroComponentFactory } from "astro/runtime/server/index.js";
+import type { MarkdownHeading } from "astro";
 
 interface Props {
-  Blog: Blog;
+  frontmatter: FrontMatter;
+  headings: MarkdownHeading[];
+  Content: AstroComponentFactory;
 }
 
-const { Blog } = Astro.props;
+const { frontmatter, headings, Content } = Astro.props;
 ---
 
-<BlogLayout title={Blog.frontmatter.title}>
+<BlogLayout title={frontmatter.title}>
   <span></span>
-  <BlogTitle title={Blog.frontmatter.title} class={"span"} />
+  <BlogTitle title={frontmatter.title} class={"span"} />
   <BlogNavigation
-    links={Blog.getHeadings().map((heading) => ({
+    links={headings.map((heading) => ({
       href: `#${heading.slug}`,
       text: heading.text,
       isActive: heading.text === "Prerequisites",
     }))}
   />
-  <BlogContent Markdown={Blog.Content} />
+  <BlogContent Markdown={Content} />
 </BlogLayout>
