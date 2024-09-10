@@ -19,20 +19,14 @@ const { Blog } = Astro.props;
 ---
 
 <BlogLayout title={Blog.frontmatter.title}>
-  <main class="h-full w-full bg-gradient-to-b from-primary-950/70 to-black">
-    <div
-      class="mx-auto grid max-w-7xl grid-cols-[16rem_minmax(0,_1fr)] grid-rows-[auto_minmax(0,_1fr)] gap-x-12 gap-y-16 px-12 pb-12 pt-48"
-    >
-      <span></span>
-      <BlogTitle title={Blog.frontmatter.title} class={"span"} />
-      <BlogNavigation
-        links={Blog.getHeadings().map((heading) => ({
-          href: `#${heading.slug}`,
-          text: heading.text,
-          isActive: heading.text === "Prerequisites",
-        }))}
-      />
-      <BlogContent Markdown={Blog.Content} />
-    </div>
-  </main>
+  <span></span>
+  <BlogTitle title={Blog.frontmatter.title} class={"span"} />
+  <BlogNavigation
+    links={Blog.getHeadings().map((heading) => ({
+      href: `#${heading.slug}`,
+      text: heading.text,
+      isActive: heading.text === "Prerequisites",
+    }))}
+  />
+  <BlogContent Markdown={Blog.Content} />
 </BlogLayout>
