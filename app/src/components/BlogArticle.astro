@@ -1,0 +1,61 @@
+---
+import BlogLayout from "@/layouts/BlogLayout.astro";
+import BlogContent from "@/components/BlogContent.astro";
+import Navigation from "@/components/Navigation.astro";
+import Title from "@/components/Title.astro";
+import type { AstroComponentFactory } from "astro/runtime/server/index.js";
+
+const sections = [
+  {
+    id: 1,
+    title: "Introduction",
+    content: "This is the introduction section.",
+  },
+  {
+    id: 2,
+    title: "Prerequisites",
+    content: "This is the prerequisites section.",
+  },
+  {
+    id: 3,
+    title: "How does a Transformer Work?",
+    content: "This is the how does a transformer work section.",
+  },
+  {
+    id: 4,
+    title: "Types of Transformers",
+    content: "This is the types of transformers section.",
+  },
+  {
+    id: 5,
+    title: "Conclusion",
+    content: "This is the conclusion section.",
+  },
+];
+
+interface Props {
+  Markdown: AstroComponentFactory;
+  title: string;
+}
+
+const { Markdown, title } = Astro.props;
+---
+
+<BlogLayout title={title}>
+  <main class="h-full w-full bg-gradient-to-b from-primary-950/70 to-black">
+    <div
+      class="mx-auto grid max-w-7xl grid-cols-[16rem_minmax(0,_1fr)] grid-rows-[auto_minmax(0,_1fr)] gap-x-4 gap-y-16 px-12 pb-12 pt-48"
+    >
+      <span></span>
+      <Title title={title} class={"span"} />
+      <Navigation
+        links={sections.map((section) => ({
+          href: `#${section.id}`,
+          text: section.title,
+          isActive: section.id === 1,
+        }))}
+      />
+      <BlogContent Markdown={Markdown} />
+    </div>
+  </main>
+</BlogLayout>
