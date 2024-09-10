@@ -23,6 +23,11 @@ Residual stream of a transformer is the "central memory" of a transformer. All o
 ## Attention-only Transformers
 A transformer is a device that is used to transfer electrical energy from one circuit to another through electromagnetic induction. It consists of two coils of wire, known as the primary and secondary coils, that are wound around a common core. When an alternating current is passed through the primary coil, it creates a changing magnetic field that induces a voltage in the secondary coil. This voltage can then be used to power a load connected to the secondary coil.
 
+<video controls>
+  <source src="/videos/MathematicalFramework.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
 
 ## Boilerplate
 In this article, we have covered the basics of transformer circuits. We have looked at how transformers work, the different types of transformers that are available, and some of the key equations that are used to describe their behavior. Transformers are an essential component of many electrical systems and are used in a wide range of applications. By understanding the principles of transformer circuits, you can gain a better understanding of how electrical systems work and how they can be optimized for different applications.
