@@ -9,6 +9,8 @@ Here we will take a look at the basics of transformer circuits. We will start by
 ## Prerequisites
 Before we get started, it is important to have a basic understanding of electrical circuits and the principles of electromagnetism. If you are not familiar with these topics, you may want to review some of the basic concepts before continuing.
 
+Some of you might think that mechanistic interpretability must be incredibly difficult. And you would be exactly right.
+
 ## How Does a Transformer Work?
 A transformer is a device that is used to transfer electrical energy from one circuit to another through electromagnetic induction. It consists of two coils of wire, known as the primary and secondary coils, that are wound around a common core. When an alternating current is passed through the primary coil, it creates a changing magnetic field that induces a voltage in the secondary coil. This voltage can then be used to power a load connected to the secondary coil.
 
