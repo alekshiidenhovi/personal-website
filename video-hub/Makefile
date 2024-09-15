@@ -1,6 +1,6 @@
 create-env:
 	@echo "Creating virtual environment..."
-	@python -m venv .venv
+	@python -m venv --system-site-packages .venv
 
 install-dev-tools:
 	@echo "Installing development tools..."
@@ -13,7 +13,11 @@ compile-deps:
 
 install-deps:
 	@echo "Installing dependencies..."
-	@.venv/bin/pip-sync requirements.txt	
+	@.venv/bin/pip-sync requirements.txt
 
-setup: create-env install-dev-tools install-deps
+activate-env:
+	@echo "To activate the virtual environment, run:"
+	@echo "source .venv/bin/activate"
+	
+setup: create-env install-dev-tools install-deps activate-env
 	@echo "Setup complete."
