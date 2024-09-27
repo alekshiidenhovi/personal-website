@@ -53,58 +53,7 @@ def get_positional_embedding(matrix: np.ndarray, dimension: int, position: int):
 
     
 
-class HeatmapExample(Scene):
-    
-    def construct(self):
-        dimensions = 128
-        nof_positions = 50
-        x_length = 10
-        y_length = 6
-        position_embedding_matrix = compute_position_embedding_matrix(dimensions, nof_positions)
-
-        ax = Axes(
-            x_range=[0, dimensions, 10],
-            y_range=[0, nof_positions, 10],
-            x_length=x_length,
-            y_length=y_length,
-            axis_config={
-                "color": BLUE,  
-                "include_tip": False,
-                "include_numbers": True,
-                "tick_size": 0,
-            }
-        )
-
-        self.play(Write(ax), run_time=1)
-
-        rect_height = x_length / dimensions
-        rect_width = y_length / nof_positions
-        
-        rectangles = VGroup()
-        for dim in range(dimensions):
-            row = VGroup()
-            for position in range(nof_positions):
-                embedding = get_positional_embedding(position_embedding_matrix, dim, position)
-
-                fill_color = BLUE if embedding > 0 else RED
-                rectangle = Rectangle(
-                    height=rect_height,
-                    width=rect_width,
-                    fill_color=fill_color,
-                    fill_opacity=abs(embedding),
-                    stroke_width=0
-                )
-                # Move the bottom left corner to x y, not the center
-                rectangle.move_to(ax.coords_to_point(dim, position) + np.array([rect_width/2, rect_height/2, 0]))
-                rectangles.add(rectangle)
-
-                row.add(rectangle)
-            rectangles.add(row)
-
-        self.play(Write(rectangles), run_time=1)
-
-
-class Test(Scene):
+class PositionalEmbedding(Scene):
     
     def construct(self):
         dimensions = 128
@@ -126,53 +75,48 @@ class Test(Scene):
                 "font_size": 20,
             }
         )
-
-        y_label = grid.get_y_axis_label("pos", edge=LEFT, direction=LEFT, buff=0.4)
-        x_label = grid.get_x_axis_label("dimension")
+        
+        label_scaling = 0.55
+        y_label = grid.get_y_axis_label("position", edge=LEFT, direction=LEFT, buff=0.4).scale(label_scaling)
+        x_label = grid.get_x_axis_label("dimension").scale(label_scaling)
         grid_labels = VGroup(x_label, y_label)
         
         self.play(Write(grid), run_time=1)
         self.play(Write(grid_labels), run_time=0.5)
 
-        rectangles = VGroup()
-        rect = Rectangle(height=1, width=1, stroke_width=0)
-        rect2 = Rectangle(height=1, width=1, stroke_width=0)
-        rect3 = Rectangle(height=1, width=1, stroke_width=0)
-        rect.set_fill(color=BLUE, opacity=0.5)
-        rect2.set_fill(color=RED, opacity=0.5)
-        rect3.set_fill(color=GREEN, opacity=0.5)
-        rect2.next_to(rect, RIGHT, buff=0)
-        rect3.next_to(rect, UP, buff=0)
-        rectangles.add(rect, rect2, rect3)
-        print(f"Grid coords: {grid.coords_to_point(*rect.get_center())}")
-        print(f"Rect coords: {rect.get_center()}")
-        rectangles.next_to(grid.coords_to_point(*rectangles.get_center()), aligned_edge=DL, buff=0)
-        self.play(Write(rectangles))
-        self.wait(1)
-
-        # rect_height = x_length / dimensions
-        # rect_width = y_length / nof_positions
+        rect_height = y_length / nof_positions
+        rect_width = x_length / dimensions
         
-        # rectangles = VGroup()
-        # for dim in range(dimensions):
-        #     row = VGroup()
-        #     for position in range(nof_positions):
-        #         embedding = get_positional_embedding(position_embedding_matrix, dim, position)
+        rectangles = VGroup()
+        for position in range(nof_positions):
+            row = VGroup()
+            for dim in range(dimensions):
+                embedding = get_positional_embedding(position_embedding_matrix, dim, position)
 
-        #         fill_color = BLUE if embedding > 0 else RED
-        #         rectangle = Rectangle(
-        #             height=rect_height,
-        #             width=rect_width,
-        #             fill_color=fill_color,
-        #             fill_opacity=abs(embedding),
-        #             stroke_width=0
-        #         )
-        #         # Move the bottom left corner to x y, not the center
-        #         rectangle.move_to(ax.coords_to_point(dim, position) + np.array([rect_width/2, rect_height/2, 0]))
-        #         rectangles.add(rectangle)
+                fill_color = BLUE if embedding > 0 else RED
+                rectangle = Rectangle(
+                    height=rect_height,
+                    width=rect_width,
+                    stroke_width=0
+                )
+                rectangle.set_fill(color=fill_color, opacity=abs(embedding))
 
-        #         row.add(rectangle)
-        #     rectangles.add(row)
-
-        # self.play(Write(rectangles), run_time=1)
+                if dim == 0:
+                    row.add(rectangle)
+                else:
+                    rectangle.next_to(row[-1], RIGHT, buff=0)
+                    row.add(rectangle)
+            if position == 0:
+                rectangles.add(row)
+            else:
+                row.next_to(rectangles[-1], UP, buff=0)
+                rectangles.add(row)
+        
+        x_axis = grid.get_x_axis()
+        y_axis = grid.get_y_axis()
+        rectangles.next_to(x_axis, aligned_edge=DOWN, buff=0)
+        rectangles.next_to(y_axis, aligned_edge=LEFT, buff=0.25)
+        rectangles.shift(0.03*DOWN)
+        rectangles.shift(0.03*LEFT)
+        self.play(Write(rectangles))
 
