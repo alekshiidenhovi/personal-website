@@ -14,7 +14,7 @@ const { Markdown } = Astro.props;
 
 <style is:global>
   article {
-    @apply prose prose-xl prose-neutral dark:prose-invert h-full w-full pb-12;
+    @apply prose prose-xl prose-neutral h-full w-full pb-12 dark:prose-invert;
   }
 
   h2 {
@@ -33,7 +33,7 @@ const { Markdown } = Astro.props;
     @apply font-semibold text-primary-400;
   }
 
-  a {
+  article a {
     @apply text-primary-500 transition-all visited:text-primary-700 hover:text-primary-400 visited:hover:text-primary-400 active:text-primary-600 visited:active:text-primary-600;
   }
 </style>
