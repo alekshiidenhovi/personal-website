@@ -11,7 +11,7 @@ export default function BlogNavigation({
   activeSlug,
 }: BlogNavigationProps) {
   return (
-    <aside className="sticky top-0 h-full">
+    <aside className="sticky top-16 h-fit max-w-64">
       <span className="flex pb-6 text-3xl font-semibold text-neutral-200 text-opacity-70">
         Table of Contents
       </span>
