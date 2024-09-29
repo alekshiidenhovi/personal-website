@@ -61,7 +61,6 @@ const { frontmatter, headings, Content } = Astro.props;
       text: heading.text,
       depth: heading.depth,
     }))}
-    activeSlug="null"
   />
   <div class="grid grid-rows-[auto_minmax(0,_1fr)] gap-y-16">
     <BlogTitle title={frontmatter.title} class={"span"} />
