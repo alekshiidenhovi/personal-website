@@ -1,4 +1,5 @@
 import { type VariantProps, cva } from "class-variance-authority";
+import { type ForwardedRef, forwardRef } from "react";
 
 const styles = cva("w-fit transition-all", {
   variants: {
@@ -21,10 +22,14 @@ export interface Link extends VariantProps<typeof styles> {
   text: string;
 }
 
-export const BlogSectionLink = ({ href, isActive, text, depth }: Link) => {
-  return (
-    <a href={href} className={styles({ isActive, depth })}>
-      {text}
-    </a>
-  );
-};
+type RefProps = ForwardedRef<HTMLAnchorElement>;
+
+export const BlogSectionLink = forwardRef(
+  ({ href, isActive, text, depth }: Link, ref: RefProps) => {
+    return (
+      <a ref={ref} href={href} className={styles({ isActive, depth })}>
+        {text}
+      </a>
+    );
+  },
+);
