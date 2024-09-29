@@ -1,7 +1,7 @@
 ---
 import BlogLayout from "@/layouts/BlogLayout.astro";
 import BlogContent from "@/components/BlogContent.astro";
-import BlogNavigation from "@/components/BlogNavigation.astro";
+import BlogNavigation from "@/components/BlogNavigation.tsx";
 import BlogTitle from "@/components/BlogTitle.astro";
 import type { FrontMatter } from "@/pages/index.astro";
 import type { AstroComponentFactory } from "astro/runtime/server/index.js";
@@ -14,11 +14,11 @@ interface Props {
   Content: AstroComponentFactory;
 }
 
-function groupHeadings(headings: Heading[]): Heading[] {
+function groupHeadings(sortedHeadings: Heading[]): Heading[] {
   const result: Heading[] = [];
   const stack: Heading[] = [];
 
-  headings.forEach((heading) => {
+  sortedHeadings.forEach((heading) => {
     const { depth } = heading;
 
     // Create a new heading object
@@ -49,12 +49,21 @@ function groupHeadings(headings: Heading[]): Heading[] {
 }
 
 const { frontmatter, headings, Content } = Astro.props;
-const groupedHeadings = groupHeadings(headings);
+// const groupedHeadings = groupHeadings(headings);
+// console.log(JSON.stringify(groupedHeadings, null, 2));
 ---
 
 <BlogLayout title={frontmatter.title}>
   <span></span>
   <BlogTitle title={frontmatter.title} class={"span"} />
-  <BlogNavigation sectionLinks={groupedHeadings} />
+  <BlogNavigation
+    client:load
+    sectionLinks={headings.map((heading) => ({
+      slug: `#${heading.slug}`,
+      text: heading.text,
+      depth: heading.depth,
+    }))}
+    activeSlug="null"
+  />
   <BlogContent Markdown={Content} />
 </BlogLayout>

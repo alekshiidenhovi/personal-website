@@ -1,5 +1,4 @@
----
-import { cva, type VariantProps } from "class-variance-authority";
+import { type VariantProps, cva } from "class-variance-authority";
 
 const styles = cva("w-fit transition-all", {
   variants: {
@@ -22,9 +21,10 @@ export interface Link extends VariantProps<typeof styles> {
   text: string;
 }
 
-type Props = Link;
-
-const { href, text, isActive, depth } = Astro.props;
----
-
-<a href={href} class={styles({ isActive, depth })}>{text}</a>
+export const BlogSectionLink = ({ href, isActive, text, depth }: Link) => {
+  return (
+    <a href={href} className={styles({ isActive, depth })}>
+      {text}
+    </a>
+  );
+};
