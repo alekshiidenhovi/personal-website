@@ -35,3 +35,16 @@ The final result is a subgraph of the network that only has nodes with a direct 
 
 More detailed information about the algorithm can be found Section 3 from the [paper](https://arxiv.org/pdf/2304.14997), and in the "Experiment section" of this post.
 
+## Experiment
+
+### Task definition: Greater Than
+The paper presents 6 different circuit discovery tasks that they attempted to automate with ACDC. In this experiment, we focus on the "Greater-Than" -task, first introduced by Hanna et al. in the paper [*How does GPT-2 compute greater-than?*](https://arxiv.org/pdf/2305.00586).
+
+The Greater-Than -task involves implicitly prompting a model to output greater number than the reference number, based on its context. More concretely, consider the following sentence and think about the possible outputs:
+
+> The war lasted from 1720 to the year 17
+
+From the context, we do NOT know which exact war is being referred here. But in terms of language restrictions, numbers between 1-20 should not be possible answers, while anything greater or equal to 21 would be a plausible answer.
+
+### Models
+We use HuggingFace's GPT-2 model with language modeling head (LMHead). The LM Head means that the model has a linear layer at the end, the weights of which are tried to the embedding layer. This layer outputs the final logits.
