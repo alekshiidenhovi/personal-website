@@ -14,14 +14,12 @@ const { Markdown } = Astro.props;
 
 <style is:global>
   article {
-    @apply prose prose-xl prose-neutral h-full w-full pb-12 dark:prose-invert;
+    @apply prose prose-xl prose-neutral h-full w-full pb-12 dark:prose-invert prose-headings:text-slate-200;
   }
 
-  h2 {
-    @apply text-slate-200;
-  }
-
-  p {
+  p,
+  ul,
+  ol {
     @apply text-slate-400;
   }
 
