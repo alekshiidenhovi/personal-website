@@ -4,6 +4,8 @@ author: Aleks Hiidenhovi
 published: 2024-09-10
 ---
 
+import CodeEditor from '@/components/CodeEditor.tsx'
+
 This is my course project for the AI Safety Fundamentals course, summer 2024. In this notebook, I attempt to reproduce the experiments in the paper [*Towards Automated Circuit Discovery for Mechanistic Interpretability*](https://arxiv.org/pdf/2304.14997) which studies automated ways of uncovering computational graphs in small transformer models.
 
 ## Paper walkthrough
@@ -48,3 +50,7 @@ From the context, we do NOT know which exact war is being referred here. But in 
 
 ### Models
 We use HuggingFace's GPT-2 model with language modeling head (LMHead). The LM Head means that the model has a linear layer at the end, the weights of which are tried to the embedding layer. This layer outputs the final logits.
+
+<CodeEditor client:only lang={"shell"} code={`%pip install transformer_lens
+%pip install circuitsvis
+%pip install networkx -q`} />
