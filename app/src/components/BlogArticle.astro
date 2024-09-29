@@ -6,6 +6,7 @@ import BlogTitle from "@/components/BlogTitle.astro";
 import type { FrontMatter } from "@/pages/index.astro";
 import type { AstroComponentFactory } from "astro/runtime/server/index.js";
 import type { MarkdownHeading } from "astro";
+import type { Heading } from "@/components/types";
 
 interface Props {
   frontmatter: FrontMatter;
@@ -13,18 +14,47 @@ interface Props {
   Content: AstroComponentFactory;
 }
 
+function groupHeadings(headings: Heading[]): Heading[] {
+  const result: Heading[] = [];
+  const stack: Heading[] = [];
+
+  headings.forEach((heading) => {
+    const { depth } = heading;
+
+    // Create a new heading object
+    const newHeading = { ...heading };
+
+    // Ensure the stack is the correct depth
+    while (stack.length && stack.length >= depth) {
+      stack.pop();
+    }
+
+    // If the stack is empty, it's a top-level heading
+    if (stack.length === 0) {
+      result.push(newHeading);
+    } else {
+      // Add the new heading to the last item in the stack
+      const parent = stack[stack.length - 1];
+      if (!parent.subsections) {
+        parent.subsections = [];
+      }
+      parent.subsections.push(newHeading);
+    }
+
+    // Push the current heading to the stack
+    stack.push(newHeading);
+  });
+
+  return result;
+}
+
 const { frontmatter, headings, Content } = Astro.props;
+const groupedHeadings = groupHeadings(headings);
 ---
 
 <BlogLayout title={frontmatter.title}>
   <span></span>
   <BlogTitle title={frontmatter.title} class={"span"} />
-  <BlogNavigation
-    links={headings.map((heading) => ({
-      href: `#${heading.slug}`,
-      text: heading.text,
-      isActive: heading.text === "Prerequisites",
-    }))}
-  />
+  <BlogNavigation sectionLinks={groupedHeadings} />
   <BlogContent Markdown={Content} />
 </BlogLayout>
