@@ -114,7 +114,7 @@ D_{KL}(G \, \Vert \, H_{new}) - D_{KL}(G \, \Vert \, H) < \tau
 \end{equation}
 $$
 
-This formula may look a bit daunting if you're not familiar with the notation, but the concepts behind it are quite simple. In essence, the formula calculates the difference between two different result distribution $G$ and another results distribution $H$ and then checks whether the difference is less than a threshold $\tau$. 
+This formula may look a bit daunting if you're not familiar with the notation, but the concepts behind it are quite simple. In essence, the formula calculates the difference between two different result distribution $G$ and another result distribution $H$ and then checks whether the difference is less than a threshold $\tau$. 
 * $H_{new}$ is the network with the edge $w \rightarrow v$ pruned.
 * [Kullback-Leibler divergence](https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence) $D_{KL}$ measures how much one probability distribution differs from another.
 * $\tau$ is user-defined hyperparamater that controls the aggressiveness of the pruning. If the difference is less than $\tau$, the edge is pruned. This means that removing the edge does not significantly change the output of the network.
@@ -123,7 +123,10 @@ This formula may look a bit daunting if you're not familiar with the notation, b
   {src: "/images/acdc-pruning.png", alt: "ACDC pruning step"},
 ]} caption='ACDC pruning step' />
 
+After pruning an edge, the algorithm proceeds to the next node in the topologically sorted network and repeats the process. This iterative pruning continues until the algorithm reaches the input node.
+
 ### Tree-shaking
+The circuit needs to have a directed connection from the input to the output node. This is necessarily not true for all nodes after the pruning step, as some nodes might have lost all their parent connections during the pruning process. Tree-shaking removes these "dead nodes" from the network.
 
 <PhotoGallery client:load images={[
   {src: "/images/acdc-tree-shaking.png", alt: "ACDC tree-shaking step"},
@@ -131,17 +134,15 @@ This formula may look a bit daunting if you're not familiar with the notation, b
 
 The final result is a subgraph of the network that only has nodes with a direct connection from the input, all the way to the output node. And more importantly, this subgraph is the circuit that the algorithm found to be responsible for the task at hand!
 
-$$\alpha$$
-
-## Results
-
-
 
 ## Conclusion
-
+ACDC is an exciting first step towards automating the circuit discovery process in neural networks. Figuring out ways to automate this process is crucial for making the mechanistic interpretability work scale to larger models and more complex tasks.
 
 ### Limitations
+Although this method is the first towards automatic circuit discovery process, it is not without its limitations. 
 
-### Upcoming frontiers from automated interpretability
+First of all, the algorithm is not guaranteed to find the optimal circuit. This is due to the fact that the pruning process is a so called [*greedy algorithm*](https://en.wikipedia.org/wiki/Greedy_algorithm), where it makes the best decision at each step without considering the global optimal solution. 
 
-## References
+Secondly, the algorithm is computationally expensive to run, since it requires multiple forward passes through the network for each edge pruning step. This makes it difficult to apply to larger networks than the ones used in the paper.
+
+### Upcoming frontiers for automated interpretability
