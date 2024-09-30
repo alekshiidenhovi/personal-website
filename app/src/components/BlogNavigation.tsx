@@ -47,7 +47,7 @@ export default function BlogNavigation({ sectionLinks }: BlogNavigationProps) {
   return (
     <aside
       // id={navigationId}
-      className={`sticky top-16 mt-[15.2rem] h-fit max-w-64`}
+      className={`sticky top-16 mt-[15.2rem] h-fit max-w-64 opacity-50 transition-opacity duration-300 hover:opacity-100`}
     >
       <span className="flex pb-6 text-3xl font-semibold text-neutral-200 text-opacity-70">
         Table of Contents
