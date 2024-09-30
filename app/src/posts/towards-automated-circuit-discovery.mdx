@@ -1,25 +1,37 @@
 ---
-title: 'Towards Automated Circuit Discovery - re-implemented'
+title: 'Towards Automated Circuit Discovery - visual breakdown'
 author: Aleks Hiidenhovi
 published: 2024-09-10
 ---
 
 import CodeEditor from '@/components/CodeEditor.tsx'
+import PhotoGallery from '@/components/PhotoGallery.tsx'
 
 ## Introduction
 
-This is my course project for the AI Safety Fundamentals course, summer 2024. In this notebook, I attempt to reproduce the experiments in the paper [*Towards Automated Circuit Discovery for Mechanistic Interpretability*](https://arxiv.org/pdf/2304.14997) which studies automated ways of uncovering computational graphs in small transformer models.
+(*Course project for the AI Safety Fundamentals course, summer 2024 edition*)
 
-## Paper walkthrough
+The black-box nature of deep learning models has been a long-standing issue in the field of AI. While these models have shown impressive performance in a wide range of tasks, the research community still lacks a comprehensive understanding of their inner workings. As frontier models are automizing more and more of our daily lives and as society gives more control to powerful AI systems, we need ways to guarantee that these systems are safe and reliable. 
 
-The core motivation for this paper is to take the first steps in automating circuit discovery which has previously involved extensive manual handwork and iteration.
+Mechanistic interpretability is a small subfield of AI safety research that aims to address these concerns by reverse engineering neural networks from their learned weights to human-understandable algorithms. One of the key concepts in mechanistic interpretability is the idea of *circuits*, which are subgraphs of a neural network that are responsible for performing a particular task. In this blog post, I will present the paper [*Towards Automated Circuit Discovery for Mechanistic Interpretability*](https://arxiv.org/pdf/2304.14997) which studies automated ways of uncovering circuits in small transformer models. The core motivation for this paper is to take the first steps in automating circuit discovery which has previously involved extensive manual handwork and iteration.
 
-### What are circuits?
+But first, let's take a step back and take a closer look on the fundamentals of circuits.
+
+## What are circuits?
+To understand the role of circuits in neural networks, we first need to understand the concept of a neural network *feature*. [Olah et al.](https://distill.pub/2020/circuits/zoom-in) define a feature to be a low-level fundamental unit of a neural network. As a concrete example, a convolutional neural network trained to classify images might learn to detect edges, lines and textures.
+
+<PhotoGallery client:load images={[
+  {src: "/images/circuits-curve-1.png", alt: "First curve feature"},
+  {src: "/images/circuits-curve-2.png", alt: "Second curve feature"},
+  {src: "/images/circuits-curve-3.png", alt: "Third curve feature"},
+]} caption="Curve detector features" />
+
 According to [Olah et al.](https://distill.pub/2020/circuits/zoom-in), a *circuit* is a subgraph of a neural network. It consists of a set of fundamentals units called *features* that are connected with *weighted edges*.
 
 In transformer models specifically, a feature could be as small as a single neuron, but more often we are interested in larger sub-units of the network, such as attention heads or MLP layers. The invidual units, and moreover the whole networks, are connected together by the [*residual stream*](https://transformer-circuits.pub/2021/framework/index.html#residual-comms).
 
-### Automating the workflow
+
+## Manual circuit discovery process
 Before this paper was announced, the general methodology for identifying circuits involved the following 3 manual steps:
 1. **Task definition:** Recognizing a behavior or task that the model displayes, creating a dataset that reproduces that isolates and reproduces that behavior, and choosing a metric to measure how well the model performs at the task.
 2. **Interpretation scoping:** Deciding the level of granularity (e.g. attention heads/MLPs, individual neurons, etc...) at which the network should be interpreted in.
@@ -27,7 +39,7 @@ Before this paper was announced, the general methodology for identifying circuit
 
 The paper introducess an algorithm called Automatic Circuit DisCovery (ACDC), the goal of which is to fully automate step 3 of the process.
 
-### ACDC algorithm
+## The ACDC algorithm
 On the high-level, ACDC finds a circuit by iteratively pruning unimportant nodes from the network. More formally, the algorithm executes the following steps:
 1. **Network sorting:** The network is topologically sorted in reverse, i.e. from output to input nodes.
 2. **Iterative pruning:** The algorithm iterates every edge in the graph. It prunes a node if it is considered "unimportant" according to the threshold function (more on that next)
@@ -56,3 +68,11 @@ We use HuggingFace's GPT-2 model with language modeling head (LMHead). The LM He
 <CodeEditor client:only lang={"shell"} code={`%pip install transformer_lens
 %pip install circuitsvis
 %pip install networkx -q`} />
+
+## Conclusion
+
+### Limitations
+
+### Upcoming frontiers from automated interpretability
+
+## References
