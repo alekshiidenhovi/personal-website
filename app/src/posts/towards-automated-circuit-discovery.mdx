@@ -87,19 +87,37 @@ On the high-level, ACDC finds a circuit by iteratively pruning unimportant nodes
 2. **Iterative pruning:** The algorithm begins the pruning step, starting from the output node. It prunes an edge if it is considered "unimportant" according to the chosen threshold metric.
 3. **Tree-shaking:** Some nodes in the network might end up in a dead end if all its parent edges are cut off. Tree-shaking removes these "dead nodes".
 
-The final result is a subgraph of the network that only has nodes with a direct connection from the input, all the way to the output node.
-
 <PhotoGallery client:load images={[
   {src: "/images/acdc-full-pruning-process.png", alt: "ACDC end-to-end pruning process"},
 ]} caption='ACDC end-to-end pruning process, extension of Figure 2 in the paper' />
 
+There is a lot of jargon and small hidden details within these steps, so let's break them down a bit more.
+
 ### Network sorting
+The first step involves sorting the network topologically in reverse order, i.e. according to the computation order of the nodes but starting from the output. This is done to ensure that the algorithm prunes the network in the correct order, starting from the output nodes and moving towards the input nodes.
 
 <PhotoGallery client:load images={[
   {src: "/images/acdc-topological-sort.png", alt: "ACDC subgraph, topologically sorted"},
 ]} caption='ACDC subgraph, topologically sorted' />
 
 ### Iterative pruning
+Now that the network is sorted, the algorithm can start the pruning process. The algorithm iteratively prunes edges from the network one node at a time, starting from the output node. The decision to prune an edge is based on the following formula 
+
+$$
+\begin{equation}
+H_{new} = H \setminus \{ w \rightarrow v \}
+\end{equation}
+$$
+$$
+\begin{equation}
+D_{KL}(G \, \Vert \, H_{new}) - D_{KL}(G \, \Vert \, H) < \tau
+\end{equation}
+$$
+
+This formula may look a bit daunting if you're not familiar with the notation, but the concepts behind it are quite simple. In essence, the formula calculates the difference between two different result distribution $G$ and another results distribution $H$ and then checks whether the difference is less than a threshold $\tau$. 
+* $H_{new}$ is the network with the edge $w \rightarrow v$ pruned.
+* [Kullback-Leibler divergence](https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence) $D_{KL}$ measures how much one probability distribution differs from another.
+* $\tau$ is user-defined hyperparamater that controls the aggressiveness of the pruning. If the difference is less than $\tau$, the edge is pruned. This means that removing the edge does not significantly change the output of the network.
 
 <PhotoGallery client:load images={[
   {src: "/images/acdc-pruning.png", alt: "ACDC pruning step"},
@@ -110,6 +128,10 @@ The final result is a subgraph of the network that only has nodes with a direct 
 <PhotoGallery client:load images={[
   {src: "/images/acdc-tree-shaking.png", alt: "ACDC tree-shaking step"},
 ]} caption='ACDC tree-shaking step' />
+
+The final result is a subgraph of the network that only has nodes with a direct connection from the input, all the way to the output node. And more importantly, this subgraph is the circuit that the algorithm found to be responsible for the task at hand!
+
+$$\alpha$$
 
 ## Results
 
