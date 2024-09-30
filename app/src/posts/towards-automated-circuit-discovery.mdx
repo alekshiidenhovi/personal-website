@@ -17,8 +17,13 @@ Mechanistic interpretability is a small subfield of AI safety research that aims
 
 But first, let's take a step back and take a closer look on the fundamentals of circuits.
 
+
+
 ## What are circuits?
-To understand the role of circuits in neural networks, we first need to understand the concept of a neural network *feature*. [Olah et al.](https://distill.pub/2020/circuits/zoom-in) define a feature to be a low-level fundamental unit of a neural network. As a concrete example, a convolutional neural network trained to classify images might learn to detect edges, lines and textures.
+To understand the role of circuits in neural networks, we first need to understand the concept of a neural network *feature*. I find that visual examples from computer vision tasks convey the concept of features and circuits in a neural network in an intuitive way. We move onto analyzing language models after this short tangent.
+
+### Circuits in vision models
+[Olah et al.](https://distill.pub/2020/circuits/zoom-in) define a feature to be a low-level fundamental unit of a neural network. As a concrete example, a convolutional neural network trained to classify images might learn to detect edges, lines and textures.
 
 <PhotoGallery client:load images={[
   {src: "/images/circuits-curve-1.png", alt: "First curve feature"},
@@ -26,50 +31,92 @@ To understand the role of circuits in neural networks, we first need to understa
   {src: "/images/circuits-curve-3.png", alt: "Third curve feature"},
 ]} caption='Curve detector features: Olah, et al., "Zoom In: An Introduction to Circuits"' />
 
-According to [Olah et al.](https://distill.pub/2020/circuits/zoom-in), a *circuit* is a subgraph of a neural network. It consists of a set of fundamentals units called *features* that are connected with *weighted edges*.
+When these low-level features interact with each other, then together they form *circuit*. More formally:
 
-In transformer models specifically, a feature could be as small as a single neuron, but more often we are interested in larger sub-units of the network, such as attention heads or MLP layers. The invidual units, and moreover the whole networks, are connected together by the [*residual stream*](https://transformer-circuits.pub/2021/framework/index.html#residual-comms).
+> A circuit is a subgraph of a neural network which consists of *features* that are connected with *weighted edges*.
+
+Coming back to the example of the convolutional neural network, a high-level circuit for detecting curves might consist of detectors for simpler curves and lines, which are then combined to detect more complex curves, as shown in the picture below.
+
+<PhotoGallery client:load images={[
+  {src: "/images/curve-circuit.png", alt: "High-level curve detector circuit"},
+]} caption='High-level curve detector circuit: Olah, et al., "Zoom In: An Introduction to Circuits"' />
+
+### Circuits in language models
+Features and circuits in language models tend to be a bit more abstract than in computer vision models but the concept is the same: lower-level features interact with each other to form higher-level features which together form a circuit. For example, low-level language model features could be for example "subject", "verb", "object", and a circuit could then combine these features to detect a sentence structure.
+
+The paper presents 6 different tasks, for which the authors attempted to find the corresponding circuits. We focus here on two of the simpler tasks: the "Greater-Than" -task and the "Indirect Object Identification (IOI)" -task.
+
+#### Greater-Than
+"Greater-Than" -task was first introduced by Hanna et al. in the paper [*How does GPT-2 compute greater-than?*](https://arxiv.org/pdf/2305.00586). It involves guiding prompting the model to output a greater number than the reference number, based on its context. More concretely, consider the following sentence and think about what the possible outputs could be:
+
+> The war lasted from 1720 to the year 17
+
+From the context itself, we do NOT know which exact war is being referred here. But in terms of context of the sentence, the war should have ended in years 1721 and onwards, not before that. Therefore, the model should output a number greater than 20 to complete the task successfully.
+
+#### Indirect Object Identification
+Indirect Object Identification (IOI) -circuit was found and presented by Wang et al. in the paper [*Interpretability in the Wild*](https://arxiv.org/pdf/2211.00593). The task involves the target of an action in the sentence. The authors analyzed the following sentence:
+
+> When Mary and John went to the store, John gave a drink to
+
+The model should infer from the context that the drink was given to Mary, not to John. Smaller language models can sometimes struggle with this task, as the target of the action is not explicitly mentioned in the sentence and the model might end up predicting the wrong target.
+
+Now that we have a basic understanding of what circuits are and some example behaviors that they attempt to capture, we can start to think about how we can discover them in neural networks.
+
 
 
 ## Manual circuit discovery process
-Before this paper was announced, the general methodology for identifying circuits involved the following 3 manual steps:
-1. **Task definition:** Recognizing a behavior or task that the model displayes, creating a dataset that reproduces that isolates and reproduces that behavior, and choosing a metric to measure how well the model performs at the task.
+Coming up with a circuit in your head is one thing, but how do we actually find them in a neural network? Before this paper was published, the general methodology for identifying circuits involved the following 3 manual steps:
+1. **Task definition:** Recognizing a behavior or task that the model displays, creating a dataset that isolates and reproduces that behavior, and choosing a metric to measure how well the model performs at the task.
 2. **Interpretation scoping:** Deciding the level of granularity (e.g. attention heads/MLPs, individual neurons, etc...) at which the network should be interpreted in.
 3. **Manual discovery:** Performing extensive patching experiments in order to remove as many unnecessary sub-units and edges as possible.
 
-The paper introducess an algorithm called Automatic Circuit DisCovery (ACDC), the goal of which is to fully automate step 3 of the process.
+<PhotoGallery client:load images={[
+  {src: "/images/manual-circuit-discovery-process.png", alt: "Manual circuit discovery process -illustrated"},
+]} caption='Manual circuit discovery process -illustrated' />
 
-## The ACDC algorithm
+Doing all of this manually takes a lot of time and effort, and the process is not guaranteed to be successful. A more automated approach would increase the iteration speed and enable researchers to discover circuits more efficiently.
+
+The paper in question attempts to respond to this challenge by introducing a new algorithm called Automatic Circuit DisCovery (ACDC), the goal of which is to fully automate step 3 of the process.
+
+
+
+## Towards automation: The ACDC algorithm
 On the high-level, ACDC finds a circuit by iteratively pruning unimportant nodes from the network. More formally, the algorithm executes the following steps:
-1. **Network sorting:** The network is topologically sorted in reverse, i.e. from output to input nodes.
-2. **Iterative pruning:** The algorithm iterates every edge in the graph. It prunes a node if it is considered "unimportant" according to the threshold function (more on that next)
+
+1. **Network sorting:** The computational graph of the network created, sorted topologically and then sorted in reverse, i.e. from output nodes to input nodes.
+2. **Iterative pruning:** The algorithm begins the pruning step, starting from the output node. It prunes an edge if it is considered "unimportant" according to the chosen threshold metric.
 3. **Tree-shaking:** Some nodes in the network might end up in a dead end if all its parent edges are cut off. Tree-shaking removes these "dead nodes".
 
 The final result is a subgraph of the network that only has nodes with a direct connection from the input, all the way to the output node.
 
-![How ACDC works](https://drive.google.com/uc?id=1_UQWmoVuE61pC-PodD3SihNU7CnqzR3L)
+<PhotoGallery client:load images={[
+  {src: "/images/acdc-full-pruning-process.png", alt: "ACDC end-to-end pruning process"},
+]} caption='ACDC end-to-end pruning process, extension of Figure 2 in the paper' />
 
-More detailed information about the algorithm can be found Section 3 from the [paper](https://arxiv.org/pdf/2304.14997), and in the "Experiment section" of this post.
+### Network sorting
 
-## Experiment
+<PhotoGallery client:load images={[
+  {src: "/images/acdc-topological-sort.png", alt: "ACDC subgraph, topologically sorted"},
+]} caption='ACDC subgraph, topologically sorted' />
 
-### Task definition: Greater Than
-The paper presents 6 different circuit discovery tasks that they attempted to automate with ACDC. In this experiment, we focus on the "Greater-Than" -task, first introduced by Hanna et al. in the paper [*How does GPT-2 compute greater-than?*](https://arxiv.org/pdf/2305.00586).
+### Iterative pruning
 
-The Greater-Than -task involves implicitly prompting a model to output greater number than the reference number, based on its context. More concretely, consider the following sentence and think about the possible outputs:
+<PhotoGallery client:load images={[
+  {src: "/images/acdc-pruning.png", alt: "ACDC pruning step"},
+]} caption='ACDC pruning step' />
 
-> The war lasted from 1720 to the year 17
+### Tree-shaking
 
-From the context, we do NOT know which exact war is being referred here. But in terms of language restrictions, numbers between 1-20 should not be possible answers, while anything greater or equal to 21 would be a plausible answer.
+<PhotoGallery client:load images={[
+  {src: "/images/acdc-tree-shaking.png", alt: "ACDC tree-shaking step"},
+]} caption='ACDC tree-shaking step' />
 
-### Models
-We use HuggingFace's GPT-2 model with language modeling head (LMHead). The LM Head means that the model has a linear layer at the end, the weights of which are tried to the embedding layer. This layer outputs the final logits.
+## Results
 
-<CodeEditor client:only lang={"shell"} code={`%pip install transformer_lens
-%pip install circuitsvis
-%pip install networkx -q`} />
+
 
 ## Conclusion
+
 
 ### Limitations
 
