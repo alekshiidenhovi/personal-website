@@ -1,11 +1,12 @@
 // @ts-check
 import { defineConfig } from "astro/config";
+import rehypeKatex from "rehype-katex";
+import remarkMath from "remark-math";
 
+import mdx from "@astrojs/mdx";
 import react from "@astrojs/react";
 import tailwind from "@astrojs/tailwind";
 import vercel from "@astrojs/vercel/static";
-
-import mdx from "@astrojs/mdx";
 
 // https://astro.build/config
 export default defineConfig({
@@ -16,4 +17,9 @@ export default defineConfig({
       enabled: true,
     },
   }),
+  markdown: {
+    syntaxHighlight: "prism",
+    remarkPlugins: [remarkMath],
+    rehypePlugins: [rehypeKatex],
+  },
 });
