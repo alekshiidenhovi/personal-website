@@ -136,7 +136,7 @@ The final result is a subgraph of the network that only has nodes with a direct 
 
 
 ## Conclusion
-ACDC is an exciting first step towards automating the circuit discovery process in neural networks. Figuring out ways to automate this process is crucial for making the mechanistic interpretability work scale to larger models and more complex tasks.
+ACDC is an exciting first step towards automating the circuit discovery process for neural networks. Figuring out ways to automate this process is crucial for making the mechanistic interpretability work scale to larger models and more complex tasks. 
 
 ### Limitations
 Although this method is the first towards automatic circuit discovery process, it is not without its limitations. 
@@ -146,3 +146,6 @@ First of all, the algorithm is not guaranteed to find the optimal circuit. This 
 Secondly, the algorithm is computationally expensive to run, since it requires multiple forward passes through the network for each edge pruning step. This makes it difficult to apply to larger networks than the ones used in the paper.
 
 ### Upcoming frontiers for automated interpretability
+I believe that there is a lot that can be done to extend the work presented in this paper. For example, different pruning strategies could be explored that would converge closer to the global optimal circuit. Additionally, this version of the algorithm is quite computationally expensive, so finding ways to make it more efficient would make it much more applicable to larger networks, both in terms of costs and time.
+
+This truly seems like a great time for anyone interested in the field to jump in start contributing!
