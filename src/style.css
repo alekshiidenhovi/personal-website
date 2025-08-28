@@ -85,7 +85,7 @@
 
 }
 
-.gradient-overlay {
+@utility gradient-overlay {    
     background-image: radial-gradient(
         ellipse 90vw 90vh at center top,
         theme("colors.primary.600 / 0.25") 0%,
