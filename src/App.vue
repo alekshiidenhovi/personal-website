@@ -13,7 +13,7 @@ import SkillCard from "./components/SkillCard.vue"
         <span class="uppercase text-2xl tracking-[6px] text-fullstack-500">full stack</span>
       </div>
     </section>
-    <section id="expertise" class="max-w-7xl flex flex-col gap-24 py-24 items-center w-screen h-screen">
+    <section id="expertise" class="max-w-7xl w-full h-[95vh] flex flex-col gap-24 py-24 items-center">
       <h2 class="text-neutral-200 font-bold text-6xl">Expertise</h2>
       <div class="flex gap-12 h-full w-full">
         <SkillCard expertise="machineLearning" upperText="machine" lowerText="learning" />
