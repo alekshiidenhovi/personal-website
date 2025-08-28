@@ -4,10 +4,8 @@ import SkillCard from "./components/SkillCard.vue"
 
 <template>
   <main class="bg-neutral-950 w-screen min-h-screen flex flex-col items-center overflow-y-auto">
-    <section
-      id="hero"
-      class="flex flex-col gap-5 items-center justify-center w-screen h-screen bg-[radial-gradient(circle_at_top,theme(colors.primary.950)_0%,theme(colors.neutral.950)_100%)]"
-    >
+    <section id="hero" class="relative w-screen h-screen flex flex-col gap-5 items-center justify-center overflow-hidden">
+      <div class="absolute top-0 left-1/2 transform -translate-x-1/2 w-[120vw] h-[60vh] gradient-overlay pointer-events-none"></div>
       <h1 class="font-bold text-9xl tracking-[3px] text-primary-50">Aleks Hiidenhovi</h1>
       <div class="flex gap-8">
         <span class="uppercase text-2xl tracking-[6px] text-primary-500">machine learning</span>

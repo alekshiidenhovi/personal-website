@@ -84,3 +84,16 @@
     --color-white: #fff;
 
 }
+
+.gradient-overlay {
+    background-image: radial-gradient(
+        ellipse 90vw 90vh at center top,
+        theme("colors.primary.600 / 0.25") 0%,
+        theme("colors.primary.600 / 0.12") 20%,
+        theme("colors.primary.600 / 0.06") 35%,
+        theme("colors.primary.600 / 0.03") 50%,
+        theme("colors.primary.600 / 0.015") 65%,
+        theme("colors.primary.600 / 0.005") 80%,
+        transparent 100%
+    );
+}
