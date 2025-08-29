@@ -11,7 +11,7 @@ interface Props {
 const props = defineProps<Props>()
  
 const cardStyles = tv({
-  base: 'flex flex-col gap-2 p-8 border-2 items-center justify-center uppercase tracking-[3px] rounded-2xl w-full h-full text-3xl bg-linear-to-br from-neutral-900 to-neutral-95 transition-all cursor-pointer duration-300',
+  base: 'flex flex-col gap-2 p-8 border-2 text-center justify-center uppercase tracking-[3px] rounded-2xl w-full h-full text-3xl bg-linear-to-br from-neutral-900 to-neutral-95 transition-all cursor-pointer duration-300',
   variants: {
     color: {
       machineLearning: 'border-primary-500/50 text-primary-500/50 hover:border-primary-500 hover:text-primary-500',
@@ -23,8 +23,8 @@ const cardStyles = tv({
 </script>
 
 <template>
-    <div :class="cardStyles({ color: expertise })">
-      <span>{{ upperText }}</span>
-      <span>{{ lowerText }}</span>
-    </div>
-  </template>
+  <div :class="cardStyles({ color: expertise })">
+    <span class="w-full">{{ upperText }}</span>
+    <span class="w-full">{{ lowerText }}</span>
+  </div>
+</template>
