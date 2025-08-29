@@ -22,15 +22,15 @@ const ANIMATION_DELAY_UPPER_BOUND_SECONDS = 0.5
 
 const cardStyles = tv({
   base:
-    "relative flex flex-col gap-2 p-8 border-2 text-center justify-center uppercase tracking-[3px] rounded-2xl w-full h-full text-3xl bg-linear-to-br from-neutral-900 to-neutral-95 transition-all cursor-pointer duration-300 overflow-hidden",
+    "relative flex flex-col gap-2 p-8 border-2 text-center justify-center uppercase tracking-[3px] rounded-2xl w-full h-full text-3xl bg-linear-to-br from-neutral-900 to-neutral-95 transition-all cursor-pointer duration-300 overflow-hidden shadow-xl hover:shadow-2xl",
   variants: {
     color: {
       machineLearning:
-        "border-primary-500/50 text-primary-500/50 hover:border-primary-500 hover:text-primary-500",
+        "border-primary-500 text-primary-500 shadow-primary-500",
       dataViz:
-        "border-dataviz-500/50 text-dataviz-500/50 hover:border-dataviz-500 hover:text-dataviz-500",
+        "border-dataviz-500 text-dataviz-500 shadow-dataviz-500",
       fullStack:
-        "border-fullstack-500/50 text-fullstack-500/50 hover:border-fullstack-500 hover:text-fullstack-500",
+        "border-fullstack-500 text-fullstack-500 shadow-fullstack-500",
     },
   },
 });
@@ -47,7 +47,7 @@ onMounted(() => {
   tiles.forEach((el) => {
     const duration = gsap.utils.random(ANIMATION_DURATION_LOWER_BOUND_SECONDS, ANIMATION_DURATION_UPPER_BOUND_SECONDS);  
     const delay = gsap.utils.random(ANIMATION_DELAY_LOWER_BOUND_SECONDS, ANIMATION_DELAY_UPPER_BOUND_SECONDS);
-    timeline.to(el, { opacity: 0, duration, ease: "power2.inOut" }, delay);
+    timeline.to(el, { opacity: 1, duration, ease: "power2.inOut" }, delay);
   });
 
   const onEnter = () => {
@@ -71,8 +71,8 @@ onMounted(() => {
 
 <template>
   <div :class="cardStyles({ color: expertise })" ref="gridRef">
-    <span class="w-full z-10 relative">{{ upperText }}</span>
-    <span class="w-full z-10 relative">{{ lowerText }}</span>
+    <span class="w-full">{{ upperText }}</span>
+    <span class="w-full">{{ lowerText }}</span>
     <div
       class="absolute inset-0 pointer-events-none grid"
       :style="{
@@ -80,7 +80,7 @@ onMounted(() => {
         gridTemplateRows: `repeat(${ROWS}, 1fr)`
       }"
     >
-      <div v-for="i in TILE_COUNT" :key="i" class="tile opacity-100 bg-neutral-900 will-change-[opacity]"></div>
+      <div v-for="i in TILE_COUNT" :key="i" class="tile opacity-0 z-10 bg-neutral-900 will-change-[opacity]"></div>
     </div>
   </div>
 </template>
