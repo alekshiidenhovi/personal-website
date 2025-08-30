@@ -9,7 +9,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@biomejs/biome": "2.2.2",
     "@tailwindcss/vite": "4.1.12",
     "gsap": "3.13.0",
     "tailwind-merge": "3.3.1",
@@ -18,6 +17,7 @@
     "vue": "3.5.18"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.2.2",
     "@vitejs/plugin-vue": "6.0.1",
     "@vue/tsconfig": "0.7.0",
     "typescript": "~5.8.3",
