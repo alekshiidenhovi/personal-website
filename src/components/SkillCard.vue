@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from "vue";
 import { gsap } from "gsap";
 import { tv } from "tailwind-variants";
+import { onBeforeUnmount, onMounted, ref } from "vue";
+
 import type { Expertise } from "../types";
 
 interface Props {
@@ -15,22 +16,18 @@ const COLS = 30;
 const ROWS = 20;
 const TILE_COUNT = COLS * ROWS;
 
-const ANIMATION_DURATION_LOWER_BOUND_SECONDS = 0.3
-const ANIMATION_DURATION_UPPER_BOUND_SECONDS = 0.3
-const ANIMATION_DELAY_LOWER_BOUND_SECONDS = 0.0
-const ANIMATION_DELAY_UPPER_BOUND_SECONDS = 0.5 
+const ANIMATION_DURATION_LOWER_BOUND_SECONDS = 0.3;
+const ANIMATION_DURATION_UPPER_BOUND_SECONDS = 0.3;
+const ANIMATION_DELAY_LOWER_BOUND_SECONDS = 0.0;
+const ANIMATION_DELAY_UPPER_BOUND_SECONDS = 0.5;
 
 const cardStyles = tv({
-  base:
-    "relative flex flex-col gap-2 p-8 border-2 text-center justify-center uppercase tracking-[3px] rounded-2xl w-full h-full text-3xl bg-linear-to-br from-neutral-900 to-neutral-95 transition-all cursor-pointer duration-300 overflow-hidden shadow-xl hover:shadow-2xl",
+  base: "to-neutral-95 relative flex h-full w-full cursor-pointer flex-col justify-center gap-2 overflow-hidden rounded-2xl border-2 bg-linear-to-br from-neutral-900 p-8 text-center text-3xl tracking-[3px] uppercase shadow-xl transition-all duration-300 hover:shadow-2xl",
   variants: {
     color: {
-      machineLearning:
-        "border-primary-500 text-primary-500 shadow-primary-500",
-      dataViz:
-        "border-dataviz-500 text-dataviz-500 shadow-dataviz-500",
-      fullStack:
-        "border-fullstack-500 text-fullstack-500 shadow-fullstack-500",
+      machineLearning: "border-primary-500 text-primary-500 shadow-primary-500",
+      dataViz: "border-dataviz-500 text-dataviz-500 shadow-dataviz-500",
+      fullStack: "border-fullstack-500 text-fullstack-500 shadow-fullstack-500",
     },
   },
 });
@@ -42,11 +39,20 @@ onMounted(() => {
 
   const root = gridRef.value;
   const tiles = Array.from(root.querySelectorAll<HTMLDivElement>(".tile"));
-  const timeline = gsap.timeline({ paused: true, defaults: { overwrite: "auto" } });
+  const timeline = gsap.timeline({
+    paused: true,
+    defaults: { overwrite: "auto" },
+  });
 
   tiles.forEach((el) => {
-    const duration = gsap.utils.random(ANIMATION_DURATION_LOWER_BOUND_SECONDS, ANIMATION_DURATION_UPPER_BOUND_SECONDS);  
-    const delay = gsap.utils.random(ANIMATION_DELAY_LOWER_BOUND_SECONDS, ANIMATION_DELAY_UPPER_BOUND_SECONDS);
+    const duration = gsap.utils.random(
+      ANIMATION_DURATION_LOWER_BOUND_SECONDS,
+      ANIMATION_DURATION_UPPER_BOUND_SECONDS,
+    );
+    const delay = gsap.utils.random(
+      ANIMATION_DELAY_LOWER_BOUND_SECONDS,
+      ANIMATION_DELAY_UPPER_BOUND_SECONDS,
+    );
     timeline.to(el, { opacity: 1, duration, ease: "power2.inOut" }, delay);
   });
 
@@ -74,13 +80,17 @@ onMounted(() => {
     <span class="w-full">{{ upperText }}</span>
     <span class="w-full">{{ lowerText }}</span>
     <div
-      class="absolute inset-0 pointer-events-none grid"
+      class="pointer-events-none absolute inset-0 grid"
       :style="{
         gridTemplateColumns: `repeat(${COLS}, 1fr)`,
-        gridTemplateRows: `repeat(${ROWS}, 1fr)`
+        gridTemplateRows: `repeat(${ROWS}, 1fr)`,
       }"
     >
-      <div v-for="i in TILE_COUNT" :key="i" class="tile opacity-0 z-10 bg-neutral-900 will-change-[opacity]"></div>
+      <div
+        v-for="i in TILE_COUNT"
+        :key="i"
+        class="tile z-10 bg-neutral-900 opacity-0 will-change-[opacity]"
+      ></div>
     </div>
   </div>
 </template>
