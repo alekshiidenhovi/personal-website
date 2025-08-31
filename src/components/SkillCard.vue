@@ -10,7 +10,7 @@ interface Props {
   lowerText: string;
   expertise: Expertise;
 }
-const props = defineProps<Props>();
+defineProps<Props>();
 
 const COLS = 30;
 const ROWS = 20;
