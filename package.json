@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview",
-    "format": "prettier --write . "
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --apply .",
+    "lint:force": "biome lint --apply-unsafe .",
+    "lint:changed": "biome lint --changed"
   },
   "dependencies": {
     "@tailwindcss/vite": "4.1.12",
