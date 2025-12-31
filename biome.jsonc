@@ -14,8 +14,14 @@
       "!src/style.css"
     ]
   },
+  "html": {
+    "experimentalFullSupportEnabled": true,
+    "formatter": {
+      "indentScriptAndStyle": true
+    }
+  },
   "formatter": {
-    "enabled": false
+    "enabled": true
   },
   "linter": {
     "enabled": true,
@@ -33,7 +39,10 @@
   },
   "overrides": [
     {
-      "includes": ["**/*.astro", "**/*.vue"],
+      "includes": [
+        "**/*.astro",
+        "**/*.vue"
+      ],
       "linter": {
         "rules": {
           "style": {
