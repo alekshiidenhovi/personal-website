@@ -1,1 +1,1 @@
-export type Expertise = "machineLearning" | "dataViz" | "fullStack";
+export type Expertise = "machineLearning" | "lowLevel" | "webDev";
