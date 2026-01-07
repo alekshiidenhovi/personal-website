@@ -16,8 +16,20 @@ export default {
 </script>
 
 <template>
-  <main class="flex min-h-screen w-screen flex-col items-center overflow-y-auto bg-neutral-950">
+  <main>
     <HeroSection />
     <ExpertiseSection />
   </main>
 </template>
+
+<style scoped>
+main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100dvh;
+  width: 100dvw;
+  overflow-y: auto;
+  background-color: var(--neutral-950);
+}
+</style>

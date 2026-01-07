@@ -1,15 +1,76 @@
 <template>
-  <section id="hero" class="relative flex h-screen w-screen flex-col items-center justify-center gap-5 overflow-hidden">
-    <div
-      class="gradient-overlay pointer-events-none absolute top-0 left-1/2 h-[60vh] w-[120vw] -translate-x-1/2 transform">
-    </div>
-    <h1 class="text-primary-50 text-9xl font-bold tracking-[3px]">
+  <section id="hero">
+    <div class="gradient-overlay"></div>
+    <h1>
       Aleks Hiidenhovi
     </h1>
-    <div class="flex gap-8">
-      <span class="text-primary-500 text-2xl tracking-[6px] uppercase">machine learning</span>
-      <span class="text-accent-500 text-2xl tracking-[6px] uppercase">low level</span>
-      <span class="text-warning-500 text-2xl tracking-[6px] uppercase">web dev</span>
+    <div class="subtitle-container">
+      <span class="subtitle-base subtitle-ml">machine learning</span>
+      <span class="subtitle-base subtitle-ll">low level</span>
+      <span class="subtitle-base subtitle-wd">web dev</span>
     </div>
   </section>
 </template>
+
+<style scoped>
+#hero {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  height: 100dvh;
+  width: 100dvw;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  overflow: hidden;
+}
+
+.gradient-overlay {
+  background-image: radial-gradient(ellipse 60dvw 50dvh at center top,
+      color-mix(in srgb, var(--primary-600), transparent 75%) 0%,
+      color-mix(in srgb, var(--primary-600), transparent 88%) 20%,
+      color-mix(in srgb, var(--primary-600), transparent 94%) 35%,
+      color-mix(in srgb, var(--primary-600), transparent 97%) 50%,
+      color-mix(in srgb, var(--primary-600), transparent 99.85%) 65%,
+      color-mix(in srgb, var(--primary-600), transparent 99.95%) 80%,
+      transparent 100%);
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  height: 60dvh;
+  width: 120dvw;
+  transform: translateX(-50%);
+}
+
+h1 {
+  color: var(--primary-50);
+  font-size: clamp(4rem, 10vw, 8rem);
+  letter-spacing: 3px;
+  font-weight: 700
+}
+
+.subtitle-container {
+  display: flex;
+  gap: 2rem;
+}
+
+.subtitle-base {
+  font-size: clamp(0.5rem, 5vw, 1.5rem);
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  line-height: 1.33;
+}
+
+.subtitle-ml {
+  color: var(--primary-500);
+}
+
+.subtitle-ll {
+  color: var(--accent-500);
+}
+
+.subtitle-wd {
+  color: var(--warning-500);
+}
+</style>

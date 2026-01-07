@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { tv } from "tailwind-variants";
 import type { Expertise } from "../types";
 import Tag from "./Tag.vue";
 
@@ -12,28 +11,72 @@ interface Props {
   }[]
 }
 const props = defineProps<Props>();
-
-const titleStyles = tv({
-  base: "text-2xl font-normal tracking-[3px] uppercase",
-  variants: {
-    color: {
-      machineLearning: "text-primary-500",
-      lowLevel: "text-accent-500",
-      webDev: "text-warning-500",
-    },
-  },
-});
-
 </script>
 
 <template>
-  <div class="flex flex-col gap-6 p-8 border-2 border-neutral-700 bg-neutral-900 w-full">
-    <div>
-      <h3 :class="titleStyles({ color: cardColor })">{{ cardTitle }}</h3>
+  <div class="card">
+    <div class="title-container">
+      <h3 :class="{
+        'title-ml': cardColor === 'machineLearning',
+        'title-ll': cardColor === 'lowLevel',
+        'title-wd': cardColor === 'webDev',
+      }">{{ cardTitle }}</h3>
     </div>
-    <p class="text-neutral-500 text-lg font-normal">{{ cardText }}</p>
-    <div class="flex gap-3 w-full overflow-x-auto">
+    <p>{{ cardText }}</p>
+    <div class="tag-container">
       <Tag v-for="tag in props.tags" :color="cardColor" :text="tag.tagText" />
     </div>
   </div>
 </template>
+
+<style scoped>
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 2rem;
+  border: 2px solid var(--neutral-700);
+  background-color: var(--neutral-900);
+  width: 100%;
+  justify-content: between;
+  height: 100%;
+}
+
+.title-container {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.title-container h3 {
+  font-size: 1.5rem;
+  font-weight: 400;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.title-container .title-ml {
+  color: var(--primary-500);
+}
+
+.title-container .title-ll {
+  color: var(--accent-500);
+}
+
+.title-container .title-wd {
+  color: var(--warning-500);
+}
+
+p {
+  color: var(--neutral-500);
+  font-size: 1.125rem;
+  line-height: calc(1.75 / 1.125);
+  flex-grow: 1;
+}
+
+.tag-container {
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+  overflow-x: auto;
+}
+</style>

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { Expertise } from "../types";
-import { tv } from "tailwind-variants";
 
 interface Props {
   color: Expertise;
@@ -8,21 +7,33 @@ interface Props {
 }
 const props = defineProps<Props>();
 
-const tagStyles = tv({
-  base: "border-2 bg-neutral-800 px-5 py-2",
-  variants: {
-    color: {
-      machineLearning: "text-primary-500 border-neutral-800",
-      lowLevel: "text-accent-500 border-neutral-800",
-      webDev: "text-warning-500 border-neutral-800",
-    },
-  },
-});
 
 </script>
 
 <template>
-  <div :class="tagStyles({ color: props.color })">
-    {{ text }}
-  </div>
+  <div class="base" :class="{
+    ml: props.color === 'machineLearning',
+    ll: props.color === 'lowLevel',
+    wd: props.color === 'webDev',
+  }"> {{ text }} </div>
 </template>
+
+<style scoped>
+.base {
+  border: 2px solid color-mix(in srgb, var(--neutral-700), transparent 50%);
+  background-color: var(--neutral-800);
+  padding: 0.5rem 1.25rem;
+}
+
+.ml {
+  color: var(--primary-500);
+}
+
+.ll {
+  color: var(--accent-500);
+}
+
+.wd {
+  color: var(--warning-500);
+}
+</style>

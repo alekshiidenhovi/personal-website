@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import type { Expertise } from "../types";
 import ExpertiseCard from "./ExpertiseCard.vue";
-
 </script>
 
 <template>
-  <section id="expertise" class="flex w-full max-w-7xl flex-col items-center gap-32 pt-24 pb-32 px-20 bg-neutral-950">
-    <h2 class="text-6xl font-bold text-neutral-200">Expertise</h2>
-    <div class="flex w-full h-full">
+  <section id="expertise">
+    <h2>Expertise</h2>
+    <div class="card-container">
       <ExpertiseCard cardColor="machineLearning" cardTitle="Machine Learning"
         cardText="End-to-end ML specialist with a proven track record bridging the gap between deep technical research and production apps."
         :tags="[
@@ -53,3 +51,31 @@ import ExpertiseCard from "./ExpertiseCard.vue";
     </div>
   </section>
 </template>
+
+<style scoped>
+#expertise {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8rem;
+  padding: 6rem 5rem 8rem 5rem;
+  width: 100%;
+  max-width: 96rem;
+  background-color: var(--neutral-950);
+}
+
+h2 {
+  font-size: 3.75rem;
+  font-weight: 700;
+  color: var(--neutral-200);
+}
+
+.card-container {
+  display: grid;
+  justify-content: center;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  height: 100%;
+  width: 100%;
+}
+</style>
