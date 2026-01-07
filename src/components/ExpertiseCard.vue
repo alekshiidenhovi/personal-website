@@ -2,7 +2,26 @@
 import type { Expertise } from "../types";
 import Tag from "./Tag.vue";
 import { Icon } from '@iconify/vue';
+import { ref, onMounted } from "vue";
 
+const tagContainerRef = ref<HTMLDivElement | null>(null);
+const showLeftShadow = ref(false);
+const showRightShadow = ref(false);
+const END_PADDING = 10;
+
+const checkOverflow = () => {
+  const el = tagContainerRef.value;
+  if (!el) return;
+
+  const { scrollLeft, scrollWidth, clientWidth } = el;
+  showLeftShadow.value = scrollLeft > END_PADDING;
+  showRightShadow.value = scrollLeft + clientWidth < scrollWidth - END_PADDING;
+}
+
+onMounted(() => {
+  checkOverflow();
+  tagContainerRef.value?.addEventListener('scroll', checkOverflow);
+})
 
 interface Props {
   cardColor: Expertise;
@@ -28,7 +47,9 @@ const props = defineProps<Props>();
       <h3>{{ cardTitle }}</h3>
     </div>
     <p>{{ cardText }}</p>
-    <div class="tag-container">
+    <div class="tag-container" ref="tagContainerRef" :class="{
+      'tag-container-left-shadow': showLeftShadow, 'tag-container-right-shadow': showRightShadow,
+    }" @scroll="checkOverflow">
       <Tag v-for="tag in props.tags" :color="cardColor" :text="tag.tagText" />
     </div>
   </div>
@@ -89,5 +110,39 @@ p {
   gap: 0.75rem;
   width: 100%;
   overflow-x: auto;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+
+  --left-stop: black;
+  --right-stop: black;
+
+  mask-image: linear-gradient(to right,
+    var(--left-stop) 0%,
+    black 10%,
+    black 90%,
+    var(--right-stop) 100%);
+  -webkit-mask-image: linear-gradient(to right,
+    var(--left-stop) 0%,
+    black 10%,
+    black 90%,
+    var(--right-stop) 100%);
+
+  transition: all 0.4s ease;
+}
+
+.tag-container-left-shadow {
+  --left-stop: transparent;
+}
+
+.tag-container-right-shadow {
+  --right-stop: transparent;
 }
 </style>
