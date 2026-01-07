@@ -8,7 +8,7 @@ import ExpertiseCard from "./ExpertiseCard.vue";
     <div class="card-container">
       <ExpertiseCard cardColor="machineLearning" cardTitle="Machine Learning"
         cardText="End-to-end ML specialist with a proven track record bridging the gap between deep technical research and production apps."
-        :tags="[
+        iconName="heroicons:adjustments-vertical-solid" :tags="[
           {
             tagText: 'Python'
           },
@@ -21,7 +21,7 @@ import ExpertiseCard from "./ExpertiseCard.vue";
         ]" />
       <ExpertiseCard cardColor="lowLevel" cardTitle="Low Level"
         cardText="Passionate about low-level optimization. Built foundational systems from assemblers to compilers."
-        :tags="[
+        iconName="heroicons:cpu-chip-solid" :tags="[
           {
             tagText: 'Rust'
           },
@@ -34,7 +34,7 @@ import ExpertiseCard from "./ExpertiseCard.vue";
         ]" />
       <ExpertiseCard cardColor="webDev" cardTitle="Web Dev"
         cardText="Full-stack generalist, with expertise in building data-driven dashboard applications from the ground up."
-        :tags="[
+        iconName="heroicons:globe-alt-solid" :tags="[
           {
             tagText: 'React/NextJS'
           },

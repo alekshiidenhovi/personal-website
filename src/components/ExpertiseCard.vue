@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import type { Expertise } from "../types";
 import Tag from "./Tag.vue";
+import { Icon } from '@iconify/vue';
+
 
 interface Props {
   cardColor: Expertise;
   cardTitle: string;
   cardText: string;
+  iconName: string;
   tags: {
     tagText: string;
   }[]
@@ -15,12 +18,14 @@ const props = defineProps<Props>();
 
 <template>
   <div class="card">
-    <div class="title-container">
-      <h3 :class="{
-        'title-ml': cardColor === 'machineLearning',
-        'title-ll': cardColor === 'lowLevel',
-        'title-wd': cardColor === 'webDev',
-      }">{{ cardTitle }}</h3>
+    <div :class="{
+      'title-container': true,
+      'title-container-ml': cardColor === 'machineLearning',
+      'title-container-ll': cardColor === 'lowLevel',
+      'title-container-wd': cardColor === 'webDev',
+    }">
+      <Icon :icon="props.iconName" class="icon" />
+      <h3>{{ cardTitle }}</h3>
     </div>
     <p>{{ cardText }}</p>
     <div class="tag-container">
@@ -44,7 +49,25 @@ const props = defineProps<Props>();
 
 .title-container {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.title-container-ml {
+  color: var(--primary-500);
+}
+
+.title-container-ll {
+  color: var(--accent-500);
+}
+
+.title-container-wd {
+  color: var(--warning-500);
+}
+
+.title-container .icon {
+  width: 2rem;
+  height: 2rem;
 }
 
 .title-container h3 {
@@ -52,18 +75,6 @@ const props = defineProps<Props>();
   font-weight: 400;
   letter-spacing: 3px;
   text-transform: uppercase;
-}
-
-.title-container .title-ml {
-  color: var(--primary-500);
-}
-
-.title-container .title-ll {
-  color: var(--accent-500);
-}
-
-.title-container .title-wd {
-  color: var(--warning-500);
 }
 
 p {
