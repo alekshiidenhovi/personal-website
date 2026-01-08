@@ -9,9 +9,12 @@ interface Props {
   completionYear: number;
   imgUrl: string;
   imgDescription: string;
+  objectPosition?: "top" | "center" | "bottom";
 
 }
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  objectPosition: "center",
+});
 
 </script>
 
@@ -34,7 +37,7 @@ const props = defineProps<Props>();
       'img-bg-ll': props.projectTag === 'lowLevel',
       'img-bg-wd': props.projectTag === 'webDev',
     }">
-      <img :src="props.imgUrl" :alt="props.imgDescription" />
+      <img :src="props.imgUrl" :alt="props.imgDescription" :style="{ objectPosition: props.objectPosition }" />
     </div>
   </a>
 </template>
