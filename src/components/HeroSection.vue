@@ -1,3 +1,7 @@
+<script setup lang="ts">
+import { Icon } from '@iconify/vue';
+</script>
+
 <template>
   <section id="hero">
     <div class="gradient-overlay"></div>
@@ -8,6 +12,14 @@
       <span class="subtitle-base subtitle-ml">machine learning</span>
       <span class="subtitle-base subtitle-ll">low level</span>
       <span class="subtitle-base subtitle-wd">web dev</span>
+    </div>
+    <div class="social-container">
+      <a href="https://github.com/alekshiidenhovi" target="_blank" rel="noreferrer">
+        <Icon :icon="'simple-icons:github'" class="icon" />
+      </a>
+      <a href="https://www.linkedin.com/in/hiidenhovi/" target="_blank" rel="noreferrer">
+        <Icon :icon="'simple-icons:linkedin'" class="icon" />
+      </a>
     </div>
   </section>
 </template>
@@ -25,6 +37,8 @@
   overflow: hidden;
   padding: clamp(2rem, 2vw, 4rem);
 }
+
+
 
 .gradient-overlay {
   background-image: radial-gradient(ellipse 120rem 80rem at center top,
@@ -75,5 +89,30 @@ h1 {
 
 .subtitle-wd {
   color: var(--warning-500);
+}
+
+.social-container {
+  display: flex;
+  gap: clamp(0.8rem, 2vw, 1.5rem);
+  align-items: center;
+  padding-top: clamp(1rem, 2vw, 2rem);
+}
+
+.icon {
+  width: clamp(2.0rem, 3vw, 4rem);
+  height: clamp(2.0rem, 3vw, 4rem);
+  color: var(--neutral-500);
+  opacity: 0.6;
+  transition: all 0.2s ease;
+  will-change: opacity, color;
+}
+
+.icon:hover {
+  opacity: 0.8;
+  color: var(--primary-500);
+}
+
+.icon:active {
+  opacity: 1;
 }
 </style>
