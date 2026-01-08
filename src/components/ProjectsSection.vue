@@ -27,8 +27,9 @@ import SectionTitle from "./SectionTitle.vue";
         :completionYear=2025 :imgUrl="'/basic-source-code-min.jpg'" :imgDescription="'BASIC source code'"
         :projectLink="'https://github.com/alekshiidenhovi/BASIC-interpreter'" :objectPosition="'top'" />
       <ProjectCard :projectTitle="'ColViT'" :projectDescription="'Fast and scalable face identification'"
-        :projectTag="'machine learning'" :completionYear=2025 :imgUrl="'/face-identication.jpg'"
-        :imgDescription="'Face identification image'" :projectLink="'https://github.com/alekshiidenhovi/colvit-face'" />
+        :projectTag="'machine learning'" :completionYear=2025 :imgUrl="'/colvit-architecture-diagram.jpg'"
+        :imgDescription="'ColViT architecture diagram'" :projectLink="'https://github.com/alekshiidenhovi/colvit-face'"
+        :objectPosition="'top'" />
     </div>
   </section>
 </template>
