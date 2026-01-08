@@ -31,7 +31,6 @@ import JobCard from "./JobCard.vue";
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: 6rem;
   padding: 6rem 5rem 8rem 5rem;
   width: 100%;
