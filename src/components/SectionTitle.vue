@@ -13,7 +13,7 @@ const props = defineProps<Props>();
 
 <style scoped>
 h2 {
-  font-size: 3.75rem;
+  font-size: clamp(2.5rem, 6vw, 3.75rem);
   font-weight: 700;
   color: var(--neutral-200);
   text-align: center;
