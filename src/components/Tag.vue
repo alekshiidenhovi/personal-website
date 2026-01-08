@@ -24,6 +24,7 @@ const props = defineProps<Props>();
   background-color: var(--neutral-800);
   padding: 0.5rem 1.25rem;
   flex-shrink: 0;
+  font-weight: 500;
 }
 
 .ml {
