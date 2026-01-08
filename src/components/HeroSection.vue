@@ -21,8 +21,9 @@
   width: 100dvw;
   align-items: center;
   justify-content: center;
-  gap: 1.25rem;
+  gap: clamp(0.5rem, 2vw, 1.25rem);
   overflow: hidden;
+  padding: clamp(2rem, 2vw, 4rem);
 }
 
 .gradient-overlay {
@@ -45,19 +46,21 @@
 
 h1 {
   color: var(--primary-50);
-  font-size: clamp(4rem, 10vw, 8rem);
+  font-size: clamp(3.5rem, 10vw, 8rem);
   letter-spacing: 3px;
-  font-weight: 700
+  line-height: 1;
+  font-weight: 700;
+  text-align: center;
 }
 
 .subtitle-container {
   display: flex;
-  gap: 2rem;
+  gap: clamp(1rem, 2vw, 2rem);
 }
 
 .subtitle-base {
-  font-size: clamp(0.5rem, 5vw, 1.5rem);
-  letter-spacing: 6px;
+  font-size: clamp(0.8rem, 2vw, 1.5rem);
+  letter-spacing: clamp(0.25rem, 1vw, 0.375rem);
   text-transform: uppercase;
   line-height: 1.33;
 }
