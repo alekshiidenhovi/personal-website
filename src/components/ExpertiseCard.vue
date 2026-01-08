@@ -65,9 +65,17 @@ const props = defineProps<Props>();
   padding: 2rem;
   border: 2px solid var(--neutral-700);
   background-color: var(--neutral-900);
-  width: 100%;
-  justify-content: between;
-  height: 100%;
+  min-height: 12rem;
+  flex: 1 1 33.3%;
+  min-width: 24rem;
+  max-width: 50%
+}
+
+
+@media (max-width: 57.75rem) {
+  .card {
+    max-width: 100%;
+  }
 }
 
 .title-container {

@@ -46,7 +46,6 @@ const props = withDefaults(defineProps<Props>(), {
 .card {
   border: 2px solid var(--neutral-800);
   background-color: var(--neutral-900);
-  width: 100%;
   height: 24rem;
   display: flex;
   flex-direction: column;
