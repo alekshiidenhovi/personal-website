@@ -1,31 +1,30 @@
 {
-  "name": "personal-website",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vue-tsc -b && vite build",
-    "preview": "vite preview",
-    "format": "prettier --write . ",
-    "lint": "biome lint .",
-    "lint:fix": "biome lint --apply .",
-    "lint:force": "biome lint --apply-unsafe .",
-    "lint:changed": "biome lint --changed"
-  },
-  "dependencies": {
-    "gsap": "3.13.0",
-    "vue": "3.5.18"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "2.3.10",
-    "@iconify/vue": "5.0.0",
-    "@trivago/prettier-plugin-sort-imports": "5.2.2",
-    "@vitejs/plugin-vue": "6.0.1",
-    "@vue/tsconfig": "0.7.0",
-    "prettier": "3.6.2",
-    "typescript": "~5.8.3",
-    "vite": "7.1.2",
-    "vue-tsc": "3.0.5"
-  }
+	"name": "personal-website",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "vue-tsc -b && vite build",
+		"preview": "vite preview",
+		"format": "biome format . ",
+		"format:fix": "biome format --write . ",
+		"lint": "biome lint .",
+		"lint:fix": "biome lint --apply .",
+		"lint:force": "biome lint --apply-unsafe .",
+		"lint:changed": "biome lint --changed"
+	},
+	"dependencies": {
+		"gsap": "3.13.0",
+		"vue": "3.5.18"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.3.10",
+		"@iconify/vue": "5.0.0",
+		"@vitejs/plugin-vue": "6.0.1",
+		"@vue/tsconfig": "0.7.0",
+		"typescript": "~5.8.3",
+		"vite": "7.1.2",
+		"vue-tsc": "3.0.5"
+	}
 }
