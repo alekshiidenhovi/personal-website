@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import ExpertiseSection from "./components/ExpertiseSection.vue";
 import HeroSection from "./components/HeroSection.vue";
+import ProjectsSection from "./components/ProjectsSection.vue";
 </script>
 
 <template>
   <main>
     <HeroSection />
     <ExpertiseSection />
+    <ProjectsSection />
   </main>
 </template>
 
