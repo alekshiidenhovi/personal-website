@@ -16,5 +16,6 @@ h2 {
   font-size: 3.75rem;
   font-weight: 700;
   color: var(--neutral-200);
+  text-align: center;
 }
 </style>
