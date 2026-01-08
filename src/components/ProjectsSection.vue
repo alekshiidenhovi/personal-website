@@ -7,11 +7,11 @@ import SectionTitle from "./SectionTitle.vue";
   <section id="projects">
     <SectionTitle title="Projects" />
     <div class="card-container">
-      <ProjectCard :projectTitle="'C-- Compiler'"
+      <ProjectCard :projectTitle="'C-- compiler'"
         :projectDescription="'C17 standard compiler, built from scratch in Rust'" :projectTag="'low level'"
         :completionYear=2025 :imgUrl="'/c-source-code-min.jpg'" :imgDescription="'C source code'"
         :projectLink="'https://github.com/alekshiidenhovi/C--'" :objectPosition="'top'" />
-      <ProjectCard :projectTitle="'Portfolio Website'" :projectDescription="'Source code for this website'"
+      <ProjectCard :projectTitle="'Portfolio website'" :projectDescription="'Source code for this website'"
         :projectTag="'web dev'" :completionYear=2025 :imgUrl="'/portfolio.png'"
         :imgDescription="'Portfolio hero section'"
         :projectLink="'https://github.com/alekshiidenhovi/personal-website'" />
