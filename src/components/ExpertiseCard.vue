@@ -47,10 +47,12 @@ const props = defineProps<Props>();
       <h3>{{ cardTitle }}</h3>
     </div>
     <p>{{ cardText }}</p>
-    <div class="tag-container" ref="tagContainerRef" :class="{
-      'tag-container-left-shadow': showLeftShadow, 'tag-container-right-shadow': showRightShadow,
-    }" @scroll="checkOverflow">
-      <Tag v-for="tag in props.tags" :color="cardColor" :text="tag.tagText" />
+    <div class="tag-container-wrapper" :class="{
+      'show-left': showLeftShadow, 'show-right': showRightShadow,
+    }">
+      <div class="tag-container" ref="tagContainerRef" @scroll="checkOverflow">
+        <Tag v-for="tag in props.tags" :color="cardColor" :text="tag.tagText" />
+      </div>
     </div>
   </div>
 </template>
@@ -105,6 +107,12 @@ p {
   flex-grow: 1;
 }
 
+.tag-container-wrapper {
+  position: relative;
+  display: flex;
+  width: 100%;
+}
+
 .tag-container {
   display: flex;
   gap: 0.75rem;
@@ -120,29 +128,38 @@ p {
 
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
-
-  --left-stop: black;
-  --right-stop: black;
-
-  mask-image: linear-gradient(to right,
-    var(--left-stop) 0%,
-    black 10%,
-    black 90%,
-    var(--right-stop) 100%);
-  -webkit-mask-image: linear-gradient(to right,
-    var(--left-stop) 0%,
-    black 10%,
-    black 90%,
-    var(--right-stop) 100%);
-
-  transition: all 0.4s ease;
 }
 
-.tag-container-left-shadow {
-  --left-stop: transparent;
+.tag-container-wrapper::before,
+.tag-container-wrapper::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0px;
+  z-index: 2;
+  pointer-events: none;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+  opacity: 0;
 }
 
-.tag-container-right-shadow {
-  --right-stop: transparent;
+.tag-container-wrapper::before {
+  left: 0;
+  background: linear-gradient(to right, var(--neutral-900), transparent);
+}
+
+.tag-container-wrapper::after {
+  right: 0;
+  background: linear-gradient(to left, var(--neutral-900), transparent);
+}
+
+.show-left::before {
+  opacity: 1;
+  width: 40px;
+}
+
+.show-right::after {
+  opacity: 1;
+  width: 40px;
 }
 </style>
