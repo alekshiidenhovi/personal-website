@@ -59,7 +59,7 @@ import SectionTitle from "./SectionTitle.vue";
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8rem;
+  gap: 6rem;
   padding: 6rem 5rem 8rem 5rem;
   width: 100%;
   max-width: 96rem;
