@@ -27,11 +27,13 @@ const props = defineProps<Props>();
       <h3>{{ props.projectTitle }}</h3>
       <p>{{ props.projectDescription }}</p>
     </div>
-    <img :src="props.imgUrl" :alt="props.imgDescription" :class="{
+    <div class="img-wrapper" :class="{
       'img-bg-ml': props.projectTag === 'machineLearning',
       'img-bg-ll': props.projectTag === 'lowLevel',
       'img-bg-wd': props.projectTag === 'webDev',
-    }" />
+    }">
+      <img :src="props.imgUrl" :alt="props.imgDescription" />
+    </div>
   </div>
 </template>
 
@@ -43,6 +45,12 @@ const props = defineProps<Props>();
   height: 24rem;
   display: flex;
   flex-direction: column;
+}
+
+.card:hover {
+  cursor: pointer;
+  transform: scale(1.02);
+  transition: all 0.2s ease-in-out;
 }
 
 .metadata-container {
@@ -109,32 +117,39 @@ p {
   color: var(--neutral-500);
 }
 
-img {
+.img-wrapper {
   width: 100%;
   flex-grow: 1;
   flex-shrink: 1;
   min-height: 0;
+  overflow: hidden;
+}
+
+img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   object-position: center;
   mix-blend-mode: luminosity;
-  opacity: 0.8;
+  opacity: 0.7;
   filter: grayscale(1);
-  transition: all 0.3s ease;
+  transition: filter 0.2s ease-in-out, opacity 0.2s ease-in-out;
+  will-change: filter, opacity;
 }
 
 .img-bg-ml {
-  background-color: var(--primary-500);
+  background-color: color-mix(in srgb, var(--primary-500), transparent 90%);
 }
 
 .img-bg-ll {
-  background-color: var(--accent-500);
+  background-color: color-mix(in srgb, var(--accent-500), transparent 90%);
 }
 
 .img-bg-wd {
-  background-color: var(--warning-500);
+  background-color: color-mix(in srgb, var(--warning-500), transparent 90%);
 }
 
-img:hover {
+.card:hover img {
   mix-blend-mode: normal;
   filter: grayscale(0);
   opacity: 1;
