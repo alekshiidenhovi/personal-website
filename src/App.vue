@@ -1,6 +1,6 @@
 <script lang="ts">
-import HeroSection from "./components/HeroSection.vue";
 import ExpertiseSection from "./components/ExpertiseSection.vue";
+import HeroSection from "./components/HeroSection.vue";
 
 /**
  * Root component for the personal website
