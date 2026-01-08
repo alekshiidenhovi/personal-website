@@ -1,1 +1,1 @@
-export type Expertise = "machineLearning" | "lowLevel" | "webDev";
+export type Expertise = "machine learning" | "low level" | "web dev";

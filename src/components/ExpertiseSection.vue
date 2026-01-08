@@ -7,7 +7,7 @@ import SectionTitle from "./SectionTitle.vue";
   <section id="expertise">
     <SectionTitle title="Expertise" />
     <div class="card-container">
-      <ExpertiseCard cardColor="machineLearning" cardTitle="Machine Learning"
+      <ExpertiseCard :cardColor="'machine learning'" cardTitle="Machine Learning"
         cardText="End-to-end ML specialist with a proven track record bridging the gap between deep technical research and production apps."
         iconName="heroicons:adjustments-vertical-solid" :tags="[
           {
@@ -20,7 +20,7 @@ import SectionTitle from "./SectionTitle.vue";
             tagText: 'W&B'
           }
         ]" />
-      <ExpertiseCard cardColor="lowLevel" cardTitle="Low Level"
+      <ExpertiseCard :cardColor="'low level'" cardTitle="Low Level"
         cardText="Passionate about low-level optimization. Built foundational systems from assemblers to compilers."
         iconName="heroicons:cpu-chip-solid" :tags="[
           {
@@ -33,7 +33,7 @@ import SectionTitle from "./SectionTitle.vue";
             tagText: 'Assembly'
           }
         ]" />
-      <ExpertiseCard cardColor="webDev" cardTitle="Web Dev"
+      <ExpertiseCard :cardColor="'web dev'" cardTitle="Web Dev"
         cardText="Full-stack generalist, with expertise in building data-driven dashboard applications from the ground up."
         iconName="heroicons:globe-alt-solid" :tags="[
           {

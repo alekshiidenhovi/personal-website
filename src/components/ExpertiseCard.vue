@@ -39,9 +39,9 @@ const props = defineProps<Props>();
   <div class="card">
     <div :class="{
       'title-container': true,
-      'title-container-ml': cardColor === 'machineLearning',
-      'title-container-ll': cardColor === 'lowLevel',
-      'title-container-wd': cardColor === 'webDev',
+      'title-container-ml': cardColor === 'machine learning',
+      'title-container-ll': cardColor === 'low level',
+      'title-container-wd': cardColor === 'web dev',
     }">
       <Icon :icon="props.iconName" class="icon" />
       <h3>{{ cardTitle }}</h3>

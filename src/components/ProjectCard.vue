@@ -22,9 +22,9 @@ const props = withDefaults(defineProps<Props>(), {
   <a class="card" :href="props.projectLink" target="_blank">
     <div class="metadata-container">
       <span class="tag" :class="{
-        'tag-ml': props.projectTag === 'machineLearning',
-        'tag-ll': props.projectTag === 'lowLevel',
-        'tag-wd': props.projectTag === 'webDev',
+        'tag-ml': props.projectTag === 'machine learning',
+        'tag-ll': props.projectTag === 'low level',
+        'tag-wd': props.projectTag === 'web dev',
       }">{{ props.projectTag }}</span>
       <span class="year">{{ props.completionYear }}</span>
     </div>
@@ -33,9 +33,9 @@ const props = withDefaults(defineProps<Props>(), {
       <p>{{ props.projectDescription }}</p>
     </div>
     <div class="img-wrapper" :class="{
-      'img-bg-ml': props.projectTag === 'machineLearning',
-      'img-bg-ll': props.projectTag === 'lowLevel',
-      'img-bg-wd': props.projectTag === 'webDev',
+      'img-bg-ml': props.projectTag === 'machine learning',
+      'img-bg-ll': props.projectTag === 'low level',
+      'img-bg-wd': props.projectTag === 'web dev',
     }">
       <img :src="props.imgUrl" :alt="props.imgDescription" :style="{ objectPosition: props.objectPosition }" />
     </div>

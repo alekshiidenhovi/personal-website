@@ -23,10 +23,10 @@ const props = defineProps<Props>();
     <div class="left-container">
       <h3>{{ props.jobTitle }}</h3>
       <span class="time">{{ props.startYear }}/{{ props.startMonth }} - {{ props.endYear }}/{{ props.endMonth
-      }}</span>
+        }}</span>
       <p>{{ props.jobDescription }}</p>
       <div class="tags-container">
-        <Tag v-for="tag in props.tags" :key="tag" :text="tag" :color="'machineLearning'" />
+        <Tag v-for="tag in props.tags" :key="tag" :text="tag" :color="'machine learning'" />
       </div>
     </div>
     <a class="logo-container" :href="props.companyUrl" target="_blank">

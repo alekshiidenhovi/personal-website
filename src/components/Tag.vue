@@ -12,9 +12,9 @@ const props = defineProps<Props>();
 
 <template>
   <div class="base" :class="{
-    ml: props.color === 'machineLearning',
-    ll: props.color === 'lowLevel',
-    wd: props.color === 'webDev',
+    ml: props.color === 'machine learning',
+    ll: props.color === 'low level',
+    wd: props.color === 'web dev',
   }"> {{ text }} </div>
 </template>
 

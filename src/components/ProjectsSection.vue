@@ -8,26 +8,26 @@ import SectionTitle from "./SectionTitle.vue";
     <SectionTitle title="Projects" />
     <div class="card-container">
       <ProjectCard :projectTitle="'C-- Compiler'"
-        :projectDescription="'C17 standard compiler, built from scratch in Rust'" :projectTag="'lowLevel'"
+        :projectDescription="'C17 standard compiler, built from scratch in Rust'" :projectTag="'low level'"
         :completionYear=2025 :imgUrl="'/c-source-code-min.jpg'" :imgDescription="'C source code'"
         :projectLink="'https://github.com/alekshiidenhovi/C--'" :objectPosition="'top'" />
       <ProjectCard :projectTitle="'Portfolio Website'" :projectDescription="'Source code for this website'"
-        :projectTag="'webDev'" :completionYear=2025 :imgUrl="'/portfolio.png'"
+        :projectTag="'web dev'" :completionYear=2025 :imgUrl="'/portfolio.png'"
         :imgDescription="'Portfolio hero section'"
         :projectLink="'https://github.com/alekshiidenhovi/personal-website'" />
       <ProjectCard :projectTitle="'HACK assembler'"
-        :projectDescription="'Two-pass assembler for HACK computing platform'" :projectTag="'lowLevel'"
+        :projectDescription="'Two-pass assembler for HACK computing platform'" :projectTag="'low level'"
         :completionYear=2025 :imgUrl="'/hack-assembly-source-code.jpg'" :imgDescription="'HACK assembly code'"
         :projectLink="'https://github.com/alekshiidenhovi/HACK-assembler'" :objectPosition="'top'" />
       <ProjectCard :projectTitle="'SISPA'" :projectDescription="'End-to-end machine unlearning framework'"
-        :projectTag="'machineLearning'" :completionYear=2025 :imgUrl="'/abstract-neural-network.jpg'"
+        :projectTag="'machine learning'" :completionYear=2025 :imgUrl="'/abstract-neural-network.jpg'"
         :imgDescription="'SISPA architecture diagram'" :projectLink="'https://github.com/alekshiidenhovi/SISPA'" />
       <ProjectCard :projectTitle="'BASIC interpreter'"
-        :projectDescription="'Classic programming language, modern implementation'" :projectTag="'lowLevel'"
+        :projectDescription="'Classic programming language, modern implementation'" :projectTag="'low level'"
         :completionYear=2025 :imgUrl="'/basic-source-code-min.jpg'" :imgDescription="'BASIC source code'"
         :projectLink="'https://github.com/alekshiidenhovi/BASIC-interpreter'" :objectPosition="'top'" />
       <ProjectCard :projectTitle="'ColViT'" :projectDescription="'Fast and scalable face identification'"
-        :projectTag="'machineLearning'" :completionYear=2025 :imgUrl="'/face-identication.jpg'"
+        :projectTag="'machine learning'" :completionYear=2025 :imgUrl="'/face-identication.jpg'"
         :imgDescription="'Face identification image'" :projectLink="'https://github.com/alekshiidenhovi/colvit-face'" />
     </div>
   </section>
