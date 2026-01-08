@@ -40,6 +40,9 @@ import SectionTitle from "./SectionTitle.vue";
             tagText: 'React/NextJS'
           },
           {
+            tagText: 'Vue'
+          },
+          {
             tagText: 'FastAPI'
           },
           {
