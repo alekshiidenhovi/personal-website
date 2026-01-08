@@ -20,8 +20,9 @@ import SectionTitle from "./SectionTitle.vue";
         :completionYear=2025 :imgUrl="'/hack-assembly-source-code.jpg'" :imgDescription="'HACK assembly code'"
         :projectLink="'https://github.com/alekshiidenhovi/HACK-assembler'" :objectPosition="'top'" />
       <ProjectCard :projectTitle="'SISPA'" :projectDescription="'End-to-end machine unlearning framework'"
-        :projectTag="'machine learning'" :completionYear=2025 :imgUrl="'/abstract-neural-network.jpg'"
-        :imgDescription="'SISPA architecture diagram'" :projectLink="'https://github.com/alekshiidenhovi/SISPA'" />
+        :projectTag="'machine learning'" :completionYear=2025 :imgUrl="'/sispa-architecture-diagram.jpg'"
+        :imgDescription="'SISPA architecture diagram'" :projectLink="'https://github.com/alekshiidenhovi/SISPA'"
+        :objectPosition="'top'" />
       <ProjectCard :projectTitle="'BASIC interpreter'"
         :projectDescription="'Classic programming language, modern implementation'" :projectTag="'low level'"
         :completionYear=2025 :imgUrl="'/basic-source-code-min.jpg'" :imgDescription="'BASIC source code'"
