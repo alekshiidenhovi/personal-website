@@ -137,7 +137,7 @@ img {
   object-fit: cover;
   object-position: center;
   mix-blend-mode: luminosity;
-  opacity: 0.7;
+  opacity: 0.4;
   filter: grayscale(1);
   transition: filter 0.2s ease-in-out, opacity 0.2s ease-in-out;
   will-change: filter, opacity;
@@ -158,6 +158,6 @@ img {
 .card:hover img {
   mix-blend-mode: normal;
   filter: grayscale(0);
-  opacity: 1;
+  opacity: 0.8;
 }
 </style>
