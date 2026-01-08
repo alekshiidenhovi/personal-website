@@ -1,5 +1,11 @@
-# Vue 3 + TypeScript + Vite
+# Personal portfolio
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+This portfolio is built using Vue 3, TypeScript, and Vite. It is deployed with Cloudflare Workers and Cloudflare Pages. You can find the website [here](https://personal-website.hiidenhovi-aleks.workers.dev/)
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+## Setup
+
+To run the project locally:
+1. Clone the repository by running `git clone git@github.com:alekshiidenhovi/personal-website.git`
+2. Install dependencies by running `pnpm install`
+3. Start a local development server by running `pnpm dev`
+4. Open the project in your browser by navigating to [http://localhost:5173/](http://localhost:5173/)
