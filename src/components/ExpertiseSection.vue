@@ -8,7 +8,7 @@ import SectionTitle from "./SectionTitle.vue";
     <SectionTitle title="Expertise" />
     <div class="card-container">
       <ExpertiseCard :cardColor="'machine learning'" cardTitle="Machine Learning"
-        cardText="End-to-end ML specialist with a proven track record bridging the gap between deep technical research and production apps."
+        cardText="End-to-end ML specialist with a proven track record bridging the gap between deep technical research and production applications."
         iconName="heroicons:adjustments-vertical-solid" :tags="[
           {
             tagText: 'Python'
