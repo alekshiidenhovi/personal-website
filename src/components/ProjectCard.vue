@@ -51,6 +51,9 @@ const props = withDefaults(defineProps<Props>(), {
   display: flex;
   flex-direction: column;
   text-decoration: none;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 24rem;
 }
 
 .card:hover {

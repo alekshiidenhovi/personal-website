@@ -47,12 +47,10 @@ import SectionTitle from "./SectionTitle.vue";
 }
 
 .card-container {
-  display: grid;
-  justify-content: center;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-template-rows: repeat(2, minmax(0, 1fr));
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 2.5rem;
-  height: 100%;
   width: 100%;
 }
 </style>
