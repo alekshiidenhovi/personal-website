@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import { Icon } from '@iconify/vue';
+import { onMounted, ref } from "vue";
 import type { Expertise } from "../types";
 import Tag from "./Tag.vue";
-import { Icon } from '@iconify/vue';
-import { ref, onMounted } from "vue";
 
 const tagContainerRef = ref<HTMLDivElement | null>(null);
 const showLeftShadow = ref(false);
