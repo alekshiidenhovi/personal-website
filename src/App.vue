@@ -1,18 +1,6 @@
-<script lang="ts">
+<script setup lang="ts">
 import ExpertiseSection from "./components/ExpertiseSection.vue";
 import HeroSection from "./components/HeroSection.vue";
-
-/**
- * Root component for the personal website
- */
-export default {
-  name: "App",
-  components: {
-    HeroSection,
-    ExpertiseSection
-  },
-  setup() { }
-}
 </script>
 
 <template>
