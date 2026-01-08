@@ -27,7 +27,7 @@
 }
 
 .gradient-overlay {
-  background-image: radial-gradient(ellipse 60dvw 50dvh at center top,
+  background-image: radial-gradient(ellipse 120rem 80rem at center top,
       color-mix(in srgb, var(--primary-600), transparent 75%) 0%,
       color-mix(in srgb, var(--primary-600), transparent 88%) 20%,
       color-mix(in srgb, var(--primary-600), transparent 94%) 35%,
