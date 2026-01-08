@@ -23,6 +23,7 @@ const props = defineProps<Props>();
   border: 2px solid color-mix(in srgb, var(--neutral-700), transparent 50%);
   background-color: var(--neutral-800);
   padding: 0.5rem 1.25rem;
+  flex-shrink: 0;
 }
 
 .ml {
