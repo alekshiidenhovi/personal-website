@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import ExpertiseSection from "./components/ExpertiseSection.vue";
+import FooterSection from "./components/FooterSection.vue";
 import HeroSection from "./components/HeroSection.vue";
 import ProfessionalExperienceSection from "./components/ProfessionalExperienceSection.vue";
 import ProjectsSection from "./components/ProjectsSection.vue";
@@ -11,6 +12,7 @@ import ProjectsSection from "./components/ProjectsSection.vue";
     <ExpertiseSection />
     <ProjectsSection />
     <ProfessionalExperienceSection />
+    <FooterSection />
   </main>
 </template>
 
