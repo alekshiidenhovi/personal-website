@@ -5,16 +5,18 @@ interface Props {
   projectTitle: string;
   projectDescription: string;
   projectTag: Expertise;
+  projectLink: string;
   completionYear: number;
   imgUrl: string;
   imgDescription: string;
 
 }
 const props = defineProps<Props>();
+
 </script>
 
 <template>
-  <div class="card">
+  <a class="card" :href="props.projectLink" target="_blank">
     <div class="metadata-container">
       <span class="tag" :class="{
         'tag-ml': props.projectTag === 'machineLearning',
@@ -34,7 +36,7 @@ const props = defineProps<Props>();
     }">
       <img :src="props.imgUrl" :alt="props.imgDescription" />
     </div>
-  </div>
+  </a>
 </template>
 
 <style scoped>
@@ -45,6 +47,7 @@ const props = defineProps<Props>();
   height: 24rem;
   display: flex;
   flex-direction: column;
+  text-decoration: none;
 }
 
 .card:hover {
