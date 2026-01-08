@@ -1,0 +1,6 @@
+{
+  "name": "personal-website",
+  "assets": {
+    "directory": "./dist"
+  }
+}
