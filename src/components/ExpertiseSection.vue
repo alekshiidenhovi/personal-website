@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import ExpertiseCard from "./ExpertiseCard.vue";
+import SectionTitle from "./SectionTitle.vue";
 </script>
 
 <template>
   <section id="expertise">
-    <h2>Expertise</h2>
+    <SectionTitle title="Expertise" />
     <div class="card-container">
       <ExpertiseCard cardColor="machineLearning" cardTitle="Machine Learning"
         cardText="End-to-end ML specialist with a proven track record bridging the gap between deep technical research and production apps."
@@ -63,12 +64,6 @@ import ExpertiseCard from "./ExpertiseCard.vue";
   width: 100%;
   max-width: 96rem;
   background-color: var(--neutral-950);
-}
-
-h2 {
-  font-size: 3.75rem;
-  font-weight: 700;
-  color: var(--neutral-200);
 }
 
 .card-container {
