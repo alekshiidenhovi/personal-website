@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import SectionTitle from "./SectionTitle.vue";
 import JobCard from "./JobCard.vue";
+import SectionTitle from "./SectionTitle.vue";
 </script>
 
 <template>

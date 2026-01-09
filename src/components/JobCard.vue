@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import Tag from "./Tag.vue";
 import SupercellLogo from "./SupercellLogo.vue";
+import Tag from "./Tag.vue";
 import VeriLogo from "./VeriLogo.vue";
 
 interface Props {
@@ -28,7 +28,7 @@ const props = defineProps<Props>();
       <h3>{{ props.jobTitle }}</h3>
       <span class="time">{{ props.startYear }}/{{ renderMonth(props.startMonth) }} - {{ props.endYear }}/{{
         renderMonth(props.endMonth)
-        }}</span>
+      }}</span>
       <p>{{ props.jobDescription }}</p>
       <div class="tags-container">
         <Tag v-for="tag in props.tags" :key="tag" :text="tag" :color="'machine learning'" />
