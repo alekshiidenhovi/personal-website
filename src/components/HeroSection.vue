@@ -35,7 +35,7 @@ import { Icon } from '@iconify/vue';
   justify-content: center;
   gap: clamp(0.5rem, 1.5vw, 1.25rem);
   overflow: hidden;
-  padding: clamp(2rem, 2vw, 4rem);
+  padding: clamp(1.25rem, 2vw, 4rem);
 }
 
 .gradient-overlay {
@@ -54,7 +54,7 @@ import { Icon } from '@iconify/vue';
 
 h1 {
   color: var(--primary-50);
-  font-size: clamp(2.5rem, 8vw, 8rem);
+  font-size: clamp(2rem, 8vw, 8rem);
   letter-spacing: 3px;
   line-height: 1;
   font-weight: 700;
@@ -63,12 +63,12 @@ h1 {
 
 .subtitle-container {
   display: flex;
-  gap: clamp(1rem, 2vw, 2rem);
+  gap: clamp(0.5rem, 2vw, 2rem);
 }
 
 .subtitle-base {
   font-size: clamp(0.75rem, 1.5vw, 1.5rem);
-  letter-spacing: clamp(0.15rem, 0.5vw, 0.375rem);
+  letter-spacing: clamp(0.125rem, 0.25vw, 0.375rem);
   text-transform: uppercase;
 }
 
