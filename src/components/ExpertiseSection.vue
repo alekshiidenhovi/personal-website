@@ -63,7 +63,7 @@ import SectionTitle from "./SectionTitle.vue";
   align-items: center;
   justify-content: center;
   gap: clamp(2rem, 5vw, 6rem);
-  padding: clamp(2rem, 5vw, 5rem);
+  padding: clamp(1.5rem, 5vw, 5rem);
   width: 100%;
   max-width: 96rem;
   background-color: var(--neutral-950);
