@@ -39,7 +39,7 @@ import { Icon } from '@iconify/vue';
 }
 
 .gradient-overlay {
-  background-image: radial-gradient(ellipse 120rem 80rem at center top,
+  background-image: radial-gradient(ellipse 120rem 60rem at 50% 0%,
       color-mix(in srgb, var(--primary-600), transparent 75%) 0%,
       color-mix(in srgb, var(--primary-600), transparent 88%) 20%,
       color-mix(in srgb, var(--primary-600), transparent 94%) 35%,
@@ -49,11 +49,7 @@ import { Icon } from '@iconify/vue';
       transparent 100%);
   pointer-events: none;
   position: absolute;
-  top: 0;
-  left: 50%;
-  height: 60dvh;
-  width: 120dvw;
-  transform: translateX(-50%);
+  inset: 0;
 }
 
 h1 {
