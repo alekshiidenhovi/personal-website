@@ -31,8 +31,8 @@ import JobCard from "./JobCard.vue";
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6rem;
-  padding: 6rem 5rem 8rem 5rem;
+  gap: clamp(2rem, 5vw, 6rem);
+  padding: clamp(2rem, 5vw, 5rem);
   width: 100%;
   max-width: 72rem;
   background-color: var(--neutral-950);
@@ -41,7 +41,7 @@ import JobCard from "./JobCard.vue";
 .job-container {
   display: flex;
   flex-direction: column;
-  gap: 3rem;
+  gap: clamp(1.5rem, 5vw, 3rem);
   width: 100%;
 }
 </style>

@@ -40,8 +40,8 @@ import SectionTitle from "./SectionTitle.vue";
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6rem;
-  padding: 6rem 5rem 8rem 5rem;
+  gap: clamp(2rem, 5vw, 6rem);
+  padding: clamp(2rem, 5vw, 5rem);
   width: 100%;
   max-width: 104rem;
   background-color: var(--neutral-950);
@@ -51,7 +51,7 @@ import SectionTitle from "./SectionTitle.vue";
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  gap: 2.5rem;
+  gap: clamp(1.5rem, 5vw, 3rem);
   width: 100%;
 }
 </style>
