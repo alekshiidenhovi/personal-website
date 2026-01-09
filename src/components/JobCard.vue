@@ -15,6 +15,10 @@ interface Props {
   tags: string[];
 }
 
+const renderMonth = (month: number) => {
+  return month < 10 ? `0${month}` : month;
+};
+
 const props = defineProps<Props>();
 </script>
 
@@ -22,7 +26,8 @@ const props = defineProps<Props>();
   <div class="card">
     <div class="left-container">
       <h3>{{ props.jobTitle }}</h3>
-      <span class="time">{{ props.startYear }}/{{ props.startMonth }} - {{ props.endYear }}/{{ props.endMonth
+      <span class="time">{{ props.startYear }}/{{ renderMonth(props.startMonth) }} - {{ props.endYear }}/{{
+        renderMonth(props.endMonth)
         }}</span>
       <p>{{ props.jobDescription }}</p>
       <div class="tags-container">
