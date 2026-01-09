@@ -10,11 +10,11 @@ footer {
   justify-content: center;
   align-items: center;
   width: 100%;
-  padding: 6rem;
+  padding: clamp(3rem, 5vw, 6rem);
   background: linear-gradient(to bottom, var(--neutral-950), var(--neutral-900));
-  font-size: 1.125rem;
-  line-height: 1.75rem;
+  font-size: clamp(0.875rem, 1.5vw, 1.125rem);
   font-weight: 500;
   color: var(--neutral-500);
+  text-align: center;
 }
 </style>
