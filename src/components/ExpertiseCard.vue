@@ -67,7 +67,7 @@ const props = defineProps<Props>();
   background-color: var(--neutral-900);
   min-height: 12rem;
   flex: 1 1 33.3%;
-  min-width: 24rem;
+  min-width: clamp(16rem, 20vw, 24rem);
   max-width: 50%
 }
 
