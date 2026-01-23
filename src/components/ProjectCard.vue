@@ -53,12 +53,13 @@ const props = withDefaults(defineProps<Props>(), {
   flex-grow: 1;
   flex-shrink: 1;
   flex-basis: 24rem;
+  transition: transform 0.2s ease-in-out;
+  will-change: transform;
 }
 
 .card:hover {
   cursor: pointer;
   transform: scale(1.02);
-  transition: all 0.2s ease-in-out;
 }
 
 .metadata-container {
