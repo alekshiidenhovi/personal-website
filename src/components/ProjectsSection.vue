@@ -24,9 +24,9 @@ import SectionTitle from "./SectionTitle.vue";
         :imgDescription="'SISPA architecture diagram'" :projectLink="'https://github.com/alekshiidenhovi/SISPA'"
         :objectPosition="'top'" />
       <ProjectCard :projectTitle="'BASIC interpreter'"
-        :projectDescription="'Classic programming language, modern implementation'" :projectTag="'low level'"
-        :completionYear=2025 :imgUrl="'/basic-source-code-min.jpg'" :imgDescription="'BASIC source code'"
-        :projectLink="'https://github.com/alekshiidenhovi/BASIC-interpreter'" :objectPosition="'top'" />
+        :projectDescription="'Classic programming language, interactable in browser'" :projectTag="'low level'"
+        :completionYear=2025 :imgUrl="'/basic-interpreter-web-editor.jpg'" :imgDescription="'BASIC source code'"
+        :projectLink="'https://basic-interpreter-web-editor.hiidenhovi-aleks.workers.dev'" :objectPosition="'top'" />
       <ProjectCard :projectTitle="'ColViT'" :projectDescription="'Fast and scalable face identification'"
         :projectTag="'machine learning'" :completionYear=2025 :imgUrl="'/colvit-architecture-diagram.jpg'"
         :imgDescription="'ColViT architecture diagram'" :projectLink="'https://github.com/alekshiidenhovi/colvit-face'"
