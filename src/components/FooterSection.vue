@@ -9,7 +9,7 @@ const SOCIAL_LINKS = [
 </script>
 
 <template>
-  <PinnedSection id="contact" :index="4" title="Contact"
+  <PinnedSection id="contact" :index="5" title="Contact"
     subtitle="Building something ambitious in ML, systems or data products? I'd love to hear about it.">
     <footer>
       <div class="cta-block">
@@ -84,7 +84,7 @@ footer {
 .big-arrow {
   width: 0.5em;
   height: 0.5em;
-  color: var(--neutral-600);
+  color: var(--text-muted);
   transition: color 0.3s ease, transform 0.3s ease;
 }
 
@@ -126,7 +126,7 @@ footer {
 .social-arrow {
   width: 1rem;
   height: 1rem;
-  color: var(--neutral-500);
+  color: var(--text-muted);
   transition: color 0.2s ease, transform 0.2s ease;
 }
 
@@ -145,7 +145,7 @@ footer {
   border-top: 1px solid var(--neutral-800);
   font-family: var(--font-mono);
   font-size: 0.8125rem;
-  color: var(--neutral-500);
+  color: var(--text-muted);
 }
 
 .back-to-top {

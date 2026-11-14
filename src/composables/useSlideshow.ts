@@ -1,10 +1,24 @@
 import { onMounted, onUnmounted } from "vue";
 import { PINNED_LAYOUT_QUERY, SLIDE_ATTRIBUTE } from "../lib/layout";
 
-/** Wheel deltas below this are treated as jitter */
-const MIN_WHEEL_DELTA = 4;
-/** Wheel events must pause this long before another gesture counts, which swallows trackpad momentum */
+/*
+ * Wheel gestures: trackpad swipes ramp up from tiny deltas and trail off in a
+ * long momentum tail, so a gesture moves one slide once its accumulated
+ * distance passes a threshold, and the rest of it, momentum included, is
+ * swallowed. A pause, a change of direction, or deltas rising again after
+ * they started to decay (a fresh swipe over the momentum) start a new gesture.
+ */
+/** Accumulated distance in pixels that moves one slide */
+const WHEEL_THRESHOLD_PX = 24;
+/** A pause this long ends the gesture */
 const WHEEL_QUIET_MS = 180;
+/** Deltas below this share of the gesture's peak mean it is decaying into momentum */
+const WHEEL_DECAY_RATIO = 0.6;
+/** While decaying, a delta this much larger than the previous one is a new swipe */
+const WHEEL_RISE_RATIO = 1.5;
+const WHEEL_RISE_MIN_PX = 6;
+/** Pixels per line for wheels that report in lines */
+const WHEEL_LINE_PX = 16;
 /** Fallback for browsers without the `scrollend` event */
 const SCROLL_END_FALLBACK_MS = 900;
 /** Positions this close to the current scroll count as the current slide */
@@ -27,10 +41,9 @@ type Direction = 1 | -1;
 export function useSlideshow() {
   let pinnedMedia: MediaQueryList | null = null;
   let isAnimating = false;
-  let isWheelQuiet = true;
+  let gesture: { distance: number; peak: number; isDecaying: boolean; hasMoved: boolean } | null = null;
+  let lastWheelMagnitude = 0;
   let quietTimer: ReturnType<typeof setTimeout> | undefined;
-
-  const isLocked = () => isAnimating || !isWheelQuiet;
 
   const slidePositions = () => {
     const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
@@ -87,30 +100,48 @@ export function useSlideshow() {
     if (!pinnedMedia?.matches || event.ctrlKey) return;
     event.preventDefault();
 
-    const wasLocked = isLocked();
-    isWheelQuiet = false;
     clearTimeout(quietTimer);
     quietTimer = setTimeout(() => {
-      isWheelQuiet = true;
+      gesture = null;
     }, WHEEL_QUIET_MS);
-    if (wasLocked) return;
 
-    const delta = Math.abs(event.deltaY) >= Math.abs(event.deltaX) ? event.deltaY : event.deltaX;
-    if (Math.abs(delta) < MIN_WHEEL_DELTA) return;
-    goTo(delta > 0 ? 1 : -1);
+    const rawDelta = Math.abs(event.deltaY) >= Math.abs(event.deltaX) ? event.deltaY : event.deltaX;
+    const unit = { [WheelEvent.DOM_DELTA_LINE]: WHEEL_LINE_PX, [WheelEvent.DOM_DELTA_PAGE]: window.innerHeight }[event.deltaMode] ?? 1;
+    const delta = rawDelta * unit;
+    const magnitude = Math.abs(delta);
+    if (!magnitude) return;
+
+    const isReversed = gesture !== null && Math.sign(delta) !== Math.sign(gesture.distance);
+    const isFreshSwipe =
+      gesture?.isDecaying &&
+      magnitude >= lastWheelMagnitude * WHEEL_RISE_RATIO &&
+      magnitude - lastWheelMagnitude >= WHEEL_RISE_MIN_PX;
+    if (!gesture || isReversed || isFreshSwipe) gesture = { distance: 0, peak: 0, isDecaying: false, hasMoved: false };
+    lastWheelMagnitude = magnitude;
+
+    gesture.distance += delta;
+    gesture.peak = Math.max(gesture.peak, magnitude);
+    if (magnitude < gesture.peak * WHEEL_DECAY_RATIO) gesture.isDecaying = true;
+
+    if (gesture.hasMoved || Math.abs(gesture.distance) < WHEEL_THRESHOLD_PX) return;
+    // A gesture reaching the threshold mid-animation is swallowed rather than queued
+    gesture.hasMoved = true;
+    if (!isAnimating) goTo(delta > 0 ? 1 : -1);
   };
 
   const onClick = (event: MouseEvent) => {
     if (!pinnedMedia?.matches || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
       return;
     const link = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>('a[href^="#"]') : null;
-    const target = link && document.getElementById(link.hash.slice(1));
+    // A page of a pinned section is reached through its snap point
+    const id = link?.hash.slice(1);
+    const target = id && (document.querySelector(`[data-slide-for="${CSS.escape(id)}"]`) ?? document.getElementById(id));
     if (!target) return;
 
     event.preventDefault();
     if (isAnimating) return;
     const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-    history.pushState(null, "", link.hash);
+    history.pushState(null, "", `#${id}`);
     scrollTo(Math.min(target.getBoundingClientRect().top + window.scrollY, maxScroll));
   };
 

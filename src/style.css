@@ -23,9 +23,10 @@ html {
   background-color: var(--neutral-950);
 }
 
+/* Blue by default; content tied to a discipline sets --selection-color to its color */
 ::selection {
   color: var(--neutral-950);
-  background-color: var(--primary-400);
+  background-color: var(--selection-color, var(--primary-400));
 }
 
 :focus-visible {
@@ -148,5 +149,8 @@ html {
 
   --black: #000;
   --white: #fff;
+
+  /* Secondary text: at least 4.5:1 contrast on --neutral-900 and darker */
+  --text-muted: oklch(0.63 0.04 257);
 }
 

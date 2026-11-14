@@ -5,6 +5,7 @@ const LINKS = [
   { label: "Expertise", id: "expertise" },
   { label: "Projects", id: "projects" },
   { label: "Experience", id: "professional-experience" },
+  { label: "Education", id: "education" },
   { label: "Contact", id: "contact" },
 ];
 const HERO_ID = "hero";
@@ -70,7 +71,7 @@ header.visible {
 /* Same content width and gutters as the sections */
 nav {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   max-width: 96rem;
   margin: 0 auto;
   padding: 0 clamp(1.25rem, 5vw, 5rem);
@@ -95,7 +96,7 @@ nav {
 }
 
 .nav-index {
-  color: var(--neutral-600);
+  color: var(--text-muted);
   transition: color 0.2s ease;
 }
 
@@ -130,6 +131,13 @@ nav {
 }
 
 @media (max-width: 40rem) {
+  /* Five sections don't fit across a phone, so the bar scrolls sideways */
+  nav {
+    grid-template-columns: repeat(5, auto);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
   .nav-link {
     padding: 1rem 0.5rem;
     font-size: 0.75rem;

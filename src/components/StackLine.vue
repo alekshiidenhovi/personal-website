@@ -29,6 +29,6 @@ const props = defineProps<Props>();
 .stack li+li::before {
   content: "/";
   margin: 0 0.625rem;
-  color: var(--neutral-600);
+  color: var(--text-muted);
 }
 </style>

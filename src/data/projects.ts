@@ -6,70 +6,73 @@ import CompilerCover from "../components/covers/CompilerCover.vue";
 import PortfolioCover from "../components/covers/PortfolioCover.vue";
 import SispaCover from "../components/covers/SispaCover.vue";
 import type { Expertise } from "../types";
+import { EXPERTISE_COLOR } from "./expertise";
+
+/** Low-level work is a hobby, so it is tagged as a side project rather than a discipline */
+export type ProjectTag = Expertise | "side project";
+
+export const PROJECT_TAG_COLOR: Record<ProjectTag, string> = {
+  ...EXPERTISE_COLOR,
+  "side project": "var(--neutral-400)",
+};
 
 export interface Project {
   title: string;
   description: string;
-  tag: Expertise;
+  tag: ProjectTag;
   link: string;
-  year: number;
   cover: Component;
   coverDescription: string;
 }
 
+/** Research and work first; side projects (built for fun) on the second page */
 export const PROJECTS: Project[] = [
   {
-    title: "BASIC interpreter",
-    description: "Classic programming language, interactable in browser",
-    tag: "low level",
-    link: "https://basic-interpreter-web-editor.hiidenhovi-aleks.workers.dev",
-    year: 2026,
-    cover: BasicCover,
-    coverDescription: "A CRT monitor running a BASIC program",
+    title: "SISPA",
+    description: "End-to-end machine unlearning framework",
+    tag: "machine learning",
+    link: "https://github.com/alekshiidenhovi/SISPA",
+    cover: SispaCover,
+    coverDescription: "Sharded models aggregated into one prediction, with one shard unlearned",
+  },
+  {
+    title: "ColViT",
+    description: "Fast and scalable image retrieval",
+    tag: "machine learning",
+    link: "https://github.com/alekshiidenhovi/colvit-face",
+    cover: ColvitCover,
+    coverDescription: "A query image searched against a gallery of images",
   },
   {
     title: "Portfolio website",
     description: "Source code for this website",
     tag: "web dev",
     link: "https://github.com/alekshiidenhovi/personal-website",
-    year: 2026,
     cover: PortfolioCover,
     coverDescription: "A wireframe of this website",
   },
   {
+    title: "BASIC interpreter",
+    description: "Classic programming language, interactable in browser",
+    tag: "side project",
+    link: "https://basic-interpreter-web-editor.hiidenhovi-aleks.workers.dev",
+    cover: BasicCover,
+    coverDescription: "A CRT monitor running a BASIC program",
+  },
+  {
     title: "C-- compiler",
     description: "C17 standard compiler, built from scratch in Rust",
-    tag: "low level",
+    tag: "side project",
     link: "https://github.com/alekshiidenhovi/C--",
-    year: 2025,
     cover: CompilerCover,
     coverDescription: "A compiler pipeline from C source to syntax tree to assembly",
   },
   {
-    title: "SISPA",
-    description: "End-to-end machine unlearning framework",
-    tag: "machine learning",
-    link: "https://github.com/alekshiidenhovi/SISPA",
-    year: 2025,
-    cover: SispaCover,
-    coverDescription: "Sharded models aggregated into one prediction, with one shard unlearned",
-  },
-  {
     title: "HACK assembler",
     description: "Two-pass assembler for HACK computing platform",
-    tag: "low level",
+    tag: "side project",
     link: "https://github.com/alekshiidenhovi/HACK-assembler",
-    year: 2025,
     cover: AssemblerCover,
     coverDescription: "HACK assembly translated into binary machine code",
-  },
-  {
-    title: "ColViT",
-    description: "Fast and scalable face identification",
-    tag: "machine learning",
-    link: "https://github.com/alekshiidenhovi/colvit-face",
-    year: 2025,
-    cover: ColvitCover,
-    coverDescription: "A query face searched against a gallery of faces",
   },
 ];

@@ -31,7 +31,7 @@ const BOXES: Record<State, Box> = {
   resurrected: { label: "resurrected", x: 268, y: 8, width: 92, height: 30 },
   current: { label: "current", x: 150, y: 70, width: 100, height: 42 },
   atRisk: { label: "at risk", x: 40, y: 134, width: 250, height: 30 },
-  /* Starts further right to leave the bottom-left corner for the week counter */
+  /* Starts further right to leave the bottom-left corner for the day counter */
   dormant: { label: "dormant", x: 64, y: 182, width: 296, height: 30 },
 };
 const STATES = Object.keys(BOXES) as State[];
@@ -169,7 +169,7 @@ const players = ref<Player[]>(
     return { id, generation: 0, state, x, y, route: null };
   }),
 );
-const week = ref(1);
+const day = ref(1);
 const busyArrows = ref(new Set<string>());
 let frameId = 0;
 
@@ -216,7 +216,7 @@ useLiveTicker(
     }
 
     busyArrows.value = busy;
-    week.value++;
+    day.value++;
     animateMoves(destinations);
   },
   TICK_MS,
@@ -256,7 +256,7 @@ const counts = computed(() =>
       class="cover-fill accent player" :class="{ travelling: player.route }" />
 
     <!-- Same spot as the status line in the ticket pipeline figure -->
-    <text x="10" y="206" class="cover-text label">week {{ week }}</text>
+    <text x="10" y="206" class="cover-text label">day {{ day }}</text>
   </svg>
 </template>
 

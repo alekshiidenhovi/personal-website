@@ -1,108 +1,52 @@
 /**
- * A tiny assembler and CPU for the HACK platform (nand2tetris), supporting the
- * subset of instructions used by the expertise card's demo program.
+ * A tiny assembler for the HACK platform (nand2tetris), supporting the subset
+ * of instructions used by the HACK assembler project's cover.
  */
-
-interface Registers {
-  a: number;
-  d: number;
-  m: number;
-}
-
-export interface CpuState {
-  pc: number;
-  a: number;
-  d: number;
-  ram: Record<number, number>;
-}
-
-export interface BitSegment {
-  bits: string;
-  label: string;
-}
 
 export interface Instruction {
   address: number;
   source: string;
-  segments: BitSegment[];
-  execute: (state: CpuState) => CpuState;
+  /** The 16-bit machine code */
+  binary: string;
 }
 
-export interface ListingRow {
-  source: string;
-  address: number | null;
-}
-
-const COMP: Record<string, { bits: string; compute: (r: Registers) => number }> = {
-  "0": { bits: "0101010", compute: () => 0 },
-  "1": { bits: "0111111", compute: () => 1 },
-  D: { bits: "0001100", compute: (r) => r.d },
-  A: { bits: "0110000", compute: (r) => r.a },
-  M: { bits: "1110000", compute: (r) => r.m },
-  "D-1": { bits: "0001110", compute: (r) => r.d - 1 },
-  "D-A": { bits: "0010011", compute: (r) => r.d - r.a },
-  "M-1": { bits: "1110010", compute: (r) => r.m - 1 },
-  "M+1": { bits: "1110111", compute: (r) => r.m + 1 },
-  "D+M": { bits: "1000010", compute: (r) => r.d + r.m },
+const COMP: Record<string, string> = {
+  "0": "0101010",
+  "1": "0111111",
+  D: "0001100",
+  A: "0110000",
+  M: "1110000",
+  "D-1": "0001110",
+  "D-A": "0010011",
+  "M-1": "1110010",
+  "M+1": "1110111",
+  "D+M": "1000010",
 };
 
-const JUMP: Record<string, { bits: string; test: (value: number) => boolean }> = {
-  "": { bits: "000", test: () => false },
-  JGT: { bits: "001", test: (v) => v > 0 },
-  JEQ: { bits: "010", test: (v) => v === 0 },
-  JGE: { bits: "011", test: (v) => v >= 0 },
-  JLT: { bits: "100", test: (v) => v < 0 },
-  JNE: { bits: "101", test: (v) => v !== 0 },
-  JLE: { bits: "110", test: (v) => v <= 0 },
-  JMP: { bits: "111", test: () => true },
+const JUMP: Record<string, string> = {
+  "": "000",
+  JGT: "001",
+  JEQ: "010",
+  JGE: "011",
+  JLT: "100",
+  JNE: "101",
+  JLE: "110",
+  JMP: "111",
 };
 
 const FIRST_VARIABLE_ADDRESS = 16;
 
 const isLabel = (line: string) => line.startsWith("(");
 
-const assembleAInstruction = (value: number, address: number, source: string): Instruction => ({
-  address,
-  source,
-  segments: [
-    { bits: "0", label: "op" },
-    { bits: value.toString(2).padStart(15, "0"), label: "value" },
-  ],
-  execute: (state) => ({ ...state, a: value, pc: state.pc + 1 }),
-});
-
-const assembleCInstruction = (address: number, source: string): Instruction => {
-  const [assignment, jumpName = ""] = source.split(";");
-  const [dest, compName] = assignment.includes("=") ? assignment.split("=") : ["", assignment];
-  const comp = COMP[compName];
-  const jump = JUMP[jumpName];
+const encodeCInstruction = (source: string) => {
+  const [assignment, jump = ""] = source.split(";");
+  const [dest, comp] = assignment.includes("=") ? assignment.split("=") : ["", assignment];
   const destBits = ["A", "D", "M"].map((register) => (dest.includes(register) ? "1" : "0")).join("");
-
-  return {
-    address,
-    source,
-    segments: [
-      { bits: "111", label: "op" },
-      { bits: comp.bits[0], label: "a" },
-      { bits: comp.bits.slice(1), label: "comp" },
-      { bits: destBits, label: "dest" },
-      { bits: jump.bits, label: "jump" },
-    ],
-    execute: (state) => {
-      const value = comp.compute({ a: state.a, d: state.d, m: state.ram[state.a] ?? 0 });
-      const ram = dest.includes("M") ? { ...state.ram, [state.a]: value } : state.ram;
-      return {
-        pc: jump.test(value) ? state.a : state.pc + 1,
-        a: dest.includes("A") ? value : state.a,
-        d: dest.includes("D") ? value : state.d,
-        ram,
-      };
-    },
-  };
+  return `111${COMP[comp]}${destBits}${JUMP[jump]}`;
 };
 
 /** Two-pass assembly: resolve labels first, then variables and instructions. */
-export function assemble(lines: string[]) {
+export function assemble(lines: string[]): Instruction[] {
   const symbols: Record<string, number> = {};
   let address = 0;
   for (const line of lines) {
@@ -117,17 +61,13 @@ export function assemble(lines: string[]) {
     return symbols[symbol];
   };
 
-  const instructions: Instruction[] = [];
-  const listing: ListingRow[] = lines.map((line) => {
-    if (isLabel(line)) return { source: line, address: null };
-    const instructionAddress = instructions.length;
-    instructions.push(
-      line.startsWith("@")
-        ? assembleAInstruction(resolve(line.slice(1)), instructionAddress, line)
-        : assembleCInstruction(instructionAddress, line),
-    );
-    return { source: line, address: instructionAddress };
-  });
-
-  return { instructions, listing, symbols };
+  return lines
+    .filter((line) => !isLabel(line))
+    .map((source, index) => ({
+      address: index,
+      source,
+      binary: source.startsWith("@")
+        ? `0${resolve(source.slice(1)).toString(2).padStart(15, "0")}`
+        : encodeCInstruction(source),
+    }));
 }

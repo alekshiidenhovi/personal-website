@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import EducationSection from "./components/EducationSection.vue";
 import ExpertiseSection from "./components/ExpertiseSection.vue";
 import FooterSection from "./components/FooterSection.vue";
 import HeroSection from "./components/HeroSection.vue";
@@ -17,6 +18,7 @@ useSlideshow();
     <ExpertiseSection />
     <ProjectsSection />
     <ProfessionalExperienceSection />
+    <EducationSection />
     <FooterSection />
   </main>
   <div class="grain" aria-hidden="true"></div>

@@ -1,23 +1,10 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
-import { useTypewriter } from "../composables/useTypewriter";
-import { EXPERTISE_COLOR } from "../data/expertise";
-import type { Expertise } from "../types";
-import NeuralField from "./NeuralField.vue";
-import TerminalCard from "./TerminalCard.vue";
-
-const FOCUS_AREAS: { expertise: Expertise; phrase: string }[] = [
-  { expertise: "machine learning", phrase: "ML systems that ship to production." },
-  { expertise: "low level", phrase: "compilers, assemblers & interpreters." },
-  { expertise: "web dev", phrase: "data-driven dashboards, end to end." },
-];
-
-const { text, phraseIndex } = useTypewriter(FOCUS_AREAS.map((area) => area.phrase));
+import EmbeddingSpace from "./EmbeddingSpace.vue";
 </script>
 
 <template>
   <section id="hero" data-slide>
-    <NeuralField />
     <div class="glow"></div>
     <div class="content">
       <div class="intro">
@@ -26,15 +13,8 @@ const { text, phraseIndex } = useTypewriter(FOCUS_AREAS.map((area) => area.phras
           <span class="name-first">Aleks</span>
           <span class="name-last">Hiidenhovi</span>
         </h1>
-        <p class="typed-line">
-          I build
-          <span class="typed" :style="{ color: EXPERTISE_COLOR[FOCUS_AREAS[phraseIndex].expertise] }">{{ text }}</span>
-        </p>
-        <p class="pitch">
-          Machine learning engineer bridging deep technical research and production systems,
-          working across <span class="hl-ml">machine learning</span>, <span class="hl-ll">low level systems</span>
-          and <span class="hl-wd">web dev</span>.
-        </p>
+        <p class="headline">Full-stack data scientist</p>
+        <p class="pitch">From raw data to real products, at terabyte scale.</p>
         <div class="cta-container">
           <a class="cta cta-primary" href="#projects">
             See selected work
@@ -49,8 +29,12 @@ const { text, phraseIndex } = useTypewriter(FOCUS_AREAS.map((area) => area.phras
             GitHub
           </a>
         </div>
+        <a class="status" href="#role-data-scientist">
+          <span class="status-dot"></span>
+          Employed at Supercell
+        </a>
       </div>
-      <TerminalCard class="terminal" />
+      <EmbeddingSpace class="embedding" />
     </div>
     <a class="scroll-cue" href="#expertise" aria-label="Scroll to expertise">
       <span>scroll</span>
@@ -146,52 +130,42 @@ h1 {
   }
 }
 
-.typed-line {
-  min-height: 1.5em;
+.headline {
   font-family: var(--font-mono);
   font-size: clamp(1rem, 1.8vw, 1.5rem);
-  color: var(--neutral-300);
-}
-
-.typed {
   font-weight: 500;
-  transition: color 0.3s ease;
-}
-
-.typed::after {
-  content: "";
-  display: inline-block;
-  width: 0.55em;
-  height: 1.1em;
-  margin-left: 0.15em;
-  vertical-align: text-bottom;
-  background-color: currentColor;
-  animation: blink 1s steps(2, start) infinite;
-}
-
-@keyframes blink {
-  to {
-    visibility: hidden;
-  }
+  color: var(--primary-300);
 }
 
 .pitch {
   max-width: 38rem;
-  font-size: clamp(1rem, 1.3vw, 1.2rem);
-  line-height: 1.65;
+  font-size: clamp(1.125rem, 1.6vw, 1.5rem);
+  line-height: 1.5;
+  color: var(--neutral-300);
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 0.625rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
   color: var(--neutral-400);
+  text-decoration: none;
+  transition: color 0.2s ease;
 }
 
-.hl-ml {
-  color: var(--primary-400);
+.status:hover {
+  color: var(--neutral-100);
 }
 
-.hl-ll {
-  color: var(--accent-400);
-}
-
-.hl-wd {
-  color: var(--warning-400);
+.status-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: var(--success-400);
+  box-shadow: 0 0 0.5rem var(--success-400);
 }
 
 .cta-container {
@@ -242,16 +216,6 @@ h1 {
   height: 1.125rem;
 }
 
-.terminal {
-  animation: float 7s ease-in-out infinite;
-}
-
-@keyframes float {
-  50% {
-    transform: translateY(-0.75rem);
-  }
-}
-
 .scroll-cue {
   position: absolute;
   bottom: clamp(1.25rem, 3vh, 2.5rem);
@@ -265,7 +229,7 @@ h1 {
   font-family: var(--font-mono);
   font-size: 0.75rem;
   letter-spacing: 3px;
-  color: var(--neutral-500);
+  color: var(--text-muted);
   text-decoration: none;
 }
 
@@ -295,13 +259,35 @@ h1 {
   }
 }
 
+/* Narrower screens stack the embedding space below the introduction */
 @media (max-width: 64rem) {
   .content {
     grid-template-columns: 1fr;
   }
 
-  .terminal {
-    display: none;
+  .embedding {
+    max-width: 32rem;
+  }
+}
+
+/* Phones: one full-width primary action, the two profiles side by side below it */
+@media (max-width: 40rem) {
+  /* Taller than the screen here, so start near the top instead of centering */
+  #hero {
+    padding-top: 3rem;
+  }
+
+  .cta-container {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cta {
+    justify-content: center;
+  }
+
+  .cta-primary {
+    grid-column: 1 / -1;
   }
 }
 </style>

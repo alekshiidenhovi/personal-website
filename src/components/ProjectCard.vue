@@ -2,33 +2,39 @@
 import { Icon } from '@iconify/vue';
 import { computed, ref } from "vue";
 import { usePointerVars } from "../composables/usePointerVars";
-import { EXPERTISE_COLOR } from "../data/expertise";
-import type { Project } from "../data/projects";
+import { PROJECT_TAG_COLOR, type Project } from "../data/projects";
 import "./covers/cover.css";
 
 interface Props {
   project: Project;
   featured?: boolean;
+  /** Plays the cover without hover; used where there is no pointer to hover with */
+  playing?: boolean;
 }
 const props = withDefaults(defineProps<Props>(), {
   featured: false,
+  playing: false,
 });
 
 const cardRef = ref<HTMLElement | null>(null);
 usePointerVars(cardRef);
 
-const isActive = ref(false);
+const isHovered = ref(false);
+const isActive = computed(() => isHovered.value || props.playing);
 const linkType = computed(() => (new URL(props.project.link).hostname === "github.com" ? "source" : "live demo"));
 </script>
 
 <template>
   <a ref="cardRef" class="card" :class="{ featured: props.featured, active: isActive }"
-    :style="{ '--card-color': EXPERTISE_COLOR[props.project.tag] }" :href="props.project.link" target="_blank"
-    rel="noreferrer" @pointerenter="isActive = true" @pointerleave="isActive = false" @focus="isActive = true"
-    @blur="isActive = false">
+    :style="{
+      '--card-color': PROJECT_TAG_COLOR[props.project.tag],
+      // Side projects aren't a discipline, so their selection stays the default blue
+      '--selection-color': props.project.tag === 'side project' ? undefined : PROJECT_TAG_COLOR[props.project.tag],
+    }" :href="props.project.link" target="_blank"
+    rel="noreferrer" @pointerenter="isHovered = true" @pointerleave="isHovered = false" @focus="isHovered = true"
+    @blur="isHovered = false">
     <div class="metadata-container">
       <span class="tag">{{ props.project.tag }}</span>
-      <span class="year">{{ props.project.year }}</span>
     </div>
     <div class="cover-container" role="img" :aria-label="props.project.coverDescription">
       <component :is="props.project.cover" :active="isActive" />
@@ -110,10 +116,6 @@ const linkType = computed(() => (new URL(props.project.link).hostname === "githu
   background-color: color-mix(in srgb, var(--card-color), transparent 92%);
 }
 
-.year {
-  color: var(--neutral-400);
-}
-
 .cover-container {
   position: relative;
   flex-grow: 1;
@@ -169,7 +171,7 @@ p {
   gap: 0.25rem;
   font-family: var(--font-mono);
   font-size: 0.8125rem;
-  color: var(--neutral-500);
+  color: var(--text-muted);
   transition: color 0.2s ease;
 }
 

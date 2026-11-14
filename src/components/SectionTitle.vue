@@ -15,6 +15,10 @@ const props = defineProps<Props>();
       <h2>{{ props.title }}</h2>
       <p v-if="props.subtitle">{{ props.subtitle }}</p>
     </div>
+    <!-- Optional content aligned to the right end, such as a page indicator -->
+    <div v-if="$slots.default" class="aside">
+      <slot />
+    </div>
   </div>
 </template>
 
@@ -42,6 +46,10 @@ const props = defineProps<Props>();
   paint-order: stroke fill;
 }
 
+.aside {
+  margin-left: auto;
+}
+
 .text {
   display: flex;
   flex-direction: column;
@@ -54,6 +62,36 @@ h2 {
   letter-spacing: -0.03em;
   line-height: 1;
   color: var(--neutral-100);
+}
+
+/*
+ * PINNED_LAYOUT_QUERY not matching: the number sits beside the title on one
+ * row, and the subtitle runs the full width below them.
+ */
+@media not ((min-width: 57.75rem) and (min-height: 40rem) and (orientation: landscape)) {
+  .title-container {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: end;
+    column-gap: 1rem;
+  }
+
+  .text {
+    display: contents;
+  }
+
+  .index {
+    font-size: 2.75rem;
+  }
+
+  h2 {
+    font-size: 2.5rem;
+  }
+
+  p {
+    grid-column: 1 / -1;
+    padding-top: 0.75rem;
+  }
 }
 
 p {

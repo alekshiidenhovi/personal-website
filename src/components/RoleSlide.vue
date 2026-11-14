@@ -19,12 +19,13 @@ const props = defineProps<Props>();
 <template>
   <article class="slide" :style="{ '--card-color': EXPERTISE_COLOR[props.role.discipline] }">
     <div class="info">
-      <a class="company" :href="props.role.companyUrl" target="_blank" rel="noreferrer">
-        <span class="logo">
+      <!-- The logo alone identifies the company; the name stays for screen readers -->
+      <a class="company" :href="props.role.companyUrl" target="_blank" rel="noreferrer"
+        :aria-label="COMPANY_NAMES[props.role.company]">
+        <span class="logo" :class="props.role.company">
           <SupercellLogo v-if="props.role.company === 'supercell'" />
           <VeriLogo v-else-if="props.role.company === 'veri'" />
         </span>
-        <span class="company-name">@ {{ COMPANY_NAMES[props.role.company] }}</span>
       </a>
       <h3>{{ props.role.title }}</h3>
       <span class="dates">
@@ -57,6 +58,7 @@ const props = defineProps<Props>();
 
 <style scoped>
 .slide {
+  --selection-color: var(--card-color);
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
   align-items: center;
@@ -83,19 +85,22 @@ const props = defineProps<Props>();
   height: 1.75rem;
 }
 
+/* The stacked three-line mark needs more height to match the one-line wordmark */
+.logo.supercell {
+  height: 2.5rem;
+}
+
 .logo svg {
   width: auto;
   height: 100%;
 }
 
-.company-name {
-  font-family: var(--font-mono);
-  font-size: 0.875rem;
-  color: var(--card-color);
+.company .logo {
+  transition: opacity 0.2s ease;
 }
 
-.company:hover .company-name {
-  text-decoration: underline;
+.company:hover .logo {
+  opacity: 0.75;
 }
 
 h3 {
@@ -113,7 +118,7 @@ h3 {
 }
 
 .duration {
-  color: var(--neutral-500);
+  color: var(--text-muted);
 }
 
 .highlights {

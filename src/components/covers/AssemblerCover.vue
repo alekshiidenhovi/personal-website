@@ -19,12 +19,7 @@ const ROW_HEIGHT = 15;
 const VIEWPORT = { y: 30, height: 150 };
 const HIGHLIGHT_ROW = 4;
 
-const { instructions } = assemble(PROGRAM);
-const rows = instructions.map((instruction) => ({
-  address: instruction.address,
-  source: instruction.source,
-  binary: instruction.segments.map((segment) => segment.bits).join(""),
-}));
+const rows = assemble(PROGRAM);
 // Rendered twice so the scroll loops seamlessly
 const loopedRows = [...rows, ...rows];
 const scrollDistance = rows.length * ROW_HEIGHT;

@@ -1,4 +1,5 @@
 import type { Component } from "vue";
+import LearnedFeaturesFigure from "../components/roles/LearnedFeaturesFigure.vue";
 import LlmTriageFigure from "../components/roles/LlmTriageFigure.vue";
 import MarkovGrowthFigure from "../components/roles/MarkovGrowthFigure.vue";
 import TicketPipelineFigure from "../components/roles/TicketPipelineFigure.vue";
@@ -11,11 +12,14 @@ export interface YearMonth {
 }
 
 export interface Role {
+  /** Anchor id of the role's slide, for in-page links */
+  slug: string;
   title: string;
   company: "supercell" | "veri";
   companyUrl: string;
   start: YearMonth;
-  end: YearMonth;
+  /** Missing while the role is ongoing */
+  end?: YearMonth;
   /** The discipline the role highlights; sets its accent color */
   discipline: Expertise;
   highlights: string[];
@@ -32,6 +36,23 @@ export const COMPANY_NAMES: Record<Role["company"], string> = {
 /** Newest first */
 export const ROLES: Role[] = [
   {
+    slug: "role-data-scientist",
+    title: "Data Scientist",
+    company: "supercell",
+    companyUrl: "https://www.supercell.com/",
+    start: { year: 2026, month: 7 },
+    discipline: "machine learning",
+    highlights: [
+      "Built a self-supervised embedding model on large-scale game event streams, adapting LeJEPA from images to event sequences.",
+      "Evaluated the learned embeddings as features in an in-game content recommendation model.",
+      "Now improving the technical foundations of recommender systems.",
+    ],
+    stack: ["Python", "PyTorch", "SQL"],
+    figure: LearnedFeaturesFigure,
+    figureCaption: "Learned embeddings on top of hand-crafted features",
+  },
+  {
+    slug: "role-ml-engineer",
     title: "Machine Learning Engineer",
     company: "supercell",
     companyUrl: "https://www.supercell.com/",
@@ -47,12 +68,13 @@ export const ROLES: Role[] = [
     figureCaption: "Ticket analysis pipeline",
   },
   {
+    slug: "role-data-analyst",
     title: "Data Analyst Intern",
     company: "supercell",
     companyUrl: "https://www.supercell.com/",
     start: { year: 2023, month: 1 },
     end: { year: 2023, month: 8 },
-    discipline: "web dev",
+    discipline: "data ops",
     highlights: [
       "Designed a Markovian growth model for quantifying user engagement.",
       "Led multiple data projects, including BI dashboard development.",
@@ -63,6 +85,7 @@ export const ROLES: Role[] = [
     figureCaption: "Markovian growth model",
   },
   {
+    slug: "role-software-developer",
     title: "Software Developer Intern",
     company: "veri",
     companyUrl: "https://www.veri.co/",
@@ -82,7 +105,14 @@ export const ROLES: Role[] = [
 /** Months since year 0, so dates can be subtracted */
 const toMonthIndex = ({ year, month }: YearMonth) => year * 12 + (month - 1);
 
-/** Inclusive of both the start and end month */
-export const durationMonths = (role: Role) => toMonthIndex(role.end) - toMonthIndex(role.start) + 1;
+const currentYearMonth = (): YearMonth => {
+  const now = new Date();
+  return { year: now.getFullYear(), month: now.getMonth() + 1 };
+};
 
-export const formatYearMonth = ({ year, month }: YearMonth) => `${year}/${String(month).padStart(2, "0")}`;
+/** Inclusive of both the start and end month; ongoing roles count up to the current month */
+export const durationMonths = (role: Role) =>
+  toMonthIndex(role.end ?? currentYearMonth()) - toMonthIndex(role.start) + 1;
+
+export const formatYearMonth = (date?: YearMonth) =>
+  date ? `${date.year}/${String(date.month).padStart(2, "0")}` : "present";
