@@ -11,13 +11,16 @@ import SectionTitle from "./SectionTitle.vue";
         cardText="End-to-end ML specialist with a proven track record bridging the gap between deep technical research and production applications."
         iconName="heroicons:adjustments-vertical-solid" :tags="[
           {
-            tagText: 'Python'
-          },
-          {
             tagText: 'PyTorch'
           },
           {
-            tagText: 'W&B'
+            tagText: 'Ray'
+          },
+          {
+            tagText: 'Spark'
+          },
+          {
+            tagText: 'MLFlow'
           }
         ]" />
       <ExpertiseCard :cardColor="'low level'" cardTitle="Low Level"
