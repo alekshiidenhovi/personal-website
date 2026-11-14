@@ -1,57 +1,61 @@
 <script setup lang="ts">
+import { PROJECTS } from "../data/projects";
+import PinnedSection from "./PinnedSection.vue";
 import ProjectCard from "./ProjectCard.vue";
-import SectionTitle from "./SectionTitle.vue";
+
+/** Each page shows one featured project next to two smaller ones */
+const PROJECTS_PER_PAGE = 3;
+
+const pages = Array.from({ length: Math.ceil(PROJECTS.length / PROJECTS_PER_PAGE) }, (_, page) =>
+  PROJECTS.slice(page * PROJECTS_PER_PAGE, (page + 1) * PROJECTS_PER_PAGE),
+);
 </script>
 
 <template>
-  <section id="projects">
-    <SectionTitle title="Projects" />
-    <div class="card-container">
-      <ProjectCard :projectTitle="'BASIC interpreter'"
-        :projectDescription="'Classic programming language, interactable in browser'" :projectTag="'low level'"
-        :completionYear=2026 :imgUrl="'/basic-interpreter-web-editor.jpg'" :imgDescription="'BASIC source code'"
-        :projectLink="'https://basic-interpreter-web-editor.hiidenhovi-aleks.workers.dev'" :objectPosition="'top'" />
-      <ProjectCard :projectTitle="'Portfolio website'" :projectDescription="'Source code for this website'"
-        :projectTag="'web dev'" :completionYear=2026 :imgUrl="'/portfolio.png'"
-        :imgDescription="'Portfolio hero section'"
-        :projectLink="'https://github.com/alekshiidenhovi/personal-website'" />
-      <ProjectCard :projectTitle="'C-- compiler'"
-        :projectDescription="'C17 standard compiler, built from scratch in Rust'" :projectTag="'low level'"
-        :completionYear=2025 :imgUrl="'/c-source-code-min.jpg'" :imgDescription="'C source code'"
-        :projectLink="'https://github.com/alekshiidenhovi/C--'" :objectPosition="'top'" />
-      <ProjectCard :projectTitle="'SISPA'" :projectDescription="'End-to-end machine unlearning framework'"
-        :projectTag="'machine learning'" :completionYear=2025 :imgUrl="'/sispa-architecture-diagram.jpg'"
-        :imgDescription="'SISPA architecture diagram'" :projectLink="'https://github.com/alekshiidenhovi/SISPA'"
-        :objectPosition="'top'" />
-      <ProjectCard :projectTitle="'HACK assembler'"
-        :projectDescription="'Two-pass assembler for HACK computing platform'" :projectTag="'low level'"
-        :completionYear=2025 :imgUrl="'/hack-assembly-source-code.jpg'" :imgDescription="'HACK assembly code'"
-        :projectLink="'https://github.com/alekshiidenhovi/HACK-assembler'" :objectPosition="'top'" />
-      <ProjectCard :projectTitle="'ColViT'" :projectDescription="'Fast and scalable face identification'"
-        :projectTag="'machine learning'" :completionYear=2025 :imgUrl="'/colvit-architecture-diagram.jpg'"
-        :imgDescription="'ColViT architecture diagram'" :projectLink="'https://github.com/alekshiidenhovi/colvit-face'"
-        :objectPosition="'top'" />
-    </div>
-  </section>
+  <PinnedSection id="projects" :index="2" title="Projects"
+    subtitle="Things I've built from scratch — from language tooling to ML research frameworks."
+    :page-count="pages.length">
+    <template #default="{ page }">
+      <!-- Alternate pages mirror the layout so the featured card swaps sides -->
+      <div class="page-grid" :class="{ mirrored: page % 2 === 1 }">
+        <ProjectCard v-for="(project, index) in pages[page]" :key="project.title" :project="project"
+          :featured="index === 0" />
+      </div>
+    </template>
+  </PinnedSection>
 </template>
 
 <style scoped>
-#projects {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: clamp(2rem, 5vw, 6rem);
-  padding: clamp(1.5rem, 5vw, 5rem);
-  width: 100%;
-  max-width: 104rem;
-  background-color: var(--neutral-950);
+.page-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: clamp(1rem, 2vw, 1.5rem);
+  height: 100%;
 }
 
-.card-container {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: clamp(1.5rem, 5vw, 3rem);
-  width: 100%;
+.page-grid> :first-child {
+  grid-column: 1 / 3;
+  grid-row: 1 / 3;
+}
+
+.page-grid.mirrored> :first-child {
+  grid-column: 2 / 4;
+}
+
+/* Matches PinnedSection's stacked fallback */
+@media not ((min-width: 57.75rem) and (min-height: 40rem)) {
+  .page-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+    grid-auto-rows: 20rem;
+    height: auto;
+  }
+
+  .page-grid> :first-child,
+  .page-grid.mirrored> :first-child {
+    grid-column: auto;
+    grid-row: auto;
+  }
 }
 </style>

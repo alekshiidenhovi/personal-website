@@ -1,173 +1,125 @@
 <script setup lang="ts">
-import { Icon } from '@iconify/vue';
-import { onMounted, ref } from "vue";
+import type { Component } from "vue";
+import { EXPERTISE_COLOR, type ExpertiseArea } from "../data/expertise";
 import type { Expertise } from "../types";
-import Tag from "./Tag.vue";
-
-const tagContainerRef = ref<HTMLDivElement | null>(null);
-const showLeftShadow = ref(false);
-const showRightShadow = ref(false);
-const END_PADDING = 10;
-
-const checkOverflow = () => {
-  const el = tagContainerRef.value;
-  if (!el) return;
-
-  const { scrollLeft, scrollWidth, clientWidth } = el;
-  showLeftShadow.value = scrollLeft > END_PADDING;
-  showRightShadow.value = scrollLeft + clientWidth < scrollWidth - END_PADDING;
-}
-
-onMounted(() => {
-  checkOverflow();
-  tagContainerRef.value?.addEventListener('scroll', checkOverflow);
-})
+import HackCpuVisual from "./HackCpuVisual.vue";
+import LiveDashboardVisual from "./LiveDashboardVisual.vue";
+import StackLine from "./StackLine.vue";
+import TrainingRunVisual from "./TrainingRunVisual.vue";
 
 interface Props {
-  cardColor: Expertise;
-  cardTitle: string;
-  cardText: string;
-  iconName: string;
-  tags: {
-    tagText: string;
-  }[]
+  area: ExpertiseArea;
+  /** The panel currently in view; only its visual plays */
+  active: boolean;
 }
 const props = defineProps<Props>();
+
+const VISUALS: Record<Expertise, Component> = {
+  "machine learning": TrainingRunVisual,
+  "low level": HackCpuVisual,
+  "web dev": LiveDashboardVisual,
+};
 </script>
 
 <template>
-  <div class="card">
-    <div :class="{
-      'title-container': true,
-      'title-container-ml': cardColor === 'machine learning',
-      'title-container-ll': cardColor === 'low level',
-      'title-container-wd': cardColor === 'web dev',
-    }">
-      <Icon :icon="props.iconName" class="icon" />
-      <h3>{{ cardTitle }}</h3>
+  <article class="panel" :class="{ active: props.active }"
+    :style="{ '--card-color': EXPERTISE_COLOR[props.area.expertise] }">
+    <div class="info">
+      <h3>{{ props.area.title }}</h3>
+      <p>{{ props.area.text }}</p>
+      <StackLine :items="props.area.tags" />
     </div>
-    <p>{{ cardText }}</p>
-    <div class="tag-container-wrapper" :class="{
-      'show-left': showLeftShadow, 'show-right': showRightShadow,
-    }">
-      <div class="tag-container" ref="tagContainerRef" @scroll="checkOverflow">
-        <Tag v-for="tag in props.tags" :color="cardColor" :text="tag.tagText" />
+
+    <div class="window">
+      <header class="window-bar">
+        <span class="window-dots"><span></span><span></span><span></span></span>
+        <span class="file-name">{{ props.area.fileName }}</span>
+      </header>
+      <div class="visual-container">
+        <component :is="VISUALS[props.area.expertise]" :active="props.active" />
       </div>
     </div>
-  </div>
+  </article>
 </template>
 
 <style scoped>
-.card {
+.panel {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  align-items: center;
+  gap: clamp(2rem, 5vw, 5rem);
+  width: 100%;
+  height: 100%;
+}
+
+.info {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  padding: 2rem;
-  border: 2px solid var(--neutral-700);
-  background-color: var(--neutral-900);
-  min-height: 12rem;
-  flex: 1 1 33.3%;
-  min-width: clamp(16rem, 20vw, 24rem);
-  max-width: 50%
+  gap: 1.25rem;
 }
 
-
-@media (max-width: 57.75rem) {
-  .card {
-    max-width: 100%;
-  }
-}
-
-.title-container {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
-}
-
-.title-container-ml {
-  color: var(--primary-500);
-}
-
-.title-container-ll {
-  color: var(--accent-500);
-}
-
-.title-container-wd {
-  color: var(--warning-500);
-}
-
-.title-container .icon {
-  width: 2rem;
-  height: 2rem;
-}
-
-.title-container h3 {
-  font-size: 1.5rem;
-  font-weight: 400;
-  letter-spacing: 3px;
-  text-transform: uppercase;
+h3 {
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: var(--neutral-100);
 }
 
 p {
-  color: var(--neutral-500);
-  font-size: 1.125rem;
-  line-height: calc(1.75 / 1.125);
+  max-width: 32rem;
+  font-size: clamp(1rem, 1.3vw, 1.125rem);
+  line-height: 1.65;
+  color: var(--neutral-400);
+}
+
+.window {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid color-mix(in srgb, var(--card-color), transparent 50%);
+  background-color: var(--neutral-900);
+  box-shadow: 0 2rem 6rem -3rem color-mix(in srgb, var(--card-color), transparent 50%);
+}
+
+.window-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--neutral-800);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--neutral-400);
+}
+
+.window-dots {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.window-dots span {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background-color: var(--card-color);
+}
+
+.visual-container {
   flex-grow: 1;
+  display: flex;
+  align-items: center;
+  min-height: min(40dvh, 24rem);
+  padding: clamp(1.25rem, 2.5vw, 2rem);
 }
 
-.tag-container-wrapper {
-  position: relative;
-  display: flex;
-  width: 100%;
-}
-
-.tag-container {
-  display: flex;
-  gap: 0.75rem;
-  width: 100%;
-  overflow-x: auto;
-
-  &::-webkit-scrollbar {
-    display: none;
+@media (max-width: 57.75rem) {
+  .panel {
+    grid-template-columns: 1fr;
   }
 
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-}
-
-.tag-container-wrapper::before,
-.tag-container-wrapper::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 0px;
-  z-index: 2;
-  pointer-events: none;
-  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
-  opacity: 0;
-}
-
-.tag-container-wrapper::before {
-  left: 0;
-  background: linear-gradient(to right, var(--neutral-900), transparent);
-}
-
-.tag-container-wrapper::after {
-  right: 0;
-  background: linear-gradient(to left, var(--neutral-900), transparent);
-}
-
-.show-left::before {
-  opacity: 1;
-  width: 40px;
-}
-
-.show-right::after {
-  opacity: 1;
-  width: 40px;
+  .visual-container {
+    min-height: 20rem;
+  }
 }
 </style>

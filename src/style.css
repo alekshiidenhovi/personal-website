@@ -5,7 +5,54 @@
 }
 
 html {
-  font-family: inter, system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  font-family: var(--font-sans);
+  --nav-height: 5rem;
+  /* Snap points: the hero and each page of the pinned sections */
+  scroll-snap-type: y proximity;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  background-color: var(--neutral-950);
+}
+
+::selection {
+  color: var(--neutral-950);
+  background-color: var(--primary-400);
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary-400);
+  outline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* Applied by the v-reveal directive. Animates `translate` so it doesn't clash with hover transforms. */
+.reveal:not(.revealed) {
+  opacity: 0;
+}
+
+.reveal.revealed {
+  animation: reveal 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    translate: 0 1.5rem;
+  }
 }
 
 :root {

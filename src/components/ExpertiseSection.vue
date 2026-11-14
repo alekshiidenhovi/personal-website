@@ -1,82 +1,69 @@
 <script setup lang="ts">
+import { EXPERTISE_AREAS, EXPERTISE_COLOR } from "../data/expertise";
 import ExpertiseCard from "./ExpertiseCard.vue";
-import SectionTitle from "./SectionTitle.vue";
+import PinnedSection from "./PinnedSection.vue";
 </script>
 
 <template>
-  <section id="expertise">
-    <SectionTitle title="Expertise" />
-    <div class="card-container">
-      <ExpertiseCard :cardColor="'machine learning'" cardTitle="Machine Learning"
-        cardText="End-to-end ML specialist with a proven track record bridging the gap between deep technical research and production applications."
-        iconName="heroicons:adjustments-vertical-solid" :tags="[
-          {
-            tagText: 'PyTorch'
-          },
-          {
-            tagText: 'Ray'
-          },
-          {
-            tagText: 'Spark'
-          },
-          {
-            tagText: 'MLFlow'
-          }
-        ]" />
-      <ExpertiseCard :cardColor="'low level'" cardTitle="Low Level"
-        cardText="Passionate about low-level optimization. Built foundational systems from assemblers to compilers."
-        iconName="heroicons:cpu-chip-solid" :tags="[
-          {
-            tagText: 'Rust'
-          },
-          {
-            tagText: 'C++'
-          },
-          {
-            tagText: 'Assembly'
-          }
-        ]" />
-      <ExpertiseCard :cardColor="'web dev'" cardTitle="Web Dev"
-        cardText="Full-stack generalist, with expertise in building data-driven dashboard applications from the ground up."
-        iconName="heroicons:globe-alt-solid" :tags="[
-          {
-            tagText: 'React/NextJS'
-          },
-          {
-            tagText: 'Vue'
-          },
-          {
-            tagText: 'FastAPI'
-          },
-          {
-            tagText: 'TailwindCSS'
-          },
-          {
-            tagText: 'PostgreSQL'
-          }
-        ]" />
-    </div>
-  </section>
+  <PinnedSection id="expertise" :index="1" title="Expertise"
+    subtitle="Three disciplines, one throughline: understanding systems all the way down."
+    :page-count="EXPERTISE_AREAS.length">
+    <template #nav="{ activePage, goToPage }">
+      <nav class="steps" aria-label="Expertise">
+        <button v-for="(area, index) in EXPERTISE_AREAS" :key="area.expertise" type="button" class="step"
+          :class="{ current: index === activePage }" :style="{ '--step-color': EXPERTISE_COLOR[area.expertise] }"
+          @click="goToPage(index)">
+          {{ area.title }}
+        </button>
+      </nav>
+    </template>
+
+    <template #default="{ page, active }">
+      <ExpertiseCard :area="EXPERTISE_AREAS[page]" :active="active" />
+    </template>
+  </PinnedSection>
 </template>
 
 <style scoped>
-#expertise {
+.steps {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(2rem, 5vw, 6rem);
-  padding: clamp(1.5rem, 5vw, 5rem);
-  width: 100%;
-  max-width: 96rem;
-  background-color: var(--neutral-950);
+  gap: clamp(1.5rem, 3vw, 2.5rem);
 }
 
-.card-container {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: center;
-  width: 100%;
+.step {
+  position: relative;
+  padding: 0 0 0.5rem;
+  border: none;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--neutral-500);
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.step::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background-color: var(--step-color);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.step:hover {
+  color: var(--neutral-200);
+}
+
+.step.current {
+  color: var(--step-color);
+}
+
+.step.current::after {
+  transform: scaleX(1);
 }
 </style>

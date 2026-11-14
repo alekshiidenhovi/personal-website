@@ -1,166 +1,189 @@
 <script setup lang="ts">
-import type { Expertise } from "../types";
+import { Icon } from '@iconify/vue';
+import { computed, ref } from "vue";
+import { usePointerVars } from "../composables/usePointerVars";
+import { EXPERTISE_COLOR } from "../data/expertise";
+import type { Project } from "../data/projects";
+import "./covers/cover.css";
 
 interface Props {
-  projectTitle: string;
-  projectDescription: string;
-  projectTag: Expertise;
-  projectLink: string;
-  completionYear: number;
-  imgUrl: string;
-  imgDescription: string;
-  objectPosition?: "top" | "center" | "bottom";
-
+  project: Project;
+  featured?: boolean;
 }
 const props = withDefaults(defineProps<Props>(), {
-  objectPosition: "center",
+  featured: false,
 });
 
+const cardRef = ref<HTMLElement | null>(null);
+usePointerVars(cardRef);
+
+const isActive = ref(false);
+const linkType = computed(() => (new URL(props.project.link).hostname === "github.com" ? "source" : "live demo"));
 </script>
 
 <template>
-  <a class="card" :href="props.projectLink" target="_blank">
+  <a ref="cardRef" class="card" :class="{ featured: props.featured, active: isActive }"
+    :style="{ '--card-color': EXPERTISE_COLOR[props.project.tag] }" :href="props.project.link" target="_blank"
+    rel="noreferrer" @pointerenter="isActive = true" @pointerleave="isActive = false" @focus="isActive = true"
+    @blur="isActive = false">
     <div class="metadata-container">
-      <span class="tag" :class="{
-        'tag-ml': props.projectTag === 'machine learning',
-        'tag-ll': props.projectTag === 'low level',
-        'tag-wd': props.projectTag === 'web dev',
-      }">{{ props.projectTag }}</span>
-      <span class="year">{{ props.completionYear }}</span>
+      <span class="tag">{{ props.project.tag }}</span>
+      <span class="year">{{ props.project.year }}</span>
+    </div>
+    <div class="cover-container" role="img" :aria-label="props.project.coverDescription">
+      <component :is="props.project.cover" :active="isActive" />
     </div>
     <div class="title-container">
-      <h3>{{ props.projectTitle }}</h3>
-      <p>{{ props.projectDescription }}</p>
-    </div>
-    <div class="img-wrapper" :class="{
-      'img-bg-ml': props.projectTag === 'machine learning',
-      'img-bg-ll': props.projectTag === 'low level',
-      'img-bg-wd': props.projectTag === 'web dev',
-    }">
-      <img :src="props.imgUrl" :alt="props.imgDescription" :style="{ objectPosition: props.objectPosition }" />
+      <div class="title-row">
+        <h3>{{ props.project.title }}</h3>
+        <span class="link-type">
+          {{ linkType }}
+          <Icon icon="heroicons:arrow-up-right-20-solid" class="arrow" />
+        </span>
+      </div>
+      <p>{{ props.project.description }}</p>
     </div>
   </a>
 </template>
 
 <style scoped>
 .card {
-  border: 2px solid var(--neutral-800);
-  background-color: var(--neutral-900);
-  height: 30rem;
+  --tilt-x: 0;
+  --tilt-y: 0;
+  position: relative;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--neutral-800);
+  background-color: var(--neutral-900);
+  background-image: radial-gradient(color-mix(in srgb, var(--neutral-500), transparent 85%) 1px, transparent 1px);
+  background-size: 1.25rem 1.25rem;
   text-decoration: none;
-  flex-grow: 1;
-  flex-shrink: 1;
-  flex-basis: 24rem;
-  transition: transform 0.2s ease-in-out;
+  outline: none;
+  transform: perspective(1200px) rotateX(calc(var(--tilt-y) * -3deg)) rotateY(calc(var(--tilt-x) * 3deg));
+  transition: transform 0.25s ease-out, border-color 0.3s ease, box-shadow 0.3s ease;
   will-change: transform;
 }
 
-.card:hover {
-  cursor: pointer;
-  transform: scale(1.02);
+/* Soft glow in the card's color behind the cover */
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 70% 60% at 50% 45%, color-mix(in srgb, var(--card-color), transparent 88%), transparent);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.card.active {
+  border-color: color-mix(in srgb, var(--card-color), transparent 50%);
+  box-shadow: 0 2rem 5rem -2.5rem color-mix(in srgb, var(--card-color), transparent 60%);
+}
+
+.card.active::before {
+  opacity: 1;
+}
+
+.card:focus-visible {
+  outline: 2px solid var(--card-color);
+  outline-offset: 4px;
 }
 
 .metadata-container {
+  position: relative;
   display: flex;
-  gap: 1rem;
   align-items: center;
   justify-content: space-between;
-  padding-top: 1.5rem;
+  gap: 1rem;
+  padding: 1.25rem 1.25rem 0;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
   text-transform: uppercase;
+  letter-spacing: 2px;
 }
 
 .tag {
-  letter-spacing: 3px;
-  font-weight: 500;
-  padding: 0.5rem 1.5rem;
-  font-size: 1.125rem;
-  line-height: 1.5rem;
-}
-
-.tag-ml {
-  color: var(--primary-500);
-  background-color: color-mix(in srgb, var(--primary-500), transparent 85%);
-}
-
-.tag-ll {
-  color: var(--accent-500);
-  background-color: color-mix(in srgb, var(--accent-500), transparent 85%);
-}
-
-.tag-wd {
-  color: var(--warning-500);
-  background-color: color-mix(in srgb, var(--warning-500), transparent 85%);
+  padding: 0.375rem 0.75rem;
+  color: var(--card-color);
+  border: 1px solid color-mix(in srgb, var(--card-color), transparent 60%);
+  background-color: color-mix(in srgb, var(--card-color), transparent 92%);
 }
 
 .year {
-  padding: 0.5rem 1.0rem;
-  color: var(--neutral-500);
-  background-color: color-mix(in srgb, var(--neutral-500), transparent 85%);
-  letter-spacing: 1px;
-  font-size: 1.125rem;
-  line-height: 1.5rem;
-  font-weight: 400;
+  color: var(--neutral-400);
+}
+
+.cover-container {
+  position: relative;
+  flex-grow: 1;
+  min-height: 0;
+  padding: 0.75rem 1.25rem;
+}
+
+.featured .cover-container {
+  padding: 2rem 3rem;
 }
 
 .title-container {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 1.5rem;
-  border-bottom: 2px solid color-mix(in srgb, var(--neutral-800), transparent 60%);
+  gap: 0.375rem;
+  padding: 0 1.5rem 1.5rem;
+}
+
+.title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
 h3 {
-  font-size: 1.6rem;
-  line-height: 2.0rem;
-  font-weight: 500;
-  color: var(--neutral-300);
+  font-size: 1.5rem;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--neutral-100);
+}
+
+.featured h3 {
+  font-size: clamp(1.75rem, 3vw, 2.75rem);
 }
 
 p {
-  font-size: 1.0rem;
-  line-height: 1.5rem;
-  font-weight: 400;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--neutral-400);
+}
+
+.featured p {
+  font-size: 1.125rem;
+}
+
+.link-type {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
   color: var(--neutral-500);
+  transition: color 0.2s ease;
 }
 
-.img-wrapper {
-  width: 100%;
-  flex-grow: 1;
-  flex-shrink: 1;
-  min-height: 0;
-  overflow: hidden;
+.active .link-type {
+  color: var(--card-color);
 }
 
-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  mix-blend-mode: luminosity;
-  opacity: 0.4;
-  filter: grayscale(1);
-  transition: filter 0.2s ease-in-out, opacity 0.2s ease-in-out;
-  will-change: filter, opacity;
+.arrow {
+  width: 1rem;
+  height: 1rem;
+  transition: transform 0.2s ease;
 }
 
-.img-bg-ml {
-  background-color: color-mix(in srgb, var(--primary-500), transparent 90%);
-}
-
-.img-bg-ll {
-  background-color: color-mix(in srgb, var(--accent-500), transparent 90%);
-}
-
-.img-bg-wd {
-  background-color: color-mix(in srgb, var(--warning-500), transparent 90%);
-}
-
-.card:hover img {
-  mix-blend-mode: normal;
-  filter: grayscale(0);
-  opacity: 0.8;
+.active .arrow {
+  transform: translate(2px, -2px);
 }
 </style>

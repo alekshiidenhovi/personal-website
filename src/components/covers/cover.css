@@ -1,0 +1,103 @@
+/*
+ * Shared drawing vocabulary for the project covers. Covers are quiet grey line
+ * art at rest and light up in the card's color (`--card-color`) when active.
+ */
+.cover {
+  --cover-ink: var(--neutral-500);
+  --cover-muted: var(--neutral-700);
+  --cover-accent: var(--neutral-400);
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.cover.active {
+  --cover-ink: var(--neutral-300);
+  --cover-accent: var(--card-color);
+}
+
+.cover * {
+  transition: stroke 0.4s ease, fill 0.4s ease, fill-opacity 0.4s ease, opacity 0.4s ease;
+}
+
+.cover-line {
+  fill: none;
+  stroke: var(--cover-ink);
+  stroke-width: 1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.cover-line.muted {
+  stroke: var(--cover-muted);
+}
+
+.cover-line.accent {
+  stroke: var(--cover-accent);
+}
+
+.cover-fill {
+  fill: var(--cover-muted);
+}
+
+.cover-fill.accent {
+  fill: var(--cover-accent);
+}
+
+.cover-text {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  fill: var(--cover-ink);
+}
+
+.cover-text.accent {
+  fill: var(--cover-accent);
+}
+
+.cover-text.label {
+  font-size: 7px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  fill: var(--neutral-600);
+}
+
+.cover.active .glow {
+  filter: drop-shadow(0 0 4px var(--card-color));
+}
+
+/* Animated flow along connector lines */
+.cover-flow {
+  stroke-dasharray: 3 4;
+}
+
+.cover.active .cover-flow {
+  stroke: var(--cover-accent);
+  animation: cover-flow 0.8s linear infinite;
+}
+
+@keyframes cover-flow {
+  to {
+    stroke-dashoffset: -7;
+  }
+}
+
+/* Elements that appear in sequence while active; set --delay per element */
+.cover-sequence {
+  opacity: 0;
+}
+
+.cover.active .cover-sequence {
+  animation: cover-appear 0.3s ease both;
+  animation-delay: var(--delay, 0s);
+}
+
+@keyframes cover-appear {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
