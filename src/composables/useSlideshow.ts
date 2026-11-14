@@ -9,6 +9,8 @@ const WHEEL_QUIET_MS = 180;
 const SCROLL_END_FALLBACK_MS = 900;
 /** Positions this close to the current scroll count as the current slide */
 const POSITION_TOLERANCE_PX = 2;
+/** Moves longer than this many viewport heights cut to the target instead of scrolling past the slides between */
+const MAX_SCROLL_VIEWPORTS = 1;
 
 const NEXT_KEYS = new Set(["ArrowDown", "ArrowRight", "PageDown"]);
 const PREVIOUS_KEYS = new Set(["ArrowUp", "ArrowLeft", "PageUp"]);
@@ -18,7 +20,9 @@ type Direction = 1 | -1;
 /**
  * Slideshow navigation for the pinned layout: each wheel gesture or arrow key
  * moves exactly one slide (any element marked with `data-slide`) forwards or
- * backwards. Narrow screens keep normal scrolling.
+ * backwards. In-page links and Home/End jump straight to their slide: one
+ * slide away scrolls smoothly, farther crossfades in place. Narrow screens keep
+ * normal scrolling.
  */
 export function useSlideshow() {
   let pinnedMedia: MediaQueryList | null = null;
@@ -37,8 +41,23 @@ export function useSlideshow() {
   };
 
   const scrollTo = (top: number) => {
-    isAnimating = true;
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const isFar = Math.abs(top - window.scrollY) > MAX_SCROLL_VIEWPORTS * window.innerHeight + POSITION_TOLERANCE_PX;
+    if (prefersReducedMotion || (isFar && !document.startViewTransition)) {
+      window.scrollTo({ top, behavior: "instant" });
+      return;
+    }
+
+    isAnimating = true;
+    // Rendering every slide on the way makes long scrolls judder, so cut instead
+    if (isFar) {
+      const transition = document.startViewTransition(() => window.scrollTo({ top, behavior: "instant" }));
+      transition.finished.finally(() => {
+        isAnimating = false;
+      });
+      return;
+    }
+
     const finish = () => {
       clearTimeout(fallbackTimer);
       window.removeEventListener("scrollend", finish);
@@ -46,7 +65,7 @@ export function useSlideshow() {
     };
     const fallbackTimer = setTimeout(finish, SCROLL_END_FALLBACK_MS);
     window.addEventListener("scrollend", finish, { once: true });
-    window.scrollTo({ top, behavior: prefersReducedMotion ? "instant" : "smooth" });
+    window.scrollTo({ top, behavior: "smooth" });
   };
 
   const goTo = (direction: Direction) => {
@@ -81,6 +100,20 @@ export function useSlideshow() {
     goTo(delta > 0 ? 1 : -1);
   };
 
+  const onClick = (event: MouseEvent) => {
+    if (!pinnedMedia?.matches || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+      return;
+    const link = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>('a[href^="#"]') : null;
+    const target = link && document.getElementById(link.hash.slice(1));
+    if (!target) return;
+
+    event.preventDefault();
+    if (isAnimating) return;
+    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+    history.pushState(null, "", link.hash);
+    scrollTo(Math.min(target.getBoundingClientRect().top + window.scrollY, maxScroll));
+  };
+
   const isTypingTarget = (target: EventTarget | null) =>
     target instanceof HTMLElement &&
     (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
@@ -109,11 +142,13 @@ export function useSlideshow() {
     pinnedMedia = window.matchMedia(PINNED_LAYOUT_QUERY);
     window.addEventListener("wheel", onWheel, { passive: false });
     window.addEventListener("keydown", onKeyDown);
+    document.addEventListener("click", onClick);
   });
 
   onUnmounted(() => {
     clearTimeout(quietTimer);
     window.removeEventListener("wheel", onWheel);
     window.removeEventListener("keydown", onKeyDown);
+    document.removeEventListener("click", onClick);
   });
 }

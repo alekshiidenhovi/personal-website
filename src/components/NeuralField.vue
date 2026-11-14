@@ -4,6 +4,9 @@ import { onMounted, onUnmounted, ref } from "vue";
 /**
  * Animated "neural network" backdrop: drifting nodes in the three expertise
  * colors, linked when close to each other and to the pointer.
+ *
+ * Drawn in units of the root font size (16 units = 1rem), so the field scales
+ * with the rest of the page on big screens.
  */
 
 interface Node {
@@ -25,6 +28,9 @@ const SPEED = 0.25;
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const pointer = { x: -9999, y: -9999 };
 let nodes: Node[] = [];
+/** Canvas size in drawing units, and drawing units per CSS pixel */
+let size = { width: 0, height: 0 };
+let scale = 1;
 let frameId = 0;
 let isVisible = true;
 let resizeObserver: ResizeObserver | null = null;
@@ -59,10 +65,12 @@ const resize = () => {
   if (!canvas) return;
   const { width, height } = canvas.getBoundingClientRect();
   const dpr = Math.min(window.devicePixelRatio, 2);
+  scale = parseFloat(getComputedStyle(document.documentElement).fontSize) / 16;
+  size = { width: width / scale, height: height / scale };
   canvas.width = width * dpr;
   canvas.height = height * dpr;
-  canvas.getContext("2d")?.setTransform(dpr, 0, 0, dpr, 0, 0);
-  createNodes(width, height);
+  canvas.getContext("2d")?.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  createNodes(size.width, size.height);
 };
 
 const drawLink = (ctx: CanvasRenderingContext2D, a: Node, bx: number, by: number, strength: number) => {
@@ -78,7 +86,7 @@ const step = (animate: boolean) => {
   const canvas = canvasRef.value;
   const ctx = canvas?.getContext("2d");
   if (!canvas || !ctx) return;
-  const { width, height } = canvas.getBoundingClientRect();
+  const { width, height } = size;
   ctx.clearRect(0, 0, width, height);
   ctx.lineWidth = 0.6;
 
@@ -121,8 +129,8 @@ const loop = () => {
 const onPointerMove = (event: PointerEvent) => {
   const rect = canvasRef.value?.getBoundingClientRect();
   if (!rect) return;
-  pointer.x = event.clientX - rect.left;
-  pointer.y = event.clientY - rect.top;
+  pointer.x = (event.clientX - rect.left) / scale;
+  pointer.y = (event.clientY - rect.top) / scale;
 };
 
 const onPointerLeave = () => {

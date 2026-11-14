@@ -60,7 +60,7 @@ const linkType = computed(() => (new URL(props.project.link).hostname === "githu
   background-size: 1.25rem 1.25rem;
   text-decoration: none;
   outline: none;
-  transform: perspective(1200px) rotateX(calc(var(--tilt-y) * -3deg)) rotateY(calc(var(--tilt-x) * 3deg));
+  transform: perspective(75rem) rotateX(calc(var(--tilt-y) * -3deg)) rotateY(calc(var(--tilt-x) * 3deg));
   transition: transform 0.25s ease-out, border-color 0.3s ease, box-shadow 0.3s ease;
   will-change: transform;
 }

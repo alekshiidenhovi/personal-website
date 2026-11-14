@@ -8,6 +8,13 @@ html {
   --font-sans: "Inter", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
   font-family: var(--font-sans);
+  /*
+   * Scale the whole design with the viewport so big screens show the same
+   * composition, only larger. 16px at the 1728×964 reference viewport (a 16"
+   * MacBook), growing with whichever dimension runs out first. Never below the
+   * user's font size, at most double it.
+   */
+  font-size: clamp(100%, min(0.926vw, 1.66vh), 200%);
   --nav-height: 5rem;
   /* Snap points: the hero and each page of the pinned sections */
   scroll-snap-type: y proximity;
@@ -37,6 +44,12 @@ html {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }
+}
+
+/* Long slideshow jumps crossfade in place (see useSlideshow) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.4s;
 }
 
 /* Applied by the v-reveal directive. Animates `translate` so it doesn't clash with hover transforms. */

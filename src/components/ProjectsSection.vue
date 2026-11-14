@@ -44,7 +44,7 @@ const pages = Array.from({ length: Math.ceil(PROJECTS.length / PROJECTS_PER_PAGE
 }
 
 /* Matches PinnedSection's stacked fallback */
-@media not ((min-width: 57.75rem) and (min-height: 40rem)) {
+@media not ((min-width: 57.75rem) and (min-height: 40rem) and (orientation: landscape)) {
   .page-grid {
     grid-template-columns: 1fr;
     grid-template-rows: none;

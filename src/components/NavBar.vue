@@ -57,6 +57,8 @@ header {
   border-bottom: 1px solid var(--neutral-800);
   background-color: color-mix(in srgb, var(--neutral-950), transparent 20%);
   backdrop-filter: blur(12px);
+  /* Stays put while the page crossfades on long jumps */
+  view-transition-name: site-nav;
   translate: 0 -100%;
   transition: translate 0.4s cubic-bezier(0.2, 0.7, 0.2, 1);
 }

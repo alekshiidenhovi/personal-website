@@ -209,7 +209,7 @@ figcaption {
 }
 
 /* Matches PinnedSection's stacked fallback */
-@media not ((min-width: 57.75rem) and (min-height: 40rem)) {
+@media not ((min-width: 57.75rem) and (min-height: 40rem) and (orientation: landscape)) {
   .slide {
     grid-template-columns: 1fr;
   }

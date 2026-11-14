@@ -116,6 +116,12 @@ onUnmounted(() => {
 }
 
 .stage {
+  /*
+   * On screens taller than 16:10 the extra height is split above and below
+   * the slide instead of stretching it. The root font size follows
+   * min(vw, vh), so a rem height caps the slide's aspect ratio.
+   */
+  --letterbox: max(0px, (100dvh - 68rem) / 2);
   position: sticky;
   top: 0;
   display: flex;
@@ -124,7 +130,8 @@ onUnmounted(() => {
   height: 100dvh;
   max-width: 96rem;
   margin: 0 auto;
-  padding: calc(var(--nav-height) + 1rem) clamp(1.25rem, 5vw, 5rem) clamp(1.5rem, 4vh, 3rem);
+  padding:
+    calc(var(--nav-height) + 1rem + var(--letterbox)) clamp(1.25rem, 5vw, 5rem) calc(clamp(1.5rem, 4vh, 3rem) + var(--letterbox));
 }
 
 /* Pages share one grid cell and crossfade as the active page changes */
@@ -155,7 +162,7 @@ onUnmounted(() => {
 }
 
 /* PINNED_LAYOUT_QUERY not matching */
-@media not ((min-width: 57.75rem) and (min-height: 40rem)) {
+@media not ((min-width: 57.75rem) and (min-height: 40rem) and (orientation: landscape)) {
   .scroller {
     height: auto;
   }
