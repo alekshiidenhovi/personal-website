@@ -38,6 +38,10 @@ onUnmounted(() => {
 
 <template>
   <header :class="{ visible: isVisible }" :inert="!isVisible">
+    <a :href="`#${HERO_ID}`" class="nav-home" aria-label="Back to start">
+      <span class="home-full">~/aleks</span>
+      <span class="home-short">~</span>
+    </a>
     <nav>
       <a v-for="(link, index) in LINKS" :key="link.id" :href="`#${link.id}`" class="nav-link"
         :class="{ active: activeId === link.id }" :aria-current="activeId === link.id ? 'location' : undefined">
@@ -62,19 +66,52 @@ header {
   view-transition-name: site-nav;
   translate: 0 -100%;
   transition: translate 0.4s cubic-bezier(0.2, 0.7, 0.2, 1);
+  /* Same content width and gutters as the sections, the home link sits in the left gutter */
+  --gutter: clamp(1.25rem, 5vw, 5rem);
+  display: grid;
+  grid-template-columns: 1fr calc(min(100%, 96rem) - 2 * var(--gutter)) 1fr;
 }
 
 header.visible {
   translate: 0 0;
 }
 
-/* Same content width and gutters as the sections */
 nav {
+  grid-column: 2;
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  max-width: 96rem;
-  margin: 0 auto;
-  padding: 0 clamp(1.25rem, 5vw, 5rem);
+}
+
+/* Home link echoing the hero's shell prompt, shortened to "~" when the gutter is narrow */
+.nav-home {
+  container-type: inline-size;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.125rem 0;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--success-400);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.nav-home:hover {
+  color: var(--success-300);
+}
+
+.home-full {
+  display: none;
+}
+
+@container (min-width: 5.5rem) {
+  .home-full {
+    display: inline;
+  }
+
+  .home-short {
+    display: none;
+  }
 }
 
 .nav-link {
@@ -130,21 +167,44 @@ nav {
   transform: scaleX(1);
 }
 
+/* Tablets squeeze the links, so drop their numbering */
+@media (max-width: 48rem) {
+  .nav-index {
+    display: none;
+  }
+}
+
 @media (max-width: 40rem) {
+  header {
+    display: flex;
+  }
+
   /* Five sections don't fit across a phone, so the bar scrolls sideways */
   nav {
+    flex: 1;
+    min-width: 0;
     grid-template-columns: repeat(5, auto);
     overflow-x: auto;
     scrollbar-width: none;
   }
 
-  .nav-link {
-    padding: 1rem 0.5rem;
+  .nav-home {
+    container-type: normal;
+    padding: 1rem 0.75rem 1rem 1.25rem;
     font-size: 0.75rem;
   }
 
-  .nav-index {
+  .home-full {
+    display: inline;
+  }
+
+  .home-short {
     display: none;
+  }
+
+  .nav-link {
+    padding: 1rem 0.5rem;
+    font-size: 0.75rem;
   }
 }
 </style>

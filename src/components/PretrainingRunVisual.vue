@@ -1,66 +1,42 @@
 <script setup lang="ts">
-import { computed, ref, toRef } from "vue";
-import { useLiveTicker } from "../composables/useLiveTicker";
+import { computed, onUnmounted, ref, watch } from "vue";
 
 /**
- * A simulated LeJEPA pretraining run, shaped like the real ones: the SIGReg
- * term drops fast like an ordinary loss, while the invariance term starts near
- * zero, spikes as the embeddings spread out, then settles in between. Each run
- * uses the next SIGReg weight λ; a larger λ settles at a higher invariance and
- * a lower SIGReg. Hover to inspect a step.
+ * An illustrative self-supervised pretraining run, shaped like the thesis
+ * runs: the SIGReg loss drops fast like an ordinary loss, while the invariance
+ * loss starts near zero, spikes as the embeddings spread out, then slowly
+ * settles in between. The curves draw continuously and loop; hover to inspect
+ * a step.
  */
 
-interface Step {
-  /** Raw and smoothed invariance loss */
-  invariance: number;
-  invarianceSmooth: number;
-  sigreg: number;
-}
-
-interface RunShape {
-  lambda: number;
-  invarianceStart: number;
-  invariancePeak: number;
-  invarianceSettle: number;
-  sigregFloor: number;
-}
-
-/** Roughly the curves of the λ sweep in the thesis */
-const RUN_SHAPES: RunShape[] = [
-  { lambda: 0.05, invarianceStart: 0.06, invariancePeak: 0.26, invarianceSettle: 0.16, sigregFloor: 2.5 },
-  { lambda: 0.01, invarianceStart: 0.06, invariancePeak: 0.14, invarianceSettle: 0.07, sigregFloor: 6 },
-  { lambda: 0.002, invarianceStart: 0.05, invariancePeak: 0.065, invarianceSettle: 0.03, sigregFloor: 15 },
-];
-
-const STEP_COUNT = 80;
-const STEPS_PER_POINT = 300;
-const PEAK_AT = 0.05;
+const TOTAL_STEPS = 24_000;
+const INVARIANCE_START = 0.06;
+const INVARIANCE_PEAK = 0.26;
+const INVARIANCE_SETTLE = 0.16;
+/** Share of the run spent rising to the invariance peak */
+const INVARIANCE_PEAK_AT = 0.06;
+/** How slowly the invariance loss settles after its peak */
+const INVARIANCE_SETTLE_WIDTH = 0.15;
+const SIGREG_FLOOR = 2.5;
 const INVARIANCE_MAX = 0.3;
 /** The log scale runs from 10⁰ to a little above 10², so the starting loss clears the top */
 const SIGREG_DECADES = 2.4;
-const SMOOTHING = 0.15;
-const TICK_MS = 160;
-const PAUSE_TICKS_BETWEEN_RUNS = 14;
+/** Samples per curve; dense enough to read as one smooth line */
+const SAMPLE_COUNT = 240;
+const RUN_MS = 10_000;
+const PAUSE_MS = 2_500;
 
-const simulateStep = (index: number, shape: RunShape, previous: Step | undefined): Step => {
-  const t = index / (STEP_COUNT - 1);
-  const { invarianceStart, invariancePeak, invarianceSettle, sigregFloor } = shape;
-  const base =
-    t < PEAK_AT
-      ? invarianceStart + (invariancePeak - invarianceStart) * Math.sin(((t / PEAK_AT) * Math.PI) / 2)
-      : invarianceSettle + (invariancePeak - invarianceSettle) * Math.exp(-(t - PEAK_AT) / 0.3);
-  const invariance = Math.max(0, base * (1 + (Math.random() - 0.5) * 0.45));
-  const sigreg =
-    sigregFloor * (1 + 0.9 * Math.exp(-t / 0.3)) + (100 - 1.9 * sigregFloor) * Math.exp(-t / 0.035);
-  const invarianceSmooth = previous ? previous.invarianceSmooth + SMOOTHING * (invariance - previous.invarianceSmooth) : invariance;
-  return { invariance, invarianceSmooth, sigreg: sigreg * (1 + (Math.random() - 0.5) * 0.06) };
-};
+const smoothstep = (x: number) => x * x * (3 - 2 * x);
 
-const simulateRun = (shape: RunShape) => {
-  const steps: Step[] = [];
-  for (let index = 0; index < STEP_COUNT; index++) steps.push(simulateStep(index, shape, steps[index - 1]));
-  return steps;
-};
+/** Smooth everywhere: eases up to the peak, then decays with a long tail */
+const invarianceLoss = (t: number) =>
+  t < INVARIANCE_PEAK_AT
+    ? INVARIANCE_START + (INVARIANCE_PEAK - INVARIANCE_START) * smoothstep(t / INVARIANCE_PEAK_AT)
+    : INVARIANCE_SETTLE +
+      (INVARIANCE_PEAK - INVARIANCE_SETTLE) / (1 + ((t - INVARIANCE_PEAK_AT) / INVARIANCE_SETTLE_WIDTH) ** 2);
+
+const sigregLoss = (t: number) =>
+  SIGREG_FLOOR * (1 + 0.9 * Math.exp(-t / 0.3)) + (100 - 1.9 * SIGREG_FLOOR) * Math.exp(-t / 0.035);
 
 interface Props {
   /** Whether the visual is playing */
@@ -68,111 +44,123 @@ interface Props {
 }
 const props = defineProps<Props>();
 
+const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const chartsRef = ref<HTMLElement | null>(null);
-const runIndex = ref(0);
-const shape = computed(() => RUN_SHAPES[runIndex.value % RUN_SHAPES.length]);
-// Without motion we show a finished run; otherwise it streams in from step 0
-const history = ref<Step[]>(
-  window.matchMedia("(prefers-reduced-motion: reduce)").matches ? simulateRun(RUN_SHAPES[0]) : [],
-);
-const hoveredIndex = ref<number | null>(null);
-let pauseTicks = 0;
+/** Share of the run drawn so far; without motion the run is shown finished */
+const progress = ref(prefersReducedMotion ? 1 : 0);
+const hoveredT = ref<number | null>(null);
+let frameId = 0;
+let pausedMs = 0;
 
-useLiveTicker(
-  toRef(props, "active"),
-  () => {
-    if (history.value.length < STEP_COUNT) {
-      history.value.push(simulateStep(history.value.length, shape.value, history.value[history.value.length - 1]));
-      return;
-    }
-    pauseTicks++;
-    if (pauseTicks < PAUSE_TICKS_BETWEEN_RUNS) return;
-    pauseTicks = 0;
-    runIndex.value++;
-    history.value = [];
+const stop = () => {
+  cancelAnimationFrame(frameId);
+  frameId = 0;
+};
+
+watch(
+  () => props.active,
+  (active) => {
+    stop();
+    if (!active || prefersReducedMotion) return;
+    let last = performance.now();
+    const frame = (now: number) => {
+      const elapsed = now - last;
+      last = now;
+      if (progress.value < 1) {
+        progress.value = Math.min(progress.value + elapsed / RUN_MS, 1);
+      } else {
+        pausedMs += elapsed;
+        if (pausedMs >= PAUSE_MS) {
+          pausedMs = 0;
+          progress.value = 0;
+        }
+      }
+      frameId = requestAnimationFrame(frame);
+    };
+    frameId = requestAnimationFrame(frame);
   },
-  TICK_MS,
+  { immediate: true },
 );
+onUnmounted(stop);
 
-const toX = (index: number) => (index / (STEP_COUNT - 1)) * 100;
+const toX = (t: number) => t * 100;
 const toInvarianceY = (loss: number) => 100 - (Math.min(loss, INVARIANCE_MAX) / INVARIANCE_MAX) * 100;
 const toSigregY = (loss: number) => 100 - (Math.log10(Math.max(loss, 1)) / SIGREG_DECADES) * 100;
 
-const toPoints = (value: (step: Step) => number, toY: (loss: number) => number) =>
-  history.value.map((step, index) => `${toX(index)},${toY(value(step))}`).join(" ");
+/** The curve up to the current progress, ending exactly at its tip */
+const toPoints = (loss: (t: number) => number, toY: (loss: number) => number) => {
+  const end = progress.value;
+  const count = Math.max(Math.ceil(end * SAMPLE_COUNT), 1);
+  return Array.from({ length: count + 1 }, (_, i) => {
+    const t = (i / count) * end;
+    return `${toX(t)},${toY(loss(t))}`;
+  }).join(" ");
+};
 
-const invarianceRawPoints = computed(() => toPoints((step) => step.invariance, toInvarianceY));
-const invariancePoints = computed(() => toPoints((step) => step.invarianceSmooth, toInvarianceY));
-const sigregPoints = computed(() => toPoints((step) => step.sigreg, toSigregY));
+const invariancePoints = computed(() => toPoints(invarianceLoss, toInvarianceY));
+const sigregPoints = computed(() => toPoints(sigregLoss, toSigregY));
 
 const status = computed(() => {
-  if (history.value.length === STEP_COUNT) return "done";
+  if (progress.value === 1) return "done";
   if (props.active) return "training";
-  return history.value.length ? "paused" : "ready";
+  return progress.value ? "paused" : "ready";
 });
-const selectedIndex = computed(() => hoveredIndex.value ?? history.value.length - 1);
-const selected = computed(() => history.value[selectedIndex.value]);
-const formatStep = (index: number) => ((index + 1) * STEPS_PER_POINT).toLocaleString("en-US");
+const selectedT = computed(() => hoveredT.value ?? progress.value);
+const formatStep = (t: number) => (Math.round((t * TOTAL_STEPS) / 100) * 100).toLocaleString("en-US");
 
 const onPointerMove = (event: PointerEvent) => {
   const rect = chartsRef.value?.getBoundingClientRect();
-  if (!rect || !history.value.length) return;
+  if (!rect || !progress.value) return;
   const fraction = (event.clientX - rect.left) / rect.width;
-  const index = Math.round(fraction * (STEP_COUNT - 1));
-  hoveredIndex.value = Math.min(Math.max(index, 0), history.value.length - 1);
+  hoveredT.value = Math.min(Math.max(fraction, 0), progress.value);
 };
 </script>
 
 <template>
   <div class="visual">
     <div class="header">
-      <div class="run-info">
-        <span class="status" :class="status">{{ status }}</span>
-        <span>run #{{ runIndex + 1 }}</span>
-        <span>λ {{ shape.lambda }}</span>
-      </div>
-      <span class="objective">LeJEPA = (1−λ)·inv + λ·SIGReg</span>
+      <span class="status" :class="status">{{ status }}</span>
+      <span>self-supervised pretraining</span>
     </div>
 
     <div class="stats">
       <div class="stat">
         <span class="stat-label">step</span>
-        <span class="stat-value">{{ selected ? formatStep(selectedIndex) : "0" }}</span>
+        <span class="stat-value">{{ formatStep(selectedT) }}</span>
       </div>
       <div class="stat">
-        <span class="stat-label">invariance</span>
-        <span class="stat-value stat-invariance">{{ selected ? selected.invarianceSmooth.toFixed(4) : "—" }}</span>
+        <span class="stat-label">invariance loss</span>
+        <span class="stat-value stat-invariance">{{ invarianceLoss(selectedT).toFixed(4) }}</span>
       </div>
       <div class="stat">
-        <span class="stat-label">SIGReg</span>
-        <span class="stat-value">{{ selected ? selected.sigreg.toFixed(2) : "—" }}</span>
+        <span class="stat-label">SIGReg loss</span>
+        <span class="stat-value">{{ sigregLoss(selectedT).toFixed(2) }}</span>
       </div>
     </div>
 
     <!-- Two panels sharing the step axis, as in the thesis figures -->
-    <div ref="chartsRef" class="charts" @pointermove="onPointerMove" @pointerleave="hoveredIndex = null">
+    <div ref="chartsRef" class="charts" @pointermove="onPointerMove" @pointerleave="hoveredT = null">
       <div class="chart">
-        <span class="panel-label">invariance</span>
+        <span class="panel-label">invariance loss</span>
         <span class="axis-label axis-top">{{ INVARIANCE_MAX.toFixed(1) }}</span>
         <span class="axis-label axis-bottom">0.0</span>
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <polyline :points="invarianceRawPoints" class="line line-raw" />
           <polyline :points="invariancePoints" class="line line-invariance" />
         </svg>
-        <span v-if="selected" class="point point-invariance"
-          :style="{ left: `${toX(selectedIndex)}%`, top: `${toInvarianceY(selected.invarianceSmooth)}%` }"></span>
+        <span class="point point-invariance"
+          :style="{ left: `${toX(selectedT)}%`, top: `${toInvarianceY(invarianceLoss(selectedT))}%` }"></span>
       </div>
       <div class="chart chart-log">
-        <span class="panel-label">SIGReg · log</span>
+        <span class="panel-label">SIGReg loss · log</span>
         <span class="axis-label decade" :style="{ top: `${toSigregY(100)}%` }">10²</span>
         <span class="axis-label decade" :style="{ top: `${toSigregY(10)}%` }">10¹</span>
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           <polyline :points="sigregPoints" class="line line-sigreg" />
         </svg>
-        <span v-if="selected" class="point point-sigreg"
-          :style="{ left: `${toX(selectedIndex)}%`, top: `${toSigregY(selected.sigreg)}%` }"></span>
+        <span class="point point-sigreg"
+          :style="{ left: `${toX(selectedT)}%`, top: `${toSigregY(sigregLoss(selectedT))}%` }"></span>
       </div>
-      <span v-if="selected && hoveredIndex !== null" class="crosshair" :style="{ left: `${toX(selectedIndex)}%` }"></span>
+      <span v-if="hoveredT !== null" class="crosshair" :style="{ left: `${toX(selectedT)}%` }"></span>
     </div>
     <span class="axis-x">steps →</span>
   </div>
@@ -195,17 +183,6 @@ const onPointerMove = (event: PointerEvent) => {
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 0.5rem 1rem;
-}
-
-.run-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.objective {
-  color: var(--text-muted);
-  white-space: nowrap;
 }
 
 .status {
@@ -325,13 +302,6 @@ svg {
   stroke-width: 1.5;
   vector-effect: non-scaling-stroke;
   stroke-linejoin: round;
-}
-
-/* The raw, noisy invariance loss sits faintly behind its smoothed curve */
-.line-raw {
-  stroke: var(--neutral-600);
-  stroke-width: 1;
-  opacity: 0.7;
 }
 
 .line-invariance {

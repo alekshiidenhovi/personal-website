@@ -37,8 +37,7 @@ import EmbeddingSpace from "./EmbeddingSpace.vue";
       <EmbeddingSpace class="embedding" />
     </div>
     <a class="scroll-cue" href="#expertise" aria-label="Scroll to expertise">
-      <span>scroll</span>
-      <span class="scroll-line"></span>
+      <Icon icon="heroicons:arrow-down" class="scroll-arrow" />
     </a>
   </section>
 </template>
@@ -222,40 +221,34 @@ h1 {
   left: 50%;
   z-index: 1;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
+  padding: 0.5rem;
   translate: -50% 0;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 3px;
   color: var(--text-muted);
-  text-decoration: none;
+  transition: color 0.2s ease;
 }
 
-.scroll-line {
-  position: relative;
-  width: 1px;
-  height: 3rem;
-  overflow: hidden;
-  background-color: var(--neutral-800);
+.scroll-cue:hover,
+.scroll-cue:focus-visible {
+  color: var(--primary-400);
 }
 
-.scroll-line::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-color: var(--primary-400);
-  animation: scroll-hint 2s ease-in-out infinite;
+.scroll-arrow {
+  width: 1.5rem;
+  height: 1.5rem;
+  animation: scroll-hint 2.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 
+/* Bob downward, brightening at the lowest point to lead the eye down */
 @keyframes scroll-hint {
-  from {
-    translate: 0 -100%;
+  0%,
+  100% {
+    translate: 0 -0.25rem;
+    opacity: 0.4;
   }
 
-  to {
-    translate: 0 100%;
+  50% {
+    translate: 0 0.5rem;
+    opacity: 1;
   }
 }
 
