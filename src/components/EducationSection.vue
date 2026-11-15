@@ -1,168 +1,329 @@
 <script setup lang="ts">
 import { Icon } from "@iconify/vue";
-import { STUDIES, TIMELINE_END, TIMELINE_START } from "../data/education";
+import { computed, onUnmounted, ref } from "vue";
+import { STUDIES } from "../data/education";
 import { EXPERTISE_COLOR } from "../data/expertise";
 import PinnedSection from "./PinnedSection.vue";
 
-const TIMELINE_YEARS = Array.from({ length: TIMELINE_END - TIMELINE_START + 1 }, (_, i) => TIMELINE_START + i);
-const toPercent = (year: number) => ((year - TIMELINE_START) / (TIMELINE_END - TIMELINE_START)) * 100;
+/** "2024 – 26": the end year shortened, as the century repeats */
+const formatYears = (start: number, end: number) => `${start} – ${String(end).slice(2)}`;
+
+/*
+ * Calgary to Helsinki, edge to edge. The drawing is sized to the route's real
+ * pixels rather than stretched, so the travelling line's dash, a share of the
+ * path length, runs exactly from one city to the other.
+ */
+const routeSize = ref({ width: 100, height: 40 });
+const resizeObserver = new ResizeObserver(([entry]) => {
+  const { width, height } = entry.contentRect;
+  if (width !== routeSize.value.width || height !== routeSize.value.height) routeSize.value = { width, height };
+});
+let observedRoute: Element | null = null;
+// Template refs are set on every render, so only start observing when the element changes
+const observeRoute = (el: Element | null) => {
+  if (el === observedRoute) return;
+  resizeObserver.disconnect();
+  observedRoute = el;
+  if (el) resizeObserver.observe(el);
+};
+onUnmounted(() => resizeObserver.disconnect());
+
+const routeArc = computed(() => {
+  const { width, height } = routeSize.value;
+  const end = height * 0.95;
+  return `M 0 ${end} Q ${width / 2} ${-height * 0.85} ${width} ${end}`;
+});
 </script>
 
 <template>
   <PinnedSection id="education" :index="4" title="Education"
     subtitle="Industrial engineering into computer science, with data and machine learning throughout.">
-    <div class="education">
-      <ol class="studies">
-        <li v-for="study in STUDIES" :key="study.degree" class="row study"
-          :style="{
-            '--study-color': study.discipline ? EXPERTISE_COLOR[study.discipline] : 'var(--neutral-500)',
-            '--selection-color': study.discipline ? EXPERTISE_COLOR[study.discipline] : undefined,
-          }">
-          <span class="years">{{ study.start }}{{ study.end - study.start > 1 ? ` — ${study.end}` : "" }}</span>
-          <div class="text">
-            <h3>{{ study.degree }}</h3>
-            <p class="school">{{ study.school }}</p>
-            <p class="detail">{{ study.detail }}</p>
-            <a v-if="study.link" class="link" :href="study.link.href" target="_blank" rel="noreferrer">
-              {{ study.link.label }}
-              <Icon icon="heroicons:arrow-up-right-20-solid" class="link-arrow" />
-            </a>
-          </div>
-          <div class="track" aria-hidden="true">
-            <span class="bar"
-              :style="{ left: `${toPercent(study.start)}%`, width: `${toPercent(study.end) - toPercent(study.start)}%` }"></span>
-          </div>
-        </li>
-      </ol>
-      <!-- Shares the rows' columns so the years line up under the bars -->
-      <div class="row axis-row" aria-hidden="true">
-        <div class="axis">
-          <span v-for="year in TIMELINE_YEARS" :key="year" class="tick" :style="{ left: `${toPercent(year)}%` }">{{
-            year }}</span>
+    <ol class="studies">
+      <li v-for="study in STUDIES" :key="study.degree" class="card"
+        :style="{ '--card-color': EXPERTISE_COLOR[study.discipline], '--selection-color': EXPERTISE_COLOR[study.discipline] }">
+        <span class="years">{{ formatYears(study.start, study.end) }}</span>
+
+        <div class="degree">
+          <h3>{{ study.degree }}</h3>
+          <p class="meta">{{ study.school }}<span class="separator">·</span>{{ study.detail }}</p>
         </div>
-      </div>
-    </div>
+
+        <div v-if="study.thesis || study.exchange" class="blocks">
+          <a v-if="study.thesis" class="block thesis" :href="study.thesis.href" target="_blank" rel="noreferrer">
+            <span class="block-label">Master's thesis</span>
+            <span class="block-title">{{ study.thesis.title }}</span>
+            <span class="block-detail">{{ study.thesis.summary }}</span>
+            <span class="read">
+              Read the thesis
+              <Icon icon="heroicons:arrow-up-right-20-solid" class="read-arrow" />
+            </span>
+          </a>
+
+          <div v-if="study.exchange" class="block exchange">
+            <span class="block-label">Exchange · {{ study.exchange.year }}</span>
+            <span class="block-title">{{ study.exchange.school }}</span>
+            <span class="block-detail">{{ study.exchange.location }}</span>
+            <div class="route" aria-hidden="true">
+              <svg :ref="(el) => observeRoute(el as Element | null)"
+                :viewBox="`0 0 ${routeSize.width} ${routeSize.height}`">
+                <path :d="routeArc" class="route-line" />
+                <path :d="routeArc" class="route-pulse" pathLength="100" />
+              </svg>
+              <span class="route-city"></span>
+              <span class="route-city route-end"></span>
+              <span class="route-label">Calgary</span>
+              <span class="route-label route-end">Helsinki</span>
+            </div>
+          </div>
+        </div>
+      </li>
+    </ol>
   </PinnedSection>
 </template>
 
 <style scoped>
-.education {
+/*
+ * One row per degree on a shared grid: the years in a rail on the left, the
+ * degree and its highlights beside them. The MSc row carries the thesis and
+ * exchange; the BSc stays a slim row rather than a card with nothing in it.
+ */
+.studies {
+  container-type: inline-size;
+  /* As large as the rail allows, and the same on every row */
+  --years-size: min(4.4cqi, 9dvh);
   display: flex;
   flex-direction: column;
   justify-content: center;
+  gap: clamp(0.75rem, 1.5vw, 1rem);
   height: 100%;
-}
-
-.studies {
-  display: flex;
-  flex-direction: column;
   list-style: none;
 }
 
-.row {
+.card {
+  position: relative;
   display: grid;
-  grid-template-columns: 8rem minmax(0, 1fr) minmax(0, 1.1fr);
+  grid-template-columns: calc(var(--years-size) * 4.9) minmax(0, 1fr);
+  /* The years centered on the degree's title and subtitle; the highlights below */
   align-items: center;
-  gap: clamp(1rem, 3vw, 3rem);
+  gap: clamp(1rem, 2.5vh, 1.5rem) clamp(1.5rem, 3vw, 3rem);
+  padding: clamp(1.25rem, 2.5vw, 2rem);
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--card-color) 18%, var(--neutral-800));
+  background-color: var(--neutral-900);
+  background-image: radial-gradient(color-mix(in srgb, var(--neutral-500), transparent 85%) 1px, transparent 1px);
+  background-size: 1.25rem 1.25rem;
 }
 
-.study {
-  padding: clamp(1rem, 2.5vh, 1.75rem) 0;
-  border-bottom: 1px solid var(--neutral-800);
+/* A dim glow in the discipline's color, behind the years */
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 50% 90% at 0% 0%, color-mix(in srgb, var(--card-color), transparent 86%), transparent);
+  pointer-events: none;
 }
 
+.card > * {
+  position: relative;
+}
+
+/*
+ * Outlined like the section numbers, in the card's color. The fill paints over
+ * the stroke's inner half, hiding lines where a glyph's contours overlap.
+ */
 .years {
-  align-self: start;
-  padding-top: 0.375rem;
-  font-family: var(--font-mono);
-  font-size: 0.875rem;
+  font-size: var(--years-size);
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: var(--neutral-400);
+  letter-spacing: -0.02em;
+  line-height: 0.85;
+  white-space: nowrap;
+  color: var(--neutral-900);
+  -webkit-text-stroke: 2px color-mix(in srgb, var(--card-color), transparent 40%);
+  paint-order: stroke fill;
 }
 
-.text {
+.degree {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.375rem;
 }
 
 h3 {
-  font-size: clamp(1.25rem, 2vw, 1.625rem);
+  font-size: clamp(1.5rem, 2.4vw, 2.25rem);
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
   color: var(--neutral-100);
 }
 
-.school {
-  color: var(--neutral-300);
-}
-
-.detail {
-  font-size: 0.9375rem;
+.meta {
+  font-size: 1rem;
   color: var(--text-muted);
 }
 
-.link {
-  display: inline-flex;
-  align-items: center;
-  align-self: flex-start;
-  gap: 0.25rem;
-  margin-top: 0.375rem;
-  font-family: var(--font-mono);
-  font-size: 0.8125rem;
-  color: var(--study-color);
+.separator {
+  margin: 0 0.5rem;
+  color: var(--neutral-600);
+}
+
+/* Thesis and exchange as cells of one bordered panel */
+.blocks {
+  grid-column: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 1px;
+  border: 1px solid var(--neutral-800);
+  background-color: var(--neutral-800);
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 1rem 1.25rem;
+  background-color: var(--neutral-900);
   text-decoration: none;
 }
 
-.link-arrow {
+.block-label {
+  margin-bottom: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--card-color);
+}
+
+.block-title {
+  font-size: clamp(1.0625rem, 1.4vw, 1.1875rem);
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--neutral-100);
+}
+
+.block-detail {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.read {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--card-color);
+}
+
+.read-arrow {
   width: 1rem;
   height: 1rem;
   transition: translate 0.2s ease;
 }
 
-.link:hover .link-arrow {
+.thesis {
+  transition: background-color 0.2s ease;
+}
+
+.thesis:hover {
+  background-color: color-mix(in srgb, var(--card-color), var(--neutral-900) 94%);
+}
+
+.thesis:hover .read-arrow {
   translate: 2px -2px;
 }
 
-/* Each study as a bar on a shared 2020 to 2026 axis */
-.track {
+/* There and back: a single line travels the dotted route, reaching each city */
+.route {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: space-between;
+  row-gap: 0.5rem;
   position: relative;
-  height: 0.5rem;
-  background: linear-gradient(var(--neutral-800), var(--neutral-800)) center / 100% 1px no-repeat;
+  margin-top: auto;
+  padding-top: 3.5rem;
 }
 
-.bar {
+/* The arc spans the full width; the dots and labels keep their size */
+.route svg {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  background-color: var(--study-color);
-  box-shadow: 0 0 1rem color-mix(in srgb, var(--study-color), transparent 60%);
+  /* Ends on the dots' centers */
+  top: 1.125rem;
+  left: 0.25rem;
+  width: calc(100% - 0.5rem);
+  height: 2.75rem;
+  overflow: visible;
 }
 
-.axis {
-  grid-column: 3;
-  position: relative;
-  height: 2rem;
+.route-line {
+  fill: none;
+  stroke: var(--neutral-600);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+
+.route-pulse {
+  fill: none;
+  stroke: var(--card-color);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-dasharray: 20 200;
+  animation: travel 3s ease-in-out infinite alternate;
+}
+
+@keyframes travel {
+  from {
+    stroke-dashoffset: 0;
+  }
+
+  to {
+    stroke-dashoffset: -80;
+  }
+}
+
+.route-city {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: var(--card-color);
+  box-shadow: 0 0 0.375rem var(--card-color);
+}
+
+.route-label {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
   color: var(--text-muted);
 }
 
-.tick {
-  position: absolute;
-  top: 0.75rem;
-  translate: -50% 0;
+.route-end {
+  justify-self: end;
 }
 
-/* PINNED_LAYOUT_QUERY not matching: the timeline drops away and the list remains */
+/* Matches PinnedSection's stacked fallback: the years move above the degree */
 @media not ((min-width: 57.75rem) and (min-height: 40rem) and (orientation: landscape)) {
-  .row {
-    grid-template-columns: 6rem minmax(0, 1fr);
+  .studies {
+    --years-size: 14cqi;
+    height: auto;
   }
 
-  .track,
-  .axis-row {
-    display: none;
+  .card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .blocks {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 40rem) {
+  .blocks {
+    grid-template-columns: 1fr;
   }
 }
 </style>

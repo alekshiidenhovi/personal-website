@@ -8,7 +8,6 @@ import EmbeddingSpace from "./EmbeddingSpace.vue";
     <div class="glow"></div>
     <div class="content">
       <div class="intro">
-        <span class="prompt"><span class="prompt-path">~/aleks</span> $ whoami</span>
         <h1>
           <span class="name-first">Aleks</span>
           <span class="name-last">Hiidenhovi</span>
@@ -16,8 +15,8 @@ import EmbeddingSpace from "./EmbeddingSpace.vue";
         <p class="headline">Full-stack data scientist</p>
         <p class="pitch">From raw data to real products, at terabyte scale.</p>
         <div class="cta-container">
-          <a class="cta cta-primary" href="#projects">
-            See selected work
+          <a class="cta cta-primary" href="#professional-experience">
+            See my work
             <Icon icon="heroicons:arrow-down-20-solid" class="cta-icon" />
           </a>
           <a class="cta cta-secondary" href="https://www.linkedin.com/in/hiidenhovi/" target="_blank" rel="noreferrer">
@@ -89,16 +88,6 @@ import EmbeddingSpace from "./EmbeddingSpace.vue";
   display: flex;
   flex-direction: column;
   gap: clamp(1rem, 2vw, 1.5rem);
-}
-
-.prompt {
-  font-family: var(--font-mono);
-  font-size: clamp(0.875rem, 1.2vw, 1rem);
-  color: var(--neutral-400);
-}
-
-.prompt-path {
-  color: var(--success-400);
 }
 
 h1 {

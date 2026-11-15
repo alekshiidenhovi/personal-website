@@ -5,7 +5,7 @@ import RoleSlide from "./RoleSlide.vue";
 </script>
 
 <template>
-  <PinnedSection id="professional-experience" :index="3" title="Experience"
+  <PinnedSection id="professional-experience" :index="2" title="Experience"
     subtitle="Shipping ML and data products at a global games company and a health-tech startup."
     :page-count="ROLES.length" :page-ids="ROLES.map((role) => role.slug)">
     <template #default="{ page, active }">

@@ -60,7 +60,8 @@ const linkType = computed(() => (new URL(props.project.link).hostname === "githu
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid var(--neutral-800);
+  /* A faint tint of the card's color at rest, brightening on hover */
+  border: 1px solid color-mix(in srgb, var(--card-color) 18%, var(--neutral-800));
   background-color: var(--neutral-900);
   background-image: radial-gradient(color-mix(in srgb, var(--neutral-500), transparent 85%) 1px, transparent 1px);
   background-size: 1.25rem 1.25rem;
@@ -77,7 +78,7 @@ const linkType = computed(() => (new URL(props.project.link).hostname === "githu
   position: absolute;
   inset: 0;
   background: radial-gradient(ellipse 70% 60% at 50% 45%, color-mix(in srgb, var(--card-color), transparent 88%), transparent);
-  opacity: 0;
+  opacity: 0.35;
   transition: opacity 0.4s ease;
   pointer-events: none;
 }

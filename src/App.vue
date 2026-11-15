@@ -16,8 +16,8 @@ useSlideshow();
   <main>
     <HeroSection />
     <ExpertiseSection />
-    <ProjectsSection />
     <ProfessionalExperienceSection />
+    <ProjectsSection />
     <EducationSection />
     <FooterSection />
   </main>

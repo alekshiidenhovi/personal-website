@@ -19,7 +19,7 @@ const STAGES = [
   { title: "model", centerX: 221 },
   { title: "roc", centerX: 336 },
 ];
-const FEATURES = ["sessions_7d", "spend_30d", "level", "days_active", "last_seen"];
+const FEATURES = ["sessions_7d", "matches_30d", "level", "days_active", "last_seen"];
 const FEATURE_ROW_Y = (index: number) => 50 + index * 13;
 const FEATURE_BAR = { x: 82, width: 66 };
 const DIMENSIONS = 16;

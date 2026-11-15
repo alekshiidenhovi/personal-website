@@ -4,15 +4,15 @@ export interface Study {
   degree: string;
   school: string;
   detail: string;
-  /** Inclusive start year and exclusive end year, as drawn on the timeline */
   start: number;
   end: number;
-  /** The discipline the studies built up; sets the bar color */
-  discipline?: Expertise;
-  link?: { label: string; href: string };
+  /** The discipline the studies built up; sets the card color */
+  discipline: Expertise;
+  thesis?: { title: string; summary: string; href: string };
+  exchange?: { school: string; location: string; year: number };
 }
 
-/** Newest first */
+/** Newest first; the first is shown as the featured card */
 export const STUDIES: Study[] = [
   {
     degree: "MSc Computer Science",
@@ -21,17 +21,12 @@ export const STUDIES: Study[] = [
     start: 2024,
     end: 2026,
     discipline: "machine learning",
-    link: {
-      label: "Master's thesis",
+    thesis: {
+      title: "Learning self-supervised player embeddings from game event streams",
+      summary: "Embeddings learned from raw event streams, used to improve in-game content recommendations.",
       href: "https://aaltodoc.aalto.fi/server/api/core/bitstreams/167423ba-5e84-4442-8468-ec644f9e8404/content",
     },
-  },
-  {
-    degree: "Student exchange",
-    school: "University of Calgary",
-    detail: "Calgary, Canada",
-    start: 2025,
-    end: 2026,
+    exchange: { school: "University of Calgary", location: "Calgary, Canada", year: 2025 },
   },
   {
     degree: "BSc Industrial Engineering",
@@ -42,7 +37,3 @@ export const STUDIES: Study[] = [
     discipline: "data ops",
   },
 ];
-
-/** Years shown on the timeline axis */
-export const TIMELINE_START = 2020;
-export const TIMELINE_END = 2026;

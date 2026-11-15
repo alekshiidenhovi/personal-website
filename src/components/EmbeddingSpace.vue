@@ -12,10 +12,10 @@ import { onMounted, onUnmounted, ref } from "vue";
 type Vec = [x: number, y: number];
 
 interface Point {
+  /** The raw scatter: the same every cycle, so each run starts and ends here */
   noise: Vec;
+  /** Where training puts the point; new clusters every cycle */
   target: Vec;
-  /** Noise position of the next cycle, where the point dissolves to */
-  nextNoise: Vec;
   cluster: number;
   /** 0 to 1: when the point starts moving during training */
   delay: number;
@@ -128,17 +128,17 @@ const chooseQuery = () => {
   query = { position, neighbours: nearestTo(position, NEIGHBOURS) };
 };
 
-/** Starts a new cycle: points begin from where the last one dissolved to */
+/** Starts a new cycle from the same raw scatter, training towards new clusters */
 const startCycle = (now: number) => {
   const targets = createTargets();
   points = targets.map(({ target, cluster }, index) => ({
-    noise: points[index]?.nextNoise ?? randomNoise(),
+    noise: points[index]?.noise ?? randomNoise(),
     target,
-    nextNoise: randomNoise(),
     cluster,
     delay: Math.random(),
-    wobble: Math.random() * Math.PI * 2,
-    radius: 0.6 + Math.random() * 0.8,
+    // Kept across cycles with the scatter, so nothing jumps when a run restarts
+    wobble: points[index]?.wobble ?? Math.random() * Math.PI * 2,
+    radius: points[index]?.radius ?? 0.6 + Math.random() * 0.8,
   }));
   chooseQuery();
   cycleStart = now;
@@ -194,8 +194,7 @@ const positionOf = (point: Point, phase: ReturnType<typeof phaseAt>, now: number
   const drift = 0.004 * trained;
   const wobbleX = Math.sin(now / 1400 + point.wobble) * drift;
   const wobbleY = Math.cos(now / 1700 + point.wobble) * drift;
-  const from = phase.name === "dissolve" ? point.nextNoise : point.noise;
-  return [lerp(from[0], point.target[0], trained) + wobbleX, lerp(from[1], point.target[1], trained) + wobbleY];
+  return [lerp(point.noise[0], point.target[0], trained) + wobbleX, lerp(point.noise[1], point.target[1], trained) + wobbleY];
 };
 
 const toCanvas = ([x, y]: Vec): Vec => [x * size.width, y * size.height];
@@ -282,8 +281,13 @@ function draw(now: number) {
   ctx.globalAlpha = 1;
 
   phaseLabel.value = phase.label;
-  const trainedSteps =
-    phase.name === "raw" ? 0 : phase.name === "train" ? Math.round(phase.progress * TRAINING_STEPS) : TRAINING_STEPS;
+  // The dissolve rewinds the count on the points' easing, reaching 0 as they reach the scatter
+  const trainedSteps = {
+    raw: 0,
+    train: phase.progress * TRAINING_STEPS,
+    query: TRAINING_STEPS,
+    dissolve: (1 - easeInOut(phase.progress)) * TRAINING_STEPS,
+  }[phase.name];
   step.value = Math.round(trainedSteps / 100) * 100;
 }
 

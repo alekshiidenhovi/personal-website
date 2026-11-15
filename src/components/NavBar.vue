@@ -3,8 +3,8 @@ import { computed, onMounted, onUnmounted, ref } from "vue";
 
 const LINKS = [
   { label: "Expertise", id: "expertise" },
-  { label: "Projects", id: "projects" },
   { label: "Experience", id: "professional-experience" },
+  { label: "Projects", id: "projects" },
   { label: "Education", id: "education" },
   { label: "Contact", id: "contact" },
 ];
@@ -38,10 +38,7 @@ onUnmounted(() => {
 
 <template>
   <header :class="{ visible: isVisible }" :inert="!isVisible">
-    <a :href="`#${HERO_ID}`" class="nav-home" aria-label="Back to start">
-      <span class="home-full">~/aleks</span>
-      <span class="home-short">~</span>
-    </a>
+    <a :href="`#${HERO_ID}`" class="nav-home" aria-label="Back to start">AH</a>
     <nav>
       <a v-for="(link, index) in LINKS" :key="link.id" :href="`#${link.id}`" class="nav-link"
         :class="{ active: activeId === link.id }" :aria-current="activeId === link.id ? 'location' : undefined">
@@ -82,36 +79,25 @@ nav {
   grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
-/* Home link echoing the hero's shell prompt, shortened to "~" when the gutter is narrow */
+/* Monogram in the same type and gradient as the hero name */
+/* Sized to the letters, so the gradient spans them rather than the whole gutter */
 .nav-home {
-  container-type: inline-size;
+  justify-self: center;
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 1.125rem 0;
-  font-family: var(--font-mono);
-  font-size: 0.8125rem;
-  color: var(--success-400);
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
   text-decoration: none;
-  transition: color 0.2s ease;
+  background: linear-gradient(100deg, var(--primary-400), var(--accent-400) 55%, var(--warning-400));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  transition: filter 0.2s ease;
 }
 
 .nav-home:hover {
-  color: var(--success-300);
-}
-
-.home-full {
-  display: none;
-}
-
-@container (min-width: 5.5rem) {
-  .home-full {
-    display: inline;
-  }
-
-  .home-short {
-    display: none;
-  }
+  filter: brightness(1.2);
 }
 
 .nav-link {
@@ -189,17 +175,8 @@ nav {
   }
 
   .nav-home {
-    container-type: normal;
-    padding: 1rem 0.75rem 1rem 1.25rem;
-    font-size: 0.75rem;
-  }
-
-  .home-full {
-    display: inline;
-  }
-
-  .home-short {
-    display: none;
+    margin: 0 0.75rem 0 1.25rem;
+    font-size: 1rem;
   }
 
   .nav-link {

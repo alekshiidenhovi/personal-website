@@ -3,10 +3,11 @@ import { computed, ref, toRef } from "vue";
 import { useLiveTicker } from "../composables/useLiveTicker";
 
 /**
- * A miniature data pipeline job, drawn to illustrate rather than measure:
- * events flow through ingest, validation and write stages, data quality
- * checks quarantine the bad rows, and the day's partition fills while earlier
- * ones sit validated. Hover a check to see which rows it caught.
+ * A miniature daily pipeline job, drawn to illustrate rather than measure,
+ * laid out as its three stages. Events arrive in ingest, pass through the
+ * data quality checks in validate, where bad rows are quarantined, and fill
+ * the day's partition in write. A full day is sealed, then the job moves on
+ * to the next. Hover a check to see which rows it caught.
  */
 
 type Check = "schema" | "not-null" | "unique" | "freshness";
@@ -19,16 +20,9 @@ interface StreamRow {
   failed: Check | null;
 }
 
-interface Partition {
-  date: string;
-  /** Share of a typical day's volume written so far */
-  fill: number;
-}
-
 const TICK_MS = 700;
 const STREAM_LENGTH = 6;
 const FAILURE_RATE = 0.12;
-const STAGES = ["ingest", "validate", "write"];
 const EVENTS = ["ticket.created", "message.sent", "ticket.updated", "ticket.closed"];
 const CHECKS: Check[] = ["schema", "not-null", "unique", "freshness"];
 const FAILURE_REASONS: Record<Check, string> = {
@@ -37,10 +31,17 @@ const FAILURE_REASONS: Record<Check, string> = {
   unique: "duplicate key",
   freshness: "arrived late",
 };
-const TODAY_FILL_STEP = 0.02;
+/** Share of a day each passing row writes */
+const FILL_PER_ROW = [0.045, 0.075] as const;
+const PARTITION_COUNT = 4;
+/** Ticks the sealed day is shown before the next one starts */
+const SEAL_TICKS = 4;
+/** The first day written; recent, but far enough back that the loop stays in the past */
+const FIRST_DAY_OFFSET = -14;
 
 const randomItem = <T,>(items: T[]) => items[Math.floor(Math.random() * items.length)];
 const randomKey = () => Math.floor(Math.random() * 0xffff).toString(16).padStart(4, "0");
+const formatDate = (dayOffset: number) => new Date(Date.now() + dayOffset * 86_400_000).toISOString().slice(0, 10);
 
 let nextRowId = 0;
 const createRow = (): StreamRow => ({
@@ -50,11 +51,6 @@ const createRow = (): StreamRow => ({
   failed: Math.random() < FAILURE_RATE ? randomItem(CHECKS) : null,
 });
 
-const formatDate = (daysAgo: number) => new Date(Date.now() - daysAgo * 86_400_000).toISOString().slice(0, 10);
-
-const createPartitions = (): Partition[] =>
-  [0, 1, 2, 3].map((daysAgo) => ({ date: formatDate(daysAgo), fill: daysAgo === 0 ? 0.35 : 0.85 + Math.random() * 0.15 }));
-
 interface Props {
   /** Whether the visual is playing */
   active: boolean;
@@ -62,23 +58,53 @@ interface Props {
 const props = defineProps<Props>();
 
 const stream = ref(Array.from({ length: STREAM_LENGTH }, createRow));
-const partitions = ref(createPartitions());
-const flashedCheck = ref<Check | null>(null);
+/** The row in validation, keyed by tick so its flow animations restart */
+const current = ref<StreamRow | null>(stream.value[0]);
+const tick = ref(0);
+/** Newest first; the first is the day being written. Days are offsets from today */
+const days = ref(
+  Array.from({ length: PARTITION_COUNT }, (_, index) => ({ offset: FIRST_DAY_OFFSET - index, fill: index ? 1 : 0.4 })),
+);
+const quarantined = ref(1);
+const phase = ref<"writing" | "sealing">("writing");
 const hoveredCheck = ref<Check | null>(null);
+let sealTicks = 0;
 
 useLiveTicker(
   toRef(props, "active"),
   () => {
+    tick.value++;
+    const today = days.value[0];
+
+    if (phase.value === "sealing") {
+      current.value = null;
+      if (++sealTicks < SEAL_TICKS) return;
+      sealTicks = 0;
+      quarantined.value = 0;
+      days.value = [{ offset: today.offset + 1, fill: 0 }, ...days.value.slice(0, PARTITION_COUNT - 1)];
+      phase.value = "writing";
+      return;
+    }
+
     const row = createRow();
     stream.value = [row, ...stream.value.slice(0, STREAM_LENGTH - 1)];
-    const today = partitions.value[0];
-    today.fill = today.fill >= 0.95 ? 0.35 : today.fill + TODAY_FILL_STEP;
-    flashedCheck.value = row.failed;
+    current.value = row;
+    if (row.failed) {
+      quarantined.value++;
+      return;
+    }
+    const [min, max] = FILL_PER_ROW;
+    today.fill = Math.min(today.fill + min + Math.random() * (max - min), 1);
+    if (today.fill === 1) phase.value = "sealing";
   },
   TICK_MS,
 );
 
-const status = computed(() => (props.active ? "running" : "idle"));
+const status = computed(() => (props.active ? (phase.value === "sealing" ? "sealing" : "running") : "idle"));
+const partitionState = (index: number) => {
+  if (index > 0) return "sealed";
+  return phase.value === "sealing" ? "sealed" : "writing";
+};
 </script>
 
 <template>
@@ -88,47 +114,59 @@ const status = computed(() => (props.active ? "running" : "idle"));
       <span>job events_daily</span>
     </div>
 
-    <!-- The job's stages, with data flowing between them -->
-    <ol class="stages">
-      <template v-for="(stage, index) in STAGES" :key="stage">
-        <li class="stage">{{ stage }}</li>
-        <li v-if="index < STAGES.length - 1" class="flow" aria-hidden="true"></li>
-      </template>
-    </ol>
+    <!-- The job's stages as columns, with each row flowing between them -->
+    <div class="pipeline">
+      <span class="stage stage-ingest">ingest</span>
+      <span class="flow" aria-hidden="true">
+        <span v-if="current" :key="`in-${tick}`" class="flow-dot"></span>
+      </span>
+      <span class="stage stage-validate">validate</span>
+      <span class="flow" aria-hidden="true">
+        <span v-if="current && !current.failed" :key="`out-${tick}`" class="flow-dot flow-dot-late"></span>
+      </span>
+      <span class="stage stage-write">write</span>
 
-    <div class="columns">
-      <section class="column">
-        <span class="column-label">stream sample</span>
+      <section class="column column-ingest">
         <TransitionGroup name="row" tag="ol" class="stream">
           <li v-for="row in stream" :key="row.id" class="row"
             :class="{ failed: row.failed, dimmed: hoveredCheck && row.failed !== hoveredCheck }">
             <span class="key">{{ row.key }}</span>
             <span class="event">{{ row.event }}</span>
-            <span class="verdict">{{ row.failed ? `✗ ${FAILURE_REASONS[row.failed]}` : "✓" }}</span>
           </li>
         </TransitionGroup>
       </section>
 
-      <section class="column">
-        <span class="column-label">partitions</span>
-        <ol class="partitions">
-          <li v-for="(partition, index) in partitions" :key="partition.date" class="partition"
-            :class="{ writing: index === 0 }">
-            <span class="partition-date">dt={{ partition.date }}</span>
-            <span class="partition-track"><span class="partition-fill" :style="{ width: `${partition.fill * 100}%` }"></span></span>
-            <span class="partition-state">{{ index === 0 ? "writing" : "✓" }}</span>
+      <section class="column column-validate">
+        <p class="checking">
+          <template v-if="current">
+            <span>row {{ current.key }}</span>
+            <span :key="tick" class="verdict" :class="{ failed: current.failed }">
+              {{ current.failed ? "✗ quarantined" : "✓ passed" }}
+            </span>
+          </template>
+          <span v-else>sealing partition</span>
+        </p>
+        <ul class="checks" @pointerleave="hoveredCheck = null">
+          <li v-for="check in CHECKS" :key="check" class="check" :class="{ caught: current?.failed === check }"
+            @pointerenter="hoveredCheck = check">
+            <span class="check-dot"></span>
+            <span class="check-name">{{ check }}</span>
+            <span v-if="current?.failed === check" :key="tick" class="check-reason">{{ FAILURE_REASONS[check] }}</span>
           </li>
-        </ol>
+        </ul>
+        <p class="quarantine">quarantined <span class="quarantine-count">{{ quarantined }}</span></p>
+      </section>
+
+      <section class="column column-write">
+        <TransitionGroup name="partition" tag="ol" class="partitions">
+          <li v-for="(day, index) in days" :key="day.offset" class="partition" :class="partitionState(index)">
+            <span class="partition-date">dt={{ formatDate(day.offset) }}</span>
+            <span class="partition-state">{{ partitionState(index) === "writing" ? "writing" : "✓" }}</span>
+            <span class="partition-track"><span class="partition-fill" :style="{ width: `${day.fill * 100}%` }"></span></span>
+          </li>
+        </TransitionGroup>
       </section>
     </div>
-
-    <ul class="checks" @pointerleave="hoveredCheck = null">
-      <li v-for="check in CHECKS" :key="check" class="check" :class="{ flashed: flashedCheck === check }"
-        @pointerenter="hoveredCheck = check">
-        <span class="check-dot"></span>
-        <span class="check-name">{{ check }}</span>
-      </li>
-    </ul>
   </div>
 </template>
 
@@ -137,7 +175,7 @@ const status = computed(() => (props.active ? "running" : "idle"));
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 0.875rem;
+  gap: 1rem;
   align-self: stretch;
   width: 100%;
   font-family: var(--font-mono);
@@ -167,6 +205,14 @@ const status = computed(() => (props.active ? "running" : "idle"));
   animation: pulse 1.2s ease-in-out infinite;
 }
 
+.status.sealing {
+  color: var(--success-400);
+}
+
+.status.sealing::before {
+  background-color: var(--success-400);
+}
+
 .status.idle {
   color: var(--neutral-400);
 }
@@ -182,64 +228,116 @@ const status = computed(() => (props.active ? "running" : "idle"));
   }
 }
 
-.stages {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  list-style: none;
+/* Stage headers over their columns, joined by connectors */
+.pipeline {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 2rem minmax(0, 1fr) 2rem minmax(0, 1.15fr);
+  row-gap: 0.625rem;
 }
 
 .stage {
-  padding: 0.375rem 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.stage {
+  padding: 0.375rem 0;
   border: 1px solid color-mix(in srgb, var(--accent-400), transparent 55%);
   background-color: color-mix(in srgb, var(--accent-400), transparent 92%);
+  text-align: center;
   text-transform: uppercase;
   letter-spacing: 1px;
   font-size: 0.6875rem;
   color: var(--accent-300);
 }
 
-/* A dashed connector that flows while the job runs */
 .flow {
-  flex: 1;
+  position: relative;
+  align-self: center;
   height: 1px;
-  background: repeating-linear-gradient(90deg, var(--neutral-600) 0 4px, transparent 4px 8px);
-  background-size: 8px 1px;
+  background: repeating-linear-gradient(90deg, var(--neutral-600) 0 3px, transparent 3px 6px);
 }
 
-.running .flow {
-  background-image: repeating-linear-gradient(90deg, var(--accent-400) 0 4px, transparent 4px 8px);
-  animation: flow 0.6s linear infinite;
+/* Each row travels the connectors: into validation, then on to write if it passed */
+.flow-dot {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  background-color: var(--accent-400);
+  box-shadow: 0 0 0.375rem var(--accent-400);
+  translate: -50% -50%;
+  opacity: 0;
+  animation: travel 0.3s ease-in-out forwards;
 }
 
-@keyframes flow {
-  to {
-    background-position: 8px 0;
+.flow-dot-late {
+  animation-delay: 0.35s;
+}
+
+@keyframes travel {
+  0% {
+    left: 0;
+    opacity: 1;
+  }
+
+  100% {
+    left: 100%;
+    opacity: 0;
   }
 }
 
-.columns {
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-  gap: 1rem;
-}
-
+/*
+ * The validate column's parts sit on the pipeline's own rows, so the ingest
+ * and write lists can span exactly from the row being checked down to the
+ * last check, with the quarantine count below.
+ */
 .column {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
   min-width: 0;
 }
 
-.column-label {
-  font-size: 0.625rem;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--text-muted);
+.column-ingest {
+  grid-column: 1;
+  grid-row: 2 / 4;
+}
+
+.column-validate {
+  display: contents;
+}
+
+.checking {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.checks {
+  grid-column: 3;
+  grid-row: 3;
+}
+
+.quarantine {
+  grid-column: 3;
+  grid-row: 4;
+}
+
+.column-write {
+  grid-column: 5;
+  grid-row: 2 / 4;
+}
+
+/* Spread over the column's height, so the last item lines up with the last check */
+.column-ingest .stream,
+.column-write .partitions {
+  flex: 1;
+  justify-content: space-between;
 }
 
 .stream,
-.partitions {
+.partitions,
+.checks {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -249,7 +347,7 @@ const status = computed(() => (props.active ? "running" : "idle"));
 
 .row {
   display: grid;
-  grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+  grid-template-columns: 2.25rem minmax(0, 1fr);
   gap: 0.5rem;
   white-space: nowrap;
   transition: opacity 0.3s ease;
@@ -265,18 +363,14 @@ const status = computed(() => (props.active ? "running" : "idle"));
   color: var(--neutral-300);
 }
 
-.verdict {
-  color: var(--success-400);
+/* Quarantined rows are struck out of the stream */
+.row.failed .key {
+  color: var(--danger-400);
 }
 
-/* Rows that fail a check are struck out and quarantined */
 .row.failed .event {
   color: var(--text-muted);
   text-decoration: line-through;
-}
-
-.row.failed .verdict {
-  color: var(--danger-400);
 }
 
 .row.dimmed {
@@ -297,59 +391,40 @@ const status = computed(() => (props.active ? "running" : "idle"));
   transform: translateY(-0.5rem);
 }
 
-.partition {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) 3.5rem;
-  align-items: center;
-  gap: 0.625rem;
-  white-space: nowrap;
-}
-
-.partition-date {
-  color: var(--neutral-400);
-}
-
-/* Relative volume, not a measurement */
-.partition-track {
-  height: 0.375rem;
-  background-color: var(--neutral-800);
-}
-
-.partition-fill {
-  display: block;
-  height: 100%;
-  background-color: var(--neutral-500);
-  transition: width 0.6s ease;
-}
-
-.partition.writing .partition-fill {
-  background-color: var(--accent-400);
-}
-
-.partition-state {
-  text-align: right;
-  color: var(--success-400);
-}
-
-/* Today's partition is still being written */
-.partition.writing .partition-state {
-  color: var(--accent-300);
-  animation: pulse 1.2s ease-in-out infinite;
-}
-
-.checks {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+/* The row being checked and its verdict, revealed as it reaches validation */
+.checking {
+  display: flex;
+  justify-content: space-between;
   gap: 0.5rem;
-  list-style: none;
+  white-space: nowrap;
+  color: var(--neutral-300);
+}
+
+.verdict {
+  color: var(--success-400);
+  animation: reveal 0.25s ease 0.3s backwards;
+}
+
+.verdict.failed {
+  color: var(--danger-400);
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+  }
 }
 
 .check {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
   align-items: center;
   gap: 0.5rem;
-  padding: 0.375rem 0.5rem;
+  padding: 0.3125rem 0.5rem;
   border: 1px solid var(--neutral-800);
+  /* Fixed, so a gate showing a reason doesn't grow and shift the columns */
+  font-size: 0.625rem;
+  line-height: 1rem;
   cursor: default;
   transition: border-color 0.3s ease, background-color 0.3s ease;
 }
@@ -358,14 +433,7 @@ const status = computed(() => (props.active ? "running" : "idle"));
   border-color: var(--neutral-600);
 }
 
-/* A check lights up when it catches a row */
-.check.flashed {
-  border-color: color-mix(in srgb, var(--danger-400), transparent 40%);
-  background-color: color-mix(in srgb, var(--danger-400), transparent 92%);
-}
-
 .check-name {
-  font-size: 0.625rem;
   letter-spacing: 1px;
   text-transform: uppercase;
 }
@@ -378,18 +446,184 @@ const status = computed(() => (props.active ? "running" : "idle"));
   transition: background-color 0.3s ease;
 }
 
-.check.flashed .check-dot {
-  background-color: var(--danger-400);
+/* The gate that catches a row flashes with its reason */
+.check.caught {
+  border-color: color-mix(in srgb, var(--danger-400), transparent 40%);
+  background-color: color-mix(in srgb, var(--danger-400), transparent 92%);
+  transition-delay: 0.3s;
 }
 
-/* Narrow screens stack the stream above the partitions */
+.check.caught .check-dot {
+  background-color: var(--danger-400);
+  transition-delay: 0.3s;
+}
+
+.check-reason {
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--danger-400);
+  animation: reveal 0.25s ease 0.3s backwards;
+}
+
+.quarantine {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--neutral-800);
+}
+
+.quarantine-count {
+  font-variant-numeric: tabular-nums;
+  color: var(--danger-400);
+}
+
+.partition {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.3125rem 0.5rem;
+  white-space: nowrap;
+}
+
+.partition-date {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--neutral-400);
+}
+
+.partition-state {
+  color: var(--success-400);
+}
+
+.partition.writing .partition-state {
+  color: var(--accent-300);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+/* Progress through the day, not a measurement */
+.partition-track {
+  grid-column: 1 / -1;
+  height: 0.3125rem;
+  background-color: var(--neutral-800);
+}
+
+/* Lands as the row arrives from validation */
+.partition-fill {
+  display: block;
+  height: 100%;
+  background-color: var(--neutral-500);
+  transition: width 0.4s ease 0.6s, background-color 0.6s ease;
+}
+
+.partition.writing .partition-fill {
+  background-color: var(--accent-400);
+}
+
+/* A finished day turns green, then settles into the sealed days below */
+.partition.sealed:first-child .partition-fill {
+  animation: sealed 2.2s ease forwards;
+}
+
+.partition.sealed:first-child .partition-state {
+  animation: pop 0.4s ease 0.6s backwards;
+}
+
+@keyframes sealed {
+  0%,
+  20% {
+    background-color: var(--accent-400);
+  }
+
+  40%,
+  70% {
+    background-color: var(--success-400);
+  }
+
+  100% {
+    background-color: var(--neutral-500);
+  }
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    scale: 0.4;
+  }
+}
+
+/* The next day slides in on top; the oldest falls away */
+.partition-enter-active,
+.partition-move {
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.partition-leave-active {
+  position: absolute;
+  width: 100%;
+  transition: opacity 0.3s ease;
+}
+
+.partition-enter-from {
+  opacity: 0;
+  transform: translateY(-0.5rem);
+}
+
+.partition-leave-to {
+  opacity: 0;
+}
+
+/* Narrow screens stack the stages, each header above its own column */
 @media (max-width: 40rem) {
-  .columns {
-    grid-template-columns: 1fr;
+  .pipeline {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .flow {
+    display: none;
+  }
+
+  .pipeline > *,
+  .column-validate > * {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .stage-ingest {
+    order: 1;
+  }
+
+  .column-ingest {
+    order: 2;
+  }
+
+  .stage-validate {
+    order: 3;
+  }
+
+  .checking {
+    order: 4;
   }
 
   .checks {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    order: 5;
+  }
+
+  .quarantine {
+    order: 6;
+  }
+
+  .stage-write {
+    order: 7;
+  }
+
+  .column-write {
+    order: 8;
+  }
+
+  .column-ingest .stream,
+  .column-write .partitions {
+    gap: 0.3125rem;
   }
 }
 </style>
