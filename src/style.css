@@ -38,11 +38,20 @@ html {
    */
   font-size: clamp(100%, min(0.926vw, 1.66vh), 200%);
   --nav-height: 5rem;
-  /* Snap points: the hero and each page of the pinned sections */
-  scroll-snap-type: y proximity;
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   background-color: var(--neutral-950);
+}
+
+/*
+ * Snap points, the hero and each page of the pinned sections, only in the
+ * pinned layout (PINNED_LAYOUT_QUERY). Stacked layouts hide the section snap
+ * points, so the hero would be the only one left and pull short scrolls back.
+ */
+@media (min-width: 57.75rem) and (min-height: 40rem) and (orientation: landscape) {
+  html {
+    scroll-snap-type: y proximity;
+  }
 }
 
 /* Blue by default; content tied to a discipline sets --selection-color to its color */
