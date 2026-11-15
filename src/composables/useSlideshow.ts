@@ -19,6 +19,12 @@ const WHEEL_RISE_RATIO = 1.5;
 const WHEEL_RISE_MIN_PX = 6;
 /** Pixels per line for wheels that report in lines */
 const WHEEL_LINE_PX = 16;
+/*
+ * Touch: on tablets in the pinned layout a vertical swipe moves one slide,
+ * like a wheel gesture, instead of free scrolling past the snap points.
+ */
+/** Vertical swipe distance in pixels that moves one slide */
+const SWIPE_THRESHOLD_PX = 40;
 /** Fallback for browsers without the `scrollend` event */
 const SCROLL_END_FALLBACK_MS = 900;
 /** Positions this close to the current scroll count as the current slide */
@@ -37,7 +43,8 @@ type Direction = 1 | -1;
  * backwards, scrolling smoothly. In-page links always crossfade straight to
  * their slide, however near, unless marked `data-scroll` to scroll like the
  * wheel; Home/End crossfade once the target is more than a slide away. Narrow
- * screens keep normal scrolling.
+ * screens keep normal scrolling. Swipes on touch screens move one slide too,
+ * so tablets get the same slideshow as laptops.
  */
 export function useSlideshow() {
   let pinnedMedia: MediaQueryList | null = null;
@@ -45,6 +52,8 @@ export function useSlideshow() {
   let gesture: { distance: number; peak: number; isDecaying: boolean; hasMoved: boolean } | null = null;
   let lastWheelMagnitude = 0;
   let quietTimer: ReturnType<typeof setTimeout> | undefined;
+  /** Where the current one-finger swipe started, and whether it has already moved a slide */
+  let swipe: { x: number; y: number; hasMoved: boolean } | null = null;
 
   const slidePositions = () => {
     const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
@@ -132,6 +141,35 @@ export function useSlideshow() {
     if (!isAnimating) goTo(delta > 0 ? 1 : -1);
   };
 
+  const onTouchStart = (event: TouchEvent) => {
+    // A second finger is a pinch, which stays the browser's
+    if (!pinnedMedia?.matches || event.touches.length !== 1) {
+      swipe = null;
+      return;
+    }
+    const [touch] = event.touches;
+    swipe = { x: touch.clientX, y: touch.clientY, hasMoved: false };
+  };
+
+  const onTouchMove = (event: TouchEvent) => {
+    if (!swipe || event.touches.length !== 1) return;
+    // The slideshow owns vertical movement here, so the page never free-scrolls between slides
+    event.preventDefault();
+    if (swipe.hasMoved) return;
+
+    const [touch] = event.touches;
+    const deltaY = swipe.y - touch.clientY;
+    const deltaX = swipe.x - touch.clientX;
+    if (Math.abs(deltaY) < SWIPE_THRESHOLD_PX || Math.abs(deltaY) < Math.abs(deltaX)) return;
+    // One slide per swipe; a swipe reaching the threshold mid-animation is swallowed, as with the wheel
+    swipe.hasMoved = true;
+    if (!isAnimating) goTo(deltaY > 0 ? 1 : -1);
+  };
+
+  const onTouchEnd = () => {
+    swipe = null;
+  };
+
   const onClick = (event: MouseEvent) => {
     if (!pinnedMedia?.matches || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
       return;
@@ -177,6 +215,11 @@ export function useSlideshow() {
     pinnedMedia = window.matchMedia(PINNED_LAYOUT_QUERY);
     window.addEventListener("wheel", onWheel, { passive: false });
     window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    // Not passive, so a swipe can stop the browser's own scrolling
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchend", onTouchEnd);
+    window.addEventListener("touchcancel", onTouchEnd);
     document.addEventListener("click", onClick);
   });
 
@@ -184,6 +227,10 @@ export function useSlideshow() {
     clearTimeout(quietTimer);
     window.removeEventListener("wheel", onWheel);
     window.removeEventListener("keydown", onKeyDown);
+    window.removeEventListener("touchstart", onTouchStart);
+    window.removeEventListener("touchmove", onTouchMove);
+    window.removeEventListener("touchend", onTouchEnd);
+    window.removeEventListener("touchcancel", onTouchEnd);
     document.removeEventListener("click", onClick);
   });
 }
