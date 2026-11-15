@@ -3,11 +3,12 @@ import { computed, ref, toRef } from "vue";
 import { useLiveTicker } from "../composables/useLiveTicker";
 
 /**
- * A miniature daily pipeline job, drawn to illustrate rather than measure,
- * laid out as its three stages. Events arrive in ingest, pass through the
- * data quality checks in validate, where bad rows are quarantined, and fill
- * the day's partition in write. A full day is sealed, then the job moves on
- * to the next. Hover a check to see which rows it caught.
+ * A miniature micro-batch pipeline job, drawn to illustrate rather than
+ * measure. Its three stages run at their own pace, each on a different batch:
+ * events arrive in ingest at an irregular rate until the batch is full, the
+ * batch before it runs through the data quality checks in validate, and each
+ * checked batch is appended to the day's partition in write. A full day is
+ * sealed, and the next batch starts a new one.
  */
 
 type Check = "schema" | "not-null" | "unique" | "freshness";
@@ -16,31 +17,55 @@ interface StreamRow {
   id: number;
   key: string;
   event: string;
-  /** The check the row failed, if any */
+  /** The check the row fails, found out only in validate */
   failed: Check | null;
 }
 
-const TICK_MS = 1200;
-/** One more than the six shown, so the oldest fades out rather than vanishing */
-const STREAM_LENGTH = 7;
+interface Batch {
+  id: number;
+  rows: StreamRow[];
+}
+
+interface Validation extends Batch {
+  checksDone: number;
+  written: boolean;
+}
+
+interface Day {
+  /** Days from today */
+  offset: number;
+  /** Batches written */
+  written: number;
+}
+
+/** The clock the stages run on; fine enough that each keeps its own pace */
+const TICK_MS = 100;
+/** Gap between arriving events, drawn at random so ingest has an irregular pace */
+const ARRIVAL_MS = [400, 800] as const;
+/** A batch is cut when full, so every write is the same size */
+const BATCH_SIZE = 6;
+/** How long a full batch is shown before it's handed to validate */
+const FULL_HOLD_MS = 600;
+/** Time each check takes, and the pause after the last before the batch is written */
+const STEP_MS = 400;
+const BATCHES_PER_DAY = 8;
+/** How long a full day shows as sealed before the next day starts */
+const SEAL_HOLD_MS = 1600;
+const PARTITION_COUNT = 4;
 const FAILURE_RATE = 0.12;
 const EVENTS = ["ticket.created", "message.sent", "ticket.updated", "ticket.closed"];
 const CHECKS: Check[] = ["schema", "not-null", "unique", "freshness"];
 const FAILURE_REASONS: Record<Check, string> = {
   schema: "bad type",
   "not-null": "missing field",
-  unique: "duplicate key",
-  freshness: "arrived late",
+  unique: "duplicate",
+  freshness: "late",
 };
-/** Passing rows that fill a day; each writes the same step */
-const ROWS_PER_DAY = 12;
-const PARTITION_COUNT = 4;
-/** Ticks the sealed day is shown before the next one starts */
-const SEAL_TICKS = 3;
 /** The first day written; recent, but far enough back that the loop stays in the past */
 const FIRST_DAY_OFFSET = -14;
 
 const randomItem = <T,>(items: T[]) => items[Math.floor(Math.random() * items.length)];
+const randomBetween = ([min, max]: readonly [number, number]) => min + Math.random() * (max - min);
 const randomKey = () => Math.floor(Math.random() * 0xffff).toString(16).padStart(4, "0");
 const formatDate = (dayOffset: number) => new Date(Date.now() + dayOffset * 86_400_000).toISOString().slice(0, 10);
 
@@ -51,6 +76,7 @@ const createRow = (): StreamRow => ({
   event: randomItem(EVENTS),
   failed: Math.random() < FAILURE_RATE ? randomItem(CHECKS) : null,
 });
+const createRows = (count: number) => Array.from({ length: count }, createRow);
 
 interface Props {
   /** Whether the visual is playing */
@@ -58,82 +84,126 @@ interface Props {
 }
 const props = defineProps<Props>();
 
-const stream = ref(Array.from({ length: STREAM_LENGTH }, createRow));
-/** The row in validation, keyed by tick so its flow animations restart */
-const current = ref<StreamRow | null>(stream.value[0]);
-const tick = ref(0);
-/** Newest first; the first is the day being written. Days are offsets from today */
-const days = ref(
+// Starts mid-run, so the still frame shown with reduced motion reads on its own
+const ingesting = ref<Batch>({ id: 43, rows: createRows(3) });
+const validating = ref<Validation>({ id: 42, rows: createRows(BATCH_SIZE), checksDone: CHECKS.length, written: true });
+/** Newest first; the first is the day being written */
+const days = ref<Day[]>(
   Array.from({ length: PARTITION_COUNT }, (_, index) => ({
     offset: FIRST_DAY_OFFSET - index,
-    written: index ? ROWS_PER_DAY : 4,
+    written: index ? BATCHES_PER_DAY : 3,
   })),
 );
 /** Counted over the whole job and seeded with earlier days, so the rate holds steady rather than jumping */
 const SEED_CHECKED = 500;
 const checked = ref(SEED_CHECKED);
 const passed = ref(Math.round(SEED_CHECKED * (1 - FAILURE_RATE)));
-const passRate = computed(() => `${((passed.value / checked.value) * 100).toFixed(1)}%`);
-const phase = ref<"writing" | "sealing">("writing");
-const hoveredCheck = ref<Check | null>(null);
-let sealTicks = 0;
+/** Handoffs so far, keying each arrow so it lights up once per handoff */
+const cuts = ref(0);
+const writes = ref(0);
+
+let clock = 0;
+let nextArrivalAt = randomBetween(ARRIVAL_MS);
+let nextStepAt = 0;
+let cutAt: number | null = null;
+let nextDayAt: number | null = null;
+
+/** Starts the next day on top; the oldest falls away */
+const startNextDay = () => {
+  nextDayAt = null;
+  days.value = [{ offset: days.value[0].offset + 1, written: 0 }, ...days.value.slice(0, PARTITION_COUNT - 1)];
+};
+
+/** An event joins the batch in ingest; once full, the batch is held for a moment before the cut */
+const arrive = () => {
+  const batch = ingesting.value;
+  batch.rows.push(createRow());
+  if (batch.rows.length === BATCH_SIZE) cutAt = clock + FULL_HOLD_MS;
+};
+
+/** The full batch is handed to validate, and ingest starts the next */
+const cut = () => {
+  const batch = ingesting.value;
+  cutAt = null;
+  validating.value = { ...batch, checksDone: 0, written: false };
+  ingesting.value = { id: batch.id + 1, rows: [] };
+  cuts.value++;
+  nextStepAt = clock + STEP_MS;
+};
+
+/** Runs the batch in validate through its checks one at a time, then writes it */
+const advanceValidation = () => {
+  const batch = validating.value;
+  if (batch.written) return;
+  nextStepAt = clock + STEP_MS;
+  if (batch.checksDone < CHECKS.length) {
+    if (++batch.checksDone === CHECKS.length) {
+      checked.value += batch.rows.length;
+      passed.value += batch.rows.filter((row) => !row.failed).length;
+    }
+    return;
+  }
+  batch.written = true;
+  writes.value++;
+  // A write never lands on a sealed day, even if it comes before the next day has started
+  if (nextDayAt !== null) startNextDay();
+  if (++days.value[0].written === BATCHES_PER_DAY) nextDayAt = clock + SEAL_HOLD_MS;
+};
 
 useLiveTicker(
   toRef(props, "active"),
   () => {
-    tick.value++;
-    const today = days.value[0];
-
-    if (phase.value === "sealing") {
-      current.value = null;
-      if (++sealTicks < SEAL_TICKS) return;
-      sealTicks = 0;
-      days.value = [{ offset: today.offset + 1, written: 0 }, ...days.value.slice(0, PARTITION_COUNT - 1)];
-      phase.value = "writing";
-      return;
+    clock += TICK_MS;
+    if (cutAt !== null && clock >= cutAt) {
+      cut();
+      nextArrivalAt = clock + randomBetween(ARRIVAL_MS);
+    } else if (cutAt === null && clock >= nextArrivalAt) {
+      arrive();
+      nextArrivalAt = clock + randomBetween(ARRIVAL_MS);
     }
-
-    const row = createRow();
-    stream.value = [row, ...stream.value.slice(0, STREAM_LENGTH - 1)];
-    current.value = row;
-    checked.value++;
-    if (row.failed) return;
-    passed.value++;
-    if (++today.written === ROWS_PER_DAY) phase.value = "sealing";
+    if (clock >= nextStepAt) advanceValidation();
+    if (nextDayAt !== null && clock >= nextDayAt) startNextDay();
   },
   TICK_MS,
 );
 
-const status = computed(() => (props.active ? (phase.value === "sealing" ? "sealing" : "running") : "idle"));
-const partitionState = (index: number) => {
-  if (index > 0) return "sealed";
-  return phase.value === "sealing" ? "sealed" : "writing";
+const validated = computed(() => validating.value.checksDone === CHECKS.length);
+const passedInBatch = computed(() => validating.value.rows.filter((row) => !row.failed).length);
+const failuresOf = (check: Check) => validating.value.rows.filter((row) => row.failed === check).length;
+const checkState = (index: number) => {
+  const { checksDone } = validating.value;
+  if (index < checksDone) return failuresOf(CHECKS[index]) ? "caught" : "passed";
+  return index === checksDone ? "running" : "pending";
 };
+
+const todayFull = computed(() => days.value[0].written === BATCHES_PER_DAY);
+const status = computed(() => (props.active ? (todayFull.value ? "sealing" : "running") : "idle"));
+const partitionState = (index: number) => (index > 0 || todayFull.value ? "sealed" : "writing");
 </script>
 
 <template>
-  <div class="visual" :class="{ running: props.active }">
+  <div class="visual" :class="{ running: props.active }"
+    :style="{ '--batch-size': BATCH_SIZE, '--seal-duration': `${SEAL_HOLD_MS}ms` }">
     <div class="header">
       <span class="status" :class="status">{{ status }}</span>
       <span>job events_daily</span>
     </div>
 
-    <!-- The job's stages as columns, with each row flowing between them -->
+    <!-- The job's stages as columns, each on its own batch; an arrow lights up as a batch is handed over -->
     <div class="pipeline">
       <span class="stage stage-ingest">ingest</span>
-      <span class="flow" aria-hidden="true">
-        <span v-if="current" :key="`in-${tick}`" class="flow-dot"></span>
-      </span>
+      <span class="flow" aria-hidden="true"><span :key="cuts" :class="{ lit: cuts }">→</span></span>
       <span class="stage stage-validate">validate</span>
-      <span class="flow" aria-hidden="true">
-        <span v-if="current && !current.failed" :key="`out-${tick}`" class="flow-dot flow-dot-late"></span>
-      </span>
+      <span class="flow" aria-hidden="true"><span :key="writes" :class="{ lit: writes }">→</span></span>
       <span class="stage stage-write">write</span>
 
+      <p class="batch-head ingest-head">
+        <span>batch {{ ingesting.id }}</span>
+        <span class="batch-fill">{{ ingesting.rows.length }}/{{ BATCH_SIZE }}</span>
+      </p>
       <section class="column column-ingest">
         <TransitionGroup name="row" tag="ol" class="stream">
-          <li v-for="row in stream" :key="row.id" class="row"
-            :class="{ failed: row.failed, dimmed: hoveredCheck && row.failed !== hoveredCheck }">
+          <li v-for="row in ingesting.rows" :key="row.id" class="row">
             <span class="key">{{ row.key }}</span>
             <span class="event">{{ row.event }}</span>
           </li>
@@ -141,24 +211,22 @@ const partitionState = (index: number) => {
       </section>
 
       <section class="column column-validate">
-        <p class="checking">
-          <template v-if="current">
-            <span>row {{ current.key }}</span>
-            <span :key="tick" class="verdict" :class="{ failed: current.failed }">
-              {{ current.failed ? "✗ quarantined" : "✓ passed" }}
-            </span>
-          </template>
-          <span v-else>sealing partition</span>
+        <p class="batch-head validate-head">
+          <span>batch {{ validating.id }}</span>
+          <span :key="String(validated)" class="verdict" :class="{ done: validated }">
+            {{ validated ? `${passedInBatch}/${validating.rows.length} passed` : "checking" }}
+          </span>
         </p>
-        <ul class="checks" @pointerleave="hoveredCheck = null">
-          <li v-for="check in CHECKS" :key="check" class="check" :class="{ caught: current?.failed === check }"
-            @pointerenter="hoveredCheck = check">
+        <ul class="checks">
+          <li v-for="(check, index) in CHECKS" :key="check" class="check" :class="checkState(index)">
             <span class="check-dot"></span>
             <span class="check-name">{{ check }}</span>
-            <span v-if="current?.failed === check" :key="tick" class="check-reason">{{ FAILURE_REASONS[check] }}</span>
+            <span v-if="checkState(index) === 'caught'" class="check-reason">
+              {{ failuresOf(check) }} {{ FAILURE_REASONS[check] }}
+            </span>
           </li>
         </ul>
-        <p class="pass-rate">pass rate <span class="pass-rate-value">{{ passRate }}</span></p>
+        <p class="pass-rate">pass rate <span class="pass-rate-value">{{ ((passed / checked) * 100).toFixed(1) }}%</span></p>
       </section>
 
       <section class="column column-write">
@@ -168,8 +236,10 @@ const partitionState = (index: number) => {
               <span class="partition-date">date={{ formatDate(day.offset) }}</span>
               <span class="partition-state">{{ partitionState(index) === "writing" ? "writing" : "✓" }}</span>
             </span>
-            <span class="partition-track"><span class="partition-fill" :style="{ width: `${(day.written / ROWS_PER_DAY) * 100}%` }"></span></span>
-            <span class="partition-count">{{ day.written }}/{{ ROWS_PER_DAY }}</span>
+            <span class="partition-track">
+              <span class="partition-fill" :style="{ width: `${(day.written / BATCHES_PER_DAY) * 100}%` }"></span>
+            </span>
+            <span class="partition-count">{{ day.written }}/{{ BATCHES_PER_DAY }}</span>
           </li>
         </TransitionGroup>
       </section>
@@ -179,6 +249,11 @@ const partitionState = (index: number) => {
 
 <style scoped>
 .visual {
+  --row-height: 1.6em;
+  --row-gap: 0.25em;
+  --batch-height: calc(var(--batch-size) * var(--row-height) + (var(--batch-size) - 1) * var(--row-gap));
+  /* How long a handoff takes: a batch leaving ingest, or a day's bar growing; its arrow is lit for the same */
+  --handoff-duration: 0.3s;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -236,14 +311,21 @@ const partitionState = (index: number) => {
   }
 }
 
-/* Stage headers over their columns, joined by connectors */
+@keyframes reveal {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Stage headers over their columns, joined by arrows */
 .pipeline {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 2rem minmax(0, 1fr) 2rem minmax(0, 1.15fr);
   row-gap: 0.75em;
 }
 
-.stage {
+.stage,
+.flow {
   margin-bottom: 0.25rem;
 }
 
@@ -258,71 +340,54 @@ const partitionState = (index: number) => {
   color: var(--accent-300);
 }
 
+/* Centered on the stage boxes */
 .flow {
-  position: relative;
-  align-self: center;
-  height: 1px;
-  background: repeating-linear-gradient(90deg, var(--neutral-600) 0 3px, transparent 3px 6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  color: var(--neutral-600);
 }
 
-/* Each row travels the connectors: into validation, then on to write if it passed */
-.flow-dot {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  width: 0.375rem;
-  height: 0.375rem;
-  border-radius: 50%;
-  background-color: var(--accent-400);
-  box-shadow: 0 0 0.375rem var(--accent-400);
-  translate: -50% -50%;
-  opacity: 0;
-  animation: travel 0.45s ease-in-out forwards;
+.flow .lit {
+  animation: flash var(--handoff-duration) ease;
 }
 
-.flow-dot-late {
-  animation-delay: 0.55s;
-}
-
-@keyframes travel {
-  0% {
-    left: 0;
-    opacity: 1;
-  }
-
-  100% {
-    left: 100%;
-    opacity: 0;
+@keyframes flash {
+  15%,
+  85% {
+    color: var(--accent-300);
+    text-shadow: 0 0 0.5em var(--accent-400);
   }
 }
 
 /*
- * The validate column's parts sit on the pipeline's own rows, so the ingest
- * and write lists can span exactly from the row being checked down to the
- * last check, with the quarantine count below.
+ * The parts of each column sit on the pipeline's own rows: the batch heads
+ * line up, and the ingest slots and the days span down past the checks.
  */
+.ingest-head,
+.validate-head {
+  grid-row: 2;
+}
+
+.ingest-head {
+  grid-column: 1;
+}
+
 .column {
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
 
-/* The stream is laid over the column rather than sizing it, so it never stretches the pipeline */
+/* One faint slot per event in a batch; laid over the column rather than sizing it */
 .column-ingest {
   position: relative;
   grid-column: 1;
-  grid-row: 2 / 4;
-  overflow: hidden;
-}
-
-/* The processing zone: still, with each row sliding into it and on down */
-.column-ingest::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto;
-  height: var(--row-height);
-  background-color: color-mix(in srgb, var(--accent-400), transparent 90%);
-  box-shadow: inset 2px 0 var(--accent-400);
+  grid-row: 3 / 5;
+  background: repeating-linear-gradient(to bottom,
+      color-mix(in srgb, var(--neutral-800), transparent 40%) 0 var(--row-height),
+      transparent var(--row-height) calc(var(--row-height) + var(--row-gap))) top / 100% var(--batch-height) no-repeat;
 }
 
 .column-ingest .stream {
@@ -335,9 +400,8 @@ const partitionState = (index: number) => {
   display: contents;
 }
 
-.checking {
+.validate-head {
   grid-column: 3;
-  grid-row: 2;
 }
 
 .checks {
@@ -371,43 +435,33 @@ const partitionState = (index: number) => {
   list-style: none;
 }
 
-.visual {
-  --row-height: 1.75em;
-  --row-gap: 0.25em;
+/* The batch each stage is working on */
+.batch-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  white-space: nowrap;
+  color: var(--neutral-300);
 }
 
-/* Whole rows fade with their place in the stream, so none is ever cut off at the bottom */
+.batch-fill {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
 .row {
-  --fade: 1;
-  --dim: 1;
   display: grid;
   flex-shrink: 0;
-  align-items: center;
-  height: var(--row-height);
-  opacity: calc(var(--fade) * var(--dim));
   grid-template-columns: 2.25rem minmax(0, 1fr);
+  align-items: center;
   gap: 0.5rem;
-  /* Inset, so the current row's highlight stays inside the column */
+  height: var(--row-height);
   padding: 0 0.375rem;
   white-space: nowrap;
-  transition: opacity 0.4s ease;
-}
-
-.row:nth-child(5) {
-  --fade: 0.55;
-}
-
-.row:nth-child(6) {
-  --fade: 0.25;
-}
-
-.row:nth-child(n + 7) {
-  --fade: 0;
 }
 
 .key {
   color: var(--text-muted);
-  transition: color 0.4s ease;
 }
 
 .event {
@@ -416,84 +470,35 @@ const partitionState = (index: number) => {
   color: var(--neutral-300);
 }
 
-/* Quarantined rows are struck out of the stream */
-.row.failed .key {
-  color: var(--danger-400);
-}
-
-.row.failed .event {
-  color: var(--text-muted);
-  text-decoration: line-through;
-}
-
-/* The row in the zone is the one in validation; if it fails, it's struck only once the verdict shows */
-.row:first-child:not(.failed) .key {
-  color: var(--accent-300);
-}
-
-.row.failed:first-child .key {
-  animation: caught-key 0.25s ease 0.45s backwards;
-}
-
-.row.failed:first-child .event {
-  animation: caught-event 0.25s ease 0.45s backwards;
-}
-
-@keyframes caught-key {
-  from {
-    color: var(--accent-300);
-  }
-}
-
-@keyframes caught-event {
-  from {
-    color: var(--neutral-300);
-    text-decoration-color: transparent;
-  }
-}
-
-.row.dimmed {
-  --dim: 0.25;
-}
-
-.row-enter-active,
-.row-move {
-  transition: opacity 0.4s ease, transform 0.4s ease;
-}
-
-.row-leave-active {
-  display: none;
+/* Events drop into their slots one by one; a full batch leaves together, towards validate */
+.row-enter-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 .row-enter-from {
   opacity: 0;
-  transform: translateY(-0.5rem);
+  transform: translateY(-0.25rem);
 }
 
-/* The row being checked and its verdict, revealed as it reaches validation */
-.checking {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.5rem;
-  white-space: nowrap;
-  color: var(--neutral-300);
+.row-leave-active {
+  transition: opacity var(--handoff-duration) ease, transform var(--handoff-duration) ease;
+}
+
+.row-leave-to {
+  opacity: 0;
+  transform: translateX(1rem);
 }
 
 .verdict {
+  color: var(--text-muted);
+  animation: reveal 0.25s ease;
+}
+
+.verdict.done {
   color: var(--success-400);
-  animation: reveal 0.25s ease 0.45s backwards;
 }
 
-.verdict.failed {
-  color: var(--danger-400);
-}
-
-@keyframes reveal {
-  from {
-    opacity: 0;
-  }
-}
-
+/* Checks run one at a time: pending, running, then passed or caught */
 .check {
   display: grid;
   grid-template-columns: auto auto minmax(0, 1fr);
@@ -501,15 +506,10 @@ const partitionState = (index: number) => {
   gap: 0.5rem;
   padding: 0.4em 0.6em;
   border: 1px solid var(--neutral-800);
-  /* Fixed, so a gate showing a reason doesn't grow and shift the columns */
+  /* Fixed, so a check showing a reason doesn't grow and shift the columns */
   font-size: 0.85em;
   line-height: 1.6em;
-  cursor: default;
-  transition: border-color 0.3s ease, background-color 0.3s ease;
-}
-
-.check:hover {
-  border-color: var(--neutral-600);
+  transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
 }
 
 .check-name {
@@ -525,16 +525,31 @@ const partitionState = (index: number) => {
   transition: background-color 0.3s ease;
 }
 
-/* The gate that catches a row flashes with its reason */
+.check.pending {
+  color: var(--neutral-600);
+}
+
+.check.pending .check-dot {
+  background-color: var(--neutral-700);
+}
+
+.check.running {
+  border-color: color-mix(in srgb, var(--accent-400), transparent 50%);
+  color: var(--neutral-300);
+}
+
+.check.running .check-dot {
+  background-color: var(--accent-400);
+  animation: pulse 0.8s ease-in-out infinite;
+}
+
 .check.caught {
   border-color: color-mix(in srgb, var(--danger-400), transparent 40%);
   background-color: color-mix(in srgb, var(--danger-400), transparent 92%);
-  transition-delay: 0.45s;
 }
 
 .check.caught .check-dot {
   background-color: var(--danger-400);
-  transition-delay: 0.45s;
 }
 
 .check-reason {
@@ -543,7 +558,7 @@ const partitionState = (index: number) => {
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--danger-400);
-  animation: reveal 0.25s ease 0.45s backwards;
+  animation: reveal 0.25s ease;
 }
 
 .pass-rate {
@@ -603,12 +618,12 @@ const partitionState = (index: number) => {
   color: var(--text-muted);
 }
 
-/* Lands as the row arrives from validation */
+/* Grows as a batch is written, together with the count and the arrow into write */
 .partition-fill {
   display: block;
   height: 100%;
   background-color: var(--neutral-500);
-  transition: width 0.3s ease 0.85s, background-color 0.6s ease;
+  transition: width var(--handoff-duration) ease, background-color 0.6s ease;
 }
 
 .partition.writing .partition-fill {
@@ -617,11 +632,12 @@ const partitionState = (index: number) => {
 
 /* A finished day turns green, then settles into the sealed days below */
 .partition.sealed:first-child .partition-fill {
-  animation: sealed 2.2s ease forwards;
+  /* Lasts the seal hold, so it settles just as the next day starts */
+  animation: sealed var(--seal-duration) ease forwards;
 }
 
 .partition.sealed:first-child .partition-state {
-  animation: pop 0.4s ease 0.85s backwards;
+  animation: pop 0.4s ease backwards;
 }
 
 @keyframes sealed {
@@ -688,34 +704,37 @@ const partitionState = (index: number) => {
     order: 1;
   }
 
-  .column-ingest {
+  .ingest-head {
     order: 2;
-    /* The six shown rows */
-    height: calc(6 * var(--row-height) + 5 * var(--row-gap));
+  }
+
+  .column-ingest {
+    order: 3;
+    height: var(--batch-height);
   }
 
   .stage-validate {
-    order: 3;
-  }
-
-  .checking {
     order: 4;
   }
 
-  .checks {
+  .validate-head {
     order: 5;
   }
 
-  .pass-rate {
+  .checks {
     order: 6;
   }
 
-  .stage-write {
+  .pass-rate {
     order: 7;
   }
 
-  .column-write {
+  .stage-write {
     order: 8;
+  }
+
+  .column-write {
+    order: 9;
   }
 
   .column-write .partitions {
