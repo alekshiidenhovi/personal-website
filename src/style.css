@@ -5,8 +5,8 @@
 }
 
 html {
-  --font-sans: "Inter", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-sans: "Inter Variable", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
   font-family: var(--font-sans);
   /*
    * Scale the whole design with the viewport so big screens show the same

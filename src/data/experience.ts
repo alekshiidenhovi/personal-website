@@ -43,8 +43,8 @@ export const ROLES: Role[] = [
     start: { year: 2026, month: 2 },
     discipline: "machine learning",
     highlights: [
-      "Trained a self-supervised player embedding from raw game event streams, adapting LeJEPA from images to event sequences, so models can take player context off the shelf instead of engineering features.",
-      "Cut an in-game content recommender's **validation loss by 20%** when added to hand-crafted features, and matched them when used on its own.",
+      "Trained a self-supervised player embedding from terabyte-scale game event streams, adapting LeJEPA from images to event sequences, so models can take player context off the shelf instead of engineering features.",
+      "Cut an in-game content recommender's **validation loss by 20%** when added to aggregated features, and matched them when used on its own.",
       "Now developing a new recommender use case for the first-time user experience.",
     ],
     stack: ["PyTorch", "Ray", "Spark", "Databricks"],

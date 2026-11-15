@@ -15,17 +15,29 @@ const activeId = ref(HERO_ID);
 const isVisible = computed(() => activeId.value !== HERO_ID);
 let sectionObserver: IntersectionObserver | null = null;
 
+const SECTION_IDS = [HERO_ID, ...LINKS.map((link) => link.id)];
+
 onMounted(() => {
-  // A section counts as active while it crosses the middle of the viewport
+  /*
+   * A section counts as active while it crosses the middle of the viewport.
+   * Leaving the line is tracked as well as entering it: while the layout
+   * settles on load, several sections can touch the line at once, and acting
+   * only on entries would leave a section that has since moved away active.
+   */
+  const crossing = new Set<string>();
   sectionObserver = new IntersectionObserver(
     (entries) => {
       for (const entry of entries) {
-        if (entry.isIntersecting) activeId.value = entry.target.id;
+        if (entry.isIntersecting) crossing.add(entry.target.id);
+        else crossing.delete(entry.target.id);
       }
+      // Two sections only share the line at their common edge; the lower one is the one being entered
+      const active = [...SECTION_IDS].reverse().find((id) => crossing.has(id));
+      if (active) activeId.value = active;
     },
     { rootMargin: "-50% 0px -50% 0px" },
   );
-  for (const id of [HERO_ID, ...LINKS.map((link) => link.id)]) {
+  for (const id of SECTION_IDS) {
     const section = document.getElementById(id);
     if (section) sectionObserver.observe(section);
   }

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from "vue";
+import { whenIdle } from "../lib/idle";
 
 /**
  * The hero visual: an embedding space that learns its structure on loop.
@@ -60,6 +61,7 @@ let hovered: number | null = null;
 let hoveredNeighbours: number[] = [];
 let resizeObserver: ResizeObserver | null = null;
 let visibilityObserver: IntersectionObserver | null = null;
+let cancelStart: (() => void) | null = null;
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const clamp01 = (value: number) => Math.min(Math.max(value, 0), 1);
@@ -326,10 +328,16 @@ onMounted(() => {
     isVisible = entry.isIntersecting;
   });
   if (containerRef.value) visibilityObserver.observe(containerRef.value);
-  frameId = requestAnimationFrame(loop);
+  // The raw scatter shows straight away; the loop waits until the page has painted and settled
+  draw(performance.now());
+  cancelStart = whenIdle(() => {
+    startCycle(performance.now());
+    frameId = requestAnimationFrame(loop);
+  });
 });
 
 onUnmounted(() => {
+  cancelStart?.();
   cancelAnimationFrame(frameId);
   resizeObserver?.disconnect();
   visibilityObserver?.disconnect();

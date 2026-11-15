@@ -2,6 +2,8 @@
 import { Icon } from '@iconify/vue';
 import PinnedSection from "./PinnedSection.vue";
 
+const EMAIL = "hiidenhovi.aleks@gmail.com";
+
 const SOCIAL_LINKS = [
   { label: "LinkedIn", href: "https://www.linkedin.com/in/hiidenhovi/", icon: "simple-icons:linkedin" },
   { label: "GitHub", href: "https://github.com/alekshiidenhovi", icon: "simple-icons:github" },
@@ -13,7 +15,7 @@ const SOCIAL_LINKS = [
     subtitle="Building something ambitious in the ML or data space? I'd love to hear about it.">
     <footer>
       <div class="cta-block">
-        <a class="big-cta" href="https://www.linkedin.com/in/hiidenhovi/" target="_blank" rel="noreferrer">
+        <a class="big-cta" :href="`mailto:${EMAIL}`">
           <span>Let's talk<span class="dot">.</span></span>
           <Icon icon="heroicons:arrow-up-right-20-solid" class="big-arrow" />
         </a>

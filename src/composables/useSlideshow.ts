@@ -34,9 +34,9 @@ type Direction = 1 | -1;
 /**
  * Slideshow navigation for the pinned layout: each wheel gesture or arrow key
  * moves exactly one slide (any element marked with `data-slide`) forwards or
- * backwards. In-page links and Home/End jump straight to their slide: one
- * slide away scrolls smoothly, farther crossfades in place. Narrow screens keep
- * normal scrolling.
+ * backwards, scrolling smoothly. In-page links always crossfade straight to
+ * their slide, however near; Home/End do too once the target is more than a
+ * slide away. Narrow screens keep normal scrolling.
  */
 export function useSlideshow() {
   let pinnedMedia: MediaQueryList | null = null;
@@ -53,9 +53,11 @@ export function useSlideshow() {
     return [...new Set(positions)].sort((a, b) => a - b);
   };
 
-  const scrollTo = (top: number) => {
+  /** Scrolls to a position; a jump, or a move farther than a slide, crossfades instead of scrolling */
+  const scrollTo = (top: number, isJump = false) => {
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const isFar = Math.abs(top - window.scrollY) > MAX_SCROLL_VIEWPORTS * window.innerHeight + POSITION_TOLERANCE_PX;
+    const isFar =
+      isJump || Math.abs(top - window.scrollY) > MAX_SCROLL_VIEWPORTS * window.innerHeight + POSITION_TOLERANCE_PX;
     if (prefersReducedMotion || (isFar && !document.startViewTransition)) {
       window.scrollTo({ top, behavior: "instant" });
       return;
@@ -142,7 +144,8 @@ export function useSlideshow() {
     if (isAnimating) return;
     const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
     history.pushState(null, "", `#${id}`);
-    scrollTo(Math.min(target.getBoundingClientRect().top + window.scrollY, maxScroll));
+    // A click jumps, so it crossfades even to the neighboring slide
+    scrollTo(Math.min(target.getBoundingClientRect().top + window.scrollY, maxScroll), true);
   };
 
   const isTypingTarget = (target: EventTarget | null) =>

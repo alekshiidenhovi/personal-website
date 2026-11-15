@@ -3,7 +3,7 @@ import type { Expertise } from "../types";
 export const EXPERTISE_COLOR: Record<Expertise, string> = {
   "machine learning": "var(--primary-500)",
   "data foundations": "var(--accent-500)",
-  "web dev": "var(--warning-500)",
+  "web development": "var(--warning-500)",
 };
 
 export interface ExpertiseArea {
@@ -35,11 +35,11 @@ export const EXPERTISE_AREAS: ExpertiseArea[] = [
     source: { label: "Ticket analysis platform", href: "#role-ml-engineer" },
   },
   {
-    expertise: "web dev",
-    title: "Web Dev",
+    expertise: "web development",
+    title: "Web Development",
     text: "Full-stack web apps and dashboards that put data and models in front of the people who use them.",
     fileName: "dashboard.vue",
-    tags: ["React", "Vue", "FastAPI", "Tailwind", "PostgreSQL", "Figma"],
+    tags: ["React", "Vue", "FastAPI", "PostgreSQL", "Figma"],
     source: { label: "Ticket analysis platform", href: "#role-ml-engineer" },
   },
 ];

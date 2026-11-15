@@ -46,7 +46,7 @@ export const PROJECTS: Project[] = [
   {
     title: "Portfolio website",
     description: "Designed and built with coding agents",
-    tag: "web dev",
+    tag: "web development",
     link: "https://github.com/alekshiidenhovi/personal-website",
     cover: PortfolioCover,
     coverDescription: "A wireframe of this website",

@@ -601,7 +601,14 @@ const partitionState = (index: number) => (index > 0 || todayFull.value ? "seale
 
 .partition.writing .partition-state {
   color: var(--accent-300);
-  animation: pulse 1.2s ease-in-out infinite;
+  animation: pulse-text 1.2s ease-in-out infinite;
+}
+
+/* A shallower pulse for text, which keeps WCAG AA contrast even at its faintest (5.4:1) */
+@keyframes pulse-text {
+  50% {
+    opacity: 0.7;
+  }
 }
 
 /* Progress through the day, not a measurement */

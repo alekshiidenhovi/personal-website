@@ -19,7 +19,7 @@ const props = defineProps<Props>();
 const VISUALS: Record<Expertise, Component> = {
   "machine learning": PretrainingRunVisual,
   "data foundations": DataPipelineVisual,
-  "web dev": TicketDashboardVisual,
+  "web development": TicketDashboardVisual,
 };
 </script>
 
