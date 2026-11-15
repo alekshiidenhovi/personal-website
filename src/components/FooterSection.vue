@@ -63,18 +63,26 @@ footer {
   font-weight: 700;
   letter-spacing: -0.05em;
   line-height: 0.9;
-  color: var(--neutral-100);
   text-decoration: none;
-  background: linear-gradient(100deg, var(--primary-400), var(--accent-400), var(--warning-400)) no-repeat;
-  background-size: 0% 100%;
+  /*
+   * One strip, the gradient then solid text color, a little over twice the
+   * text's width and clipped to it. At rest the solid end shows, on hover the
+   * gradient, with a soft edge between them; sliding the strip wipes the
+   * gradient in, and back out the same way, as only the position changes
+   */
+  color: transparent;
+  background: linear-gradient(90deg,
+      var(--primary-400) 0%,
+      var(--accent-400) 22%,
+      var(--warning-400) 45%,
+      var(--neutral-100) 54%) right / 220% 100% no-repeat;
   background-clip: text;
   -webkit-background-clip: text;
-  transition: color 0.4s ease, background-size 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition: background-position 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
 .big-cta:hover {
-  color: transparent;
-  background-size: 100% 100%;
+  background-position: left;
 }
 
 .dot {

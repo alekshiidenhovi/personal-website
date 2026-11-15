@@ -49,7 +49,7 @@ export const ROLES: Role[] = [
     ],
     stack: ["PyTorch", "Ray", "Spark", "Databricks"],
     figure: LearnedFeaturesFigure,
-    figureCaption: "Learned embeddings on top of hand-crafted features",
+    figureCaption: "Embedding alone matches aggregated features; together they predict best",
   },
   {
     slug: "role-ml-engineer",

@@ -17,25 +17,25 @@ const props = defineProps<Props>();
 const CATEGORIES = ["bug", "billing", "hardware", "feedback"] as const;
 type Category = (typeof CATEGORIES)[number];
 
-// Illustrative examples, enough to feel endless when looped
+// Illustrative examples, enough to feel endless when looped; kept short to sit well inside the ticket
 const TICKETS: { text: string; category: Category; confidence: number }[] = [
-  { text: "App keeps crashing on sync", category: "bug", confidence: 0.94 },
+  { text: "App crashes on sync", category: "bug", confidence: 0.94 },
   { text: "I was charged twice", category: "billing", confidence: 0.91 },
   { text: "Sensor won't pair", category: "hardware", confidence: 0.88 },
   { text: "Love the new insights!", category: "feedback", confidence: 0.97 },
   { text: "Graph shows wrong day", category: "bug", confidence: 0.86 },
-  { text: "How do I cancel my plan?", category: "billing", confidence: 0.83 },
+  { text: "How do I cancel?", category: "billing", confidence: 0.83 },
   { text: "Sensor fell off early", category: "hardware", confidence: 0.9 },
   { text: "Meal log won't save", category: "bug", confidence: 0.92 },
   { text: "Great tips this week", category: "feedback", confidence: 0.95 },
   { text: "Refund for last month?", category: "billing", confidence: 0.89 },
-  { text: "Readings look off today", category: "hardware", confidence: 0.81 },
-  { text: "Login loop after update", category: "bug", confidence: 0.93 },
-  { text: "Can I switch to yearly?", category: "billing", confidence: 0.87 },
-  { text: "The coaching really helps", category: "feedback", confidence: 0.96 },
-  { text: "Bluetooth keeps dropping", category: "hardware", confidence: 0.85 },
+  { text: "Readings look off", category: "hardware", confidence: 0.81 },
+  { text: "Login loop on update", category: "bug", confidence: 0.93 },
+  { text: "Switch to yearly?", category: "billing", confidence: 0.87 },
+  { text: "Coaching really helps", category: "feedback", confidence: 0.96 },
+  { text: "Bluetooth drops out", category: "hardware", confidence: 0.85 },
   { text: "Notifications stopped", category: "bug", confidence: 0.84 },
-  { text: "Card declined at checkout", category: "billing", confidence: 0.9 },
+  { text: "Card was declined", category: "billing", confidence: 0.9 },
   { text: "Applicator is jammed", category: "hardware", confidence: 0.88 },
   { text: "Please add dark mode", category: "feedback", confidence: 0.82 },
   { text: "Export to CSV fails", category: "bug", confidence: 0.89 },
