@@ -34,6 +34,6 @@ export const STUDIES: Study[] = [
     detail: "Minor in Data Science",
     start: 2020,
     end: 2024,
-    discipline: "data ops",
+    discipline: "data foundations",
   },
 ];

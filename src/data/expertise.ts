@@ -2,7 +2,7 @@ import type { Expertise } from "../types";
 
 export const EXPERTISE_COLOR: Record<Expertise, string> = {
   "machine learning": "var(--primary-500)",
-  "data ops": "var(--accent-500)",
+  "data foundations": "var(--accent-500)",
   "web dev": "var(--warning-500)",
 };
 
@@ -21,15 +21,15 @@ export const EXPERTISE_AREAS: ExpertiseArea[] = [
   {
     expertise: "machine learning",
     title: "Machine Learning",
-    text: "Deepest in embedding models: self-supervised representation learning, retrieval and recommendation, taken from research to production.",
+    text: "Specialized in embedding models: self-supervised representation learning, retrieval and recommendation, taken from research to measured results.",
     fileName: "pretrain.py",
     tags: ["PyTorch", "Ray", "MLflow"],
     source: { label: "Data Scientist @ Supercell", href: "#role-data-scientist" },
   },
   {
-    expertise: "data ops",
-    title: "Data Ops",
-    text: "Analysis, pipelines, data quality and experiment tracking on terabyte-scale data, from the first query to the production job.",
+    expertise: "data foundations",
+    title: "Data Foundations",
+    text: "Analysis, pipelines and data quality on terabyte-scale data, from the first query to the production job.",
     fileName: "pipeline.py",
     tags: ["SQL", "Spark", "Databricks"],
     source: { label: "Ticket analysis platform", href: "#role-ml-engineer" },

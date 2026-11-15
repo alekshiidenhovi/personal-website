@@ -10,7 +10,7 @@ const SOCIAL_LINKS = [
 
 <template>
   <PinnedSection id="contact" :index="5" title="Contact"
-    subtitle="Building something ambitious in ML, systems or data products? I'd love to hear about it.">
+    subtitle="Building something ambitious in the ML or data space? I'd love to hear about it.">
     <footer>
       <div class="cta-block">
         <a class="big-cta" href="https://www.linkedin.com/in/hiidenhovi/" target="_blank" rel="noreferrer">

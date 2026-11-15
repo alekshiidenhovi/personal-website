@@ -4,7 +4,7 @@ import { onMounted, onUnmounted, ref } from "vue";
 /**
  * The hero visual: an embedding space that learns its structure on loop.
  * Raw data starts as scattered noise, training pulls it into clusters, then a
- * query retrieves its nearest neighbours: raw data (Data Ops pink) becomes a
+ * query retrieves its nearest neighbours: raw data (Data Foundations pink) becomes a
  * model (ML blue) becomes a product (Web amber). Hover a point to see its
  * neighbours.
  */

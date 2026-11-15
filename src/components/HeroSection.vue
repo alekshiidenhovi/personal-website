@@ -30,7 +30,7 @@ import EmbeddingSpace from "./EmbeddingSpace.vue";
         </div>
         <a class="status" href="#role-data-scientist">
           <span class="status-dot"></span>
-          Employed at Supercell
+          Data Scientist at Supercell
         </a>
       </div>
       <EmbeddingSpace class="embedding" />

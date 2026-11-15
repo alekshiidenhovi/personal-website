@@ -37,7 +37,7 @@ export const PROJECTS: Project[] = [
   },
   {
     title: "ColViT",
-    description: "Fast and scalable image retrieval",
+    description: "Late interaction image retrieval",
     tag: "machine learning",
     link: "https://github.com/alekshiidenhovi/colvit-face",
     cover: ColvitCover,
@@ -45,7 +45,7 @@ export const PROJECTS: Project[] = [
   },
   {
     title: "Portfolio website",
-    description: "Source code for this website",
+    description: "Designed and built with coding agents",
     tag: "web dev",
     link: "https://github.com/alekshiidenhovi/personal-website",
     cover: PortfolioCover,
@@ -61,7 +61,7 @@ export const PROJECTS: Project[] = [
   },
   {
     title: "C-- compiler",
-    description: "C17 standard compiler, built from scratch in Rust",
+    description: "C17 subset compiler, built from scratch in Rust",
     tag: "side project",
     link: "https://github.com/alekshiidenhovi/C--",
     cover: CompilerCover,
