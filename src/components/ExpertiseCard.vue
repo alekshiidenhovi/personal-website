@@ -152,7 +152,9 @@ p {
   background-color: var(--card-color);
 }
 
+/* A size container, so visuals can scale their type to the window */
 .visual-container {
+  container-type: inline-size;
   flex-grow: 1;
   display: flex;
   align-items: center;

@@ -20,8 +20,9 @@ interface StreamRow {
   failed: Check | null;
 }
 
-const TICK_MS = 700;
-const STREAM_LENGTH = 6;
+const TICK_MS = 1200;
+/** One more than the six shown, so the oldest fades out rather than vanishing */
+const STREAM_LENGTH = 7;
 const FAILURE_RATE = 0.12;
 const EVENTS = ["ticket.created", "message.sent", "ticket.updated", "ticket.closed"];
 const CHECKS: Check[] = ["schema", "not-null", "unique", "freshness"];
@@ -31,11 +32,11 @@ const FAILURE_REASONS: Record<Check, string> = {
   unique: "duplicate key",
   freshness: "arrived late",
 };
-/** Share of a day each passing row writes */
-const FILL_PER_ROW = [0.045, 0.075] as const;
+/** Passing rows that fill a day; each writes the same step */
+const ROWS_PER_DAY = 12;
 const PARTITION_COUNT = 4;
 /** Ticks the sealed day is shown before the next one starts */
-const SEAL_TICKS = 4;
+const SEAL_TICKS = 3;
 /** The first day written; recent, but far enough back that the loop stays in the past */
 const FIRST_DAY_OFFSET = -14;
 
@@ -63,9 +64,16 @@ const current = ref<StreamRow | null>(stream.value[0]);
 const tick = ref(0);
 /** Newest first; the first is the day being written. Days are offsets from today */
 const days = ref(
-  Array.from({ length: PARTITION_COUNT }, (_, index) => ({ offset: FIRST_DAY_OFFSET - index, fill: index ? 1 : 0.4 })),
+  Array.from({ length: PARTITION_COUNT }, (_, index) => ({
+    offset: FIRST_DAY_OFFSET - index,
+    written: index ? ROWS_PER_DAY : 4,
+  })),
 );
-const quarantined = ref(1);
+/** Counted over the whole job and seeded with earlier days, so the rate holds steady rather than jumping */
+const SEED_CHECKED = 500;
+const checked = ref(SEED_CHECKED);
+const passed = ref(Math.round(SEED_CHECKED * (1 - FAILURE_RATE)));
+const passRate = computed(() => `${((passed.value / checked.value) * 100).toFixed(1)}%`);
 const phase = ref<"writing" | "sealing">("writing");
 const hoveredCheck = ref<Check | null>(null);
 let sealTicks = 0;
@@ -80,8 +88,7 @@ useLiveTicker(
       current.value = null;
       if (++sealTicks < SEAL_TICKS) return;
       sealTicks = 0;
-      quarantined.value = 0;
-      days.value = [{ offset: today.offset + 1, fill: 0 }, ...days.value.slice(0, PARTITION_COUNT - 1)];
+      days.value = [{ offset: today.offset + 1, written: 0 }, ...days.value.slice(0, PARTITION_COUNT - 1)];
       phase.value = "writing";
       return;
     }
@@ -89,13 +96,10 @@ useLiveTicker(
     const row = createRow();
     stream.value = [row, ...stream.value.slice(0, STREAM_LENGTH - 1)];
     current.value = row;
-    if (row.failed) {
-      quarantined.value++;
-      return;
-    }
-    const [min, max] = FILL_PER_ROW;
-    today.fill = Math.min(today.fill + min + Math.random() * (max - min), 1);
-    if (today.fill === 1) phase.value = "sealing";
+    checked.value++;
+    if (row.failed) return;
+    passed.value++;
+    if (++today.written === ROWS_PER_DAY) phase.value = "sealing";
   },
   TICK_MS,
 );
@@ -154,15 +158,18 @@ const partitionState = (index: number) => {
             <span v-if="current?.failed === check" :key="tick" class="check-reason">{{ FAILURE_REASONS[check] }}</span>
           </li>
         </ul>
-        <p class="quarantine">quarantined <span class="quarantine-count">{{ quarantined }}</span></p>
+        <p class="pass-rate">pass rate <span class="pass-rate-value">{{ passRate }}</span></p>
       </section>
 
       <section class="column column-write">
         <TransitionGroup name="partition" tag="ol" class="partitions">
           <li v-for="(day, index) in days" :key="day.offset" class="partition" :class="partitionState(index)">
-            <span class="partition-date">dt={{ formatDate(day.offset) }}</span>
-            <span class="partition-state">{{ partitionState(index) === "writing" ? "writing" : "✓" }}</span>
-            <span class="partition-track"><span class="partition-fill" :style="{ width: `${day.fill * 100}%` }"></span></span>
+            <span class="partition-head">
+              <span class="partition-date">date={{ formatDate(day.offset) }}</span>
+              <span class="partition-state">{{ partitionState(index) === "writing" ? "writing" : "✓" }}</span>
+            </span>
+            <span class="partition-track"><span class="partition-fill" :style="{ width: `${(day.written / ROWS_PER_DAY) * 100}%` }"></span></span>
+            <span class="partition-count">{{ day.written }}/{{ ROWS_PER_DAY }}</span>
           </li>
         </TransitionGroup>
       </section>
@@ -179,7 +186,8 @@ const partitionState = (index: number) => {
   align-self: stretch;
   width: 100%;
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  /* Grows with the window, so wide screens aren't left with empty space around it */
+  font-size: clamp(0.75rem, 2cqi, 0.875rem);
   color: var(--text-muted);
 }
 
@@ -232,7 +240,7 @@ const partitionState = (index: number) => {
 .pipeline {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 2rem minmax(0, 1fr) 2rem minmax(0, 1.15fr);
-  row-gap: 0.625rem;
+  row-gap: 0.75em;
 }
 
 .stage {
@@ -246,7 +254,7 @@ const partitionState = (index: number) => {
   text-align: center;
   text-transform: uppercase;
   letter-spacing: 1px;
-  font-size: 0.6875rem;
+  font-size: 0.9em;
   color: var(--accent-300);
 }
 
@@ -269,11 +277,11 @@ const partitionState = (index: number) => {
   box-shadow: 0 0 0.375rem var(--accent-400);
   translate: -50% -50%;
   opacity: 0;
-  animation: travel 0.3s ease-in-out forwards;
+  animation: travel 0.45s ease-in-out forwards;
 }
 
 .flow-dot-late {
-  animation-delay: 0.35s;
+  animation-delay: 0.55s;
 }
 
 @keyframes travel {
@@ -299,9 +307,28 @@ const partitionState = (index: number) => {
   min-width: 0;
 }
 
+/* The stream is laid over the column rather than sizing it, so it never stretches the pipeline */
 .column-ingest {
+  position: relative;
   grid-column: 1;
   grid-row: 2 / 4;
+  overflow: hidden;
+}
+
+/* The processing zone: still, with each row sliding into it and on down */
+.column-ingest::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: var(--row-height);
+  background-color: color-mix(in srgb, var(--accent-400), transparent 90%);
+  box-shadow: inset 2px 0 var(--accent-400);
+}
+
+.column-ingest .stream {
+  position: absolute;
+  inset: 0;
+  gap: var(--row-gap);
 }
 
 .column-validate {
@@ -318,7 +345,7 @@ const partitionState = (index: number) => {
   grid-row: 3;
 }
 
-.quarantine {
+.pass-rate {
   grid-column: 3;
   grid-row: 4;
 }
@@ -328,8 +355,7 @@ const partitionState = (index: number) => {
   grid-row: 2 / 4;
 }
 
-/* Spread over the column's height, so the last item lines up with the last check */
-.column-ingest .stream,
+/* Spread over the column's height, so the last day lines up with the last check */
 .column-write .partitions {
   flex: 1;
   justify-content: space-between;
@@ -341,20 +367,47 @@ const partitionState = (index: number) => {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 0.3125rem;
+  gap: 0.375em;
   list-style: none;
 }
 
+.visual {
+  --row-height: 1.75em;
+  --row-gap: 0.25em;
+}
+
+/* Whole rows fade with their place in the stream, so none is ever cut off at the bottom */
 .row {
+  --fade: 1;
+  --dim: 1;
   display: grid;
+  flex-shrink: 0;
+  align-items: center;
+  height: var(--row-height);
+  opacity: calc(var(--fade) * var(--dim));
   grid-template-columns: 2.25rem minmax(0, 1fr);
   gap: 0.5rem;
+  /* Inset, so the current row's highlight stays inside the column */
+  padding: 0 0.375rem;
   white-space: nowrap;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.4s ease;
+}
+
+.row:nth-child(5) {
+  --fade: 0.55;
+}
+
+.row:nth-child(6) {
+  --fade: 0.25;
+}
+
+.row:nth-child(n + 7) {
+  --fade: 0;
 }
 
 .key {
   color: var(--text-muted);
+  transition: color 0.4s ease;
 }
 
 .event {
@@ -373,8 +426,34 @@ const partitionState = (index: number) => {
   text-decoration: line-through;
 }
 
+/* The row in the zone is the one in validation; if it fails, it's struck only once the verdict shows */
+.row:first-child:not(.failed) .key {
+  color: var(--accent-300);
+}
+
+.row.failed:first-child .key {
+  animation: caught-key 0.25s ease 0.45s backwards;
+}
+
+.row.failed:first-child .event {
+  animation: caught-event 0.25s ease 0.45s backwards;
+}
+
+@keyframes caught-key {
+  from {
+    color: var(--accent-300);
+  }
+}
+
+@keyframes caught-event {
+  from {
+    color: var(--neutral-300);
+    text-decoration-color: transparent;
+  }
+}
+
 .row.dimmed {
-  opacity: 0.25;
+  --dim: 0.25;
 }
 
 .row-enter-active,
@@ -402,7 +481,7 @@ const partitionState = (index: number) => {
 
 .verdict {
   color: var(--success-400);
-  animation: reveal 0.25s ease 0.3s backwards;
+  animation: reveal 0.25s ease 0.45s backwards;
 }
 
 .verdict.failed {
@@ -420,11 +499,11 @@ const partitionState = (index: number) => {
   grid-template-columns: auto auto minmax(0, 1fr);
   align-items: center;
   gap: 0.5rem;
-  padding: 0.3125rem 0.5rem;
+  padding: 0.4em 0.6em;
   border: 1px solid var(--neutral-800);
   /* Fixed, so a gate showing a reason doesn't grow and shift the columns */
-  font-size: 0.625rem;
-  line-height: 1rem;
+  font-size: 0.85em;
+  line-height: 1.6em;
   cursor: default;
   transition: border-color 0.3s ease, background-color 0.3s ease;
 }
@@ -450,12 +529,12 @@ const partitionState = (index: number) => {
 .check.caught {
   border-color: color-mix(in srgb, var(--danger-400), transparent 40%);
   background-color: color-mix(in srgb, var(--danger-400), transparent 92%);
-  transition-delay: 0.3s;
+  transition-delay: 0.45s;
 }
 
 .check.caught .check-dot {
   background-color: var(--danger-400);
-  transition-delay: 0.3s;
+  transition-delay: 0.45s;
 }
 
 .check-reason {
@@ -464,26 +543,35 @@ const partitionState = (index: number) => {
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--danger-400);
-  animation: reveal 0.25s ease 0.3s backwards;
+  animation: reveal 0.25s ease 0.45s backwards;
 }
 
-.quarantine {
+.pass-rate {
   display: flex;
   justify-content: space-between;
-  padding-top: 0.5rem;
+  padding-top: 0.5em;
   border-top: 1px solid var(--neutral-800);
 }
 
-.quarantine-count {
+.pass-rate-value {
   font-variant-numeric: tabular-nums;
-  color: var(--danger-400);
+  color: var(--success-400);
 }
 
 .partition {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.3125rem 0.5rem;
+  align-items: center;
+  gap: 0.375em 0.75em;
   white-space: nowrap;
+}
+
+/* Date and state on their own line, so every day's bar has the same length */
+.partition-head {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75em;
 }
 
 .partition-date {
@@ -503,9 +591,16 @@ const partitionState = (index: number) => {
 
 /* Progress through the day, not a measurement */
 .partition-track {
-  grid-column: 1 / -1;
-  height: 0.3125rem;
+  height: 0.4em;
   background-color: var(--neutral-800);
+}
+
+.partition-count {
+  width: 5ch;
+  text-align: right;
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
 }
 
 /* Lands as the row arrives from validation */
@@ -513,7 +608,7 @@ const partitionState = (index: number) => {
   display: block;
   height: 100%;
   background-color: var(--neutral-500);
-  transition: width 0.4s ease 0.6s, background-color 0.6s ease;
+  transition: width 0.3s ease 0.85s, background-color 0.6s ease;
 }
 
 .partition.writing .partition-fill {
@@ -526,7 +621,7 @@ const partitionState = (index: number) => {
 }
 
 .partition.sealed:first-child .partition-state {
-  animation: pop 0.4s ease 0.6s backwards;
+  animation: pop 0.4s ease 0.85s backwards;
 }
 
 @keyframes sealed {
@@ -595,6 +690,8 @@ const partitionState = (index: number) => {
 
   .column-ingest {
     order: 2;
+    /* The six shown rows */
+    height: calc(6 * var(--row-height) + 5 * var(--row-gap));
   }
 
   .stage-validate {
@@ -609,7 +706,7 @@ const partitionState = (index: number) => {
     order: 5;
   }
 
-  .quarantine {
+  .pass-rate {
     order: 6;
   }
 
@@ -621,9 +718,8 @@ const partitionState = (index: number) => {
     order: 8;
   }
 
-  .column-ingest .stream,
   .column-write .partitions {
-    gap: 0.3125rem;
+    gap: 0.375em;
   }
 }
 </style>
