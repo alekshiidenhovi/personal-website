@@ -44,7 +44,7 @@ export const ROLES: Role[] = [
     discipline: "machine learning",
     highlights: [
       "Trained a self-supervised player embedding from raw game event streams, adapting LeJEPA from images to event sequences, so models can take player context off the shelf instead of engineering features.",
-      "Cut an in-game content recommender's validation loss by 20% when added to hand-crafted features, and matched them when used on its own.",
+      "Cut an in-game content recommender's **validation loss by 20%** when added to hand-crafted features, and matched them when used on its own.",
       "Now developing a new recommender use case for the first-time user experience.",
     ],
     stack: ["PyTorch", "Ray", "Spark", "Databricks"],
@@ -61,8 +61,8 @@ export const ROLES: Role[] = [
     discipline: "machine learning",
     highlights: [
       "Built an end-to-end ticket analysis platform to surface the issues players face daily across all games for Player Support and game teams.",
-      "Replacing a manual reporting chain through hundreds of agents and their supervisors brought feedback in minutes rather than days, higher-quality analysis of every ticket, and more time for agents to serve players.",
-      "Owned it as a solo developer; after I left, Supercell hired two people and a consultant to take it further.",
+      "Replacing a manual reporting chain through hundreds of agents and their supervisors brought feedback in **minutes rather than days**, higher-quality analysis of every ticket, and more time for agents to serve players.",
+      "Owned it as a solo developer; after I left, Supercell hired **two people and a consultant** to take it further.",
     ],
     stack: ["React", "TypeScript", "Python", "FastAPI", "SQL"],
     figure: TicketPipelineFigure,
@@ -77,8 +77,8 @@ export const ROLES: Role[] = [
     end: { year: 2023, month: 8 },
     discipline: "data foundations",
     highlights: [
-      "Designed a Markovian growth model where no shared model for growth and engagement existed; one game team adopted it and still uses it today.",
-      "Prototyped AI support tools, such as semantic ticket search and LLM chatbots, which led to the ticket analysis platform I built next.",
+      "Designed a Markovian growth model where no shared model for growth and engagement existed; one game team adopted it and **still uses it today**.",
+      "Prototyped AI support tools, such as semantic ticket search and LLM chatbots, which **led to the ticket analysis platform** I built next.",
     ],
     stack: ["Python", "SQL", "Vector DBs"],
     figure: MarkovGrowthFigure,

@@ -4,6 +4,7 @@ import type { Component } from "vue";
 import { EXPERTISE_COLOR, type ExpertiseArea } from "../data/expertise";
 import type { Expertise } from "../types";
 import DataPipelineVisual from "./DataPipelineVisual.vue";
+import HighlightedText from "./HighlightedText.vue";
 import PretrainingRunVisual from "./PretrainingRunVisual.vue";
 import StackLine from "./StackLine.vue";
 import TicketDashboardVisual from "./TicketDashboardVisual.vue";
@@ -27,7 +28,7 @@ const VISUALS: Record<Expertise, Component> = {
     :style="{ '--card-color': EXPERTISE_COLOR[props.area.expertise] }">
     <div class="info">
       <h3>{{ props.area.title }}</h3>
-      <p>{{ props.area.text }}</p>
+      <p><HighlightedText :text="props.area.text" /></p>
       <StackLine :items="props.area.tags" />
     </div>
 

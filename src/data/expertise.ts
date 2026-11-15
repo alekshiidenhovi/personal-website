@@ -21,7 +21,7 @@ export const EXPERTISE_AREAS: ExpertiseArea[] = [
   {
     expertise: "machine learning",
     title: "Machine Learning",
-    text: "Specialized in embedding models: self-supervised representation learning, retrieval and recommendation, taken from research to measured results.",
+    text: "Specialized in **embedding models**: self-supervised representation learning, retrieval and recommendation, taken from research to measured results.",
     fileName: "pretrain.py",
     tags: ["PyTorch", "Ray", "MLflow"],
     source: { label: "Data Scientist @ Supercell", href: "#role-data-scientist" },
@@ -29,7 +29,7 @@ export const EXPERTISE_AREAS: ExpertiseArea[] = [
   {
     expertise: "data foundations",
     title: "Data Foundations",
-    text: "Analysis, pipelines and data quality on terabyte-scale data, from the first query to the production job.",
+    text: "Analysis, pipelines and data quality on **terabyte-scale data**, from the first query to the production job.",
     fileName: "pipeline.py",
     tags: ["SQL", "Spark", "Databricks"],
     source: { label: "Ticket analysis platform", href: "#role-ml-engineer" },

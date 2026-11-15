@@ -2,6 +2,7 @@
 import { EXPERTISE_COLOR } from "../data/expertise";
 import { COMPANY_NAMES, type Role, durationMonths, formatYearMonth } from "../data/experience";
 import "./covers/cover.css";
+import HighlightedText from "./HighlightedText.vue";
 import StackLine from "./StackLine.vue";
 import SupercellLogo from "./SupercellLogo.vue";
 import VeriLogo from "./VeriLogo.vue";
@@ -34,7 +35,7 @@ const props = defineProps<Props>();
       </span>
 
       <ul class="highlights">
-        <li v-for="highlight in props.role.highlights" :key="highlight">{{ highlight }}</li>
+        <li v-for="highlight in props.role.highlights" :key="highlight"><HighlightedText :text="highlight" /></li>
       </ul>
       <StackLine :items="props.role.stack" />
     </div>
@@ -133,7 +134,8 @@ h3 {
   padding-left: 1.5rem;
   font-size: 1rem;
   line-height: 1.6;
-  color: var(--neutral-300);
+  /* A step down from white, leaving room for the highlighted facts to stand out */
+  color: var(--neutral-400);
 }
 
 .highlights li::before {
