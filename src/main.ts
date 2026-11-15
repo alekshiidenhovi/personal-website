@@ -2,9 +2,7 @@ import { createApp } from "vue";
 
 import App from "./App.vue";
 import { vReveal } from "./directives/reveal";
-// Self-hosted fonts and bundled icons, so nothing waits on third-party servers
-import "@fontsource-variable/inter";
-import "@fontsource-variable/jetbrains-mono";
+// Bundled icons, so nothing waits on the Iconify API
 import "./icons";
 import "./style.css";
 
