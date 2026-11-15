@@ -43,7 +43,7 @@ export const ROLES: Role[] = [
     start: { year: 2026, month: 2 },
     discipline: "machine learning",
     highlights: [
-      "Trained a self-supervised player embedding from terabyte-scale game event streams, adapting LeJEPA from images to event sequences, so models can take player context off the shelf instead of engineering features.",
+      "Trained a self-supervised player embedding on terabyte-scale game event streams, adapting LeJEPA to event sequences, so models can take player context off the shelf.",
       "Cut an in-game content recommender's **validation loss by 20%** when added to aggregated features, and matched them when used on its own.",
       "Now developing a new recommender use case for the first-time user experience.",
     ],
@@ -61,8 +61,8 @@ export const ROLES: Role[] = [
     discipline: "machine learning",
     highlights: [
       "Built an end-to-end ticket analysis platform to surface the issues players face daily across all games for Player Support and game teams.",
-      "Replacing a manual reporting chain through hundreds of agents and their supervisors brought feedback in **minutes rather than days**, higher-quality analysis of every ticket, and more time for agents to serve players.",
-      "Owned it as a solo developer; after I left, Supercell hired **two people and a consultant** to take it further.",
+      "Replacing a manual reporting chain through hundreds of agents brought feedback in **minutes rather than days**, higher-quality analysis of every ticket, and more time to serve players.",
+      "Owned it solo; after I left, Supercell hired **two people and a consultant** to take it further.",
     ],
     stack: ["React", "TypeScript", "Python", "FastAPI", "SQL"],
     figure: TicketPipelineFigure,

@@ -1,5 +1,7 @@
 import { onMounted, onUnmounted } from "vue";
-import { PINNED_LAYOUT_QUERY, SLIDE_ATTRIBUTE } from "../lib/layout";
+import { SLIDE_ATTRIBUTE } from "../lib/layout";
+import { pinnedLayout } from "./usePinnedLayout";
+import { jumpTo } from "../lib/scroll";
 
 /*
  * Wheel gestures: trackpad swipes ramp up from tiny deltas and trail off in a
@@ -47,7 +49,6 @@ type Direction = 1 | -1;
  * so tablets get the same slideshow as laptops.
  */
 export function useSlideshow() {
-  let pinnedMedia: MediaQueryList | null = null;
   let isAnimating = false;
   let gesture: { distance: number; peak: number; isDecaying: boolean; hasMoved: boolean } | null = null;
   let lastWheelMagnitude = 0;
@@ -65,24 +66,21 @@ export function useSlideshow() {
 
   /** Scrolls to a position; a jump, or a move farther than a slide, crossfades instead of scrolling */
   const scrollTo = (top: number, isJump = false) => {
-    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const isFar =
       isJump || Math.abs(top - window.scrollY) > MAX_SCROLL_VIEWPORTS * window.innerHeight + POSITION_TOLERANCE_PX;
-    if (prefersReducedMotion || (isFar && !document.startViewTransition)) {
+    if (isFar) {
+      isAnimating = true;
+      jumpTo(top).finally(() => {
+        isAnimating = false;
+      });
+      return;
+    }
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       window.scrollTo({ top, behavior: "instant" });
       return;
     }
 
     isAnimating = true;
-    // Rendering every slide on the way makes long scrolls judder, so cut instead
-    if (isFar) {
-      const transition = document.startViewTransition(() => window.scrollTo({ top, behavior: "instant" }));
-      transition.finished.finally(() => {
-        isAnimating = false;
-      });
-      return;
-    }
-
     const finish = () => {
       clearTimeout(fallbackTimer);
       window.removeEventListener("scrollend", finish);
@@ -109,7 +107,7 @@ export function useSlideshow() {
   };
 
   const onWheel = (event: WheelEvent) => {
-    if (!pinnedMedia?.matches || event.ctrlKey) return;
+    if (!pinnedLayout.value || event.ctrlKey) return;
     event.preventDefault();
 
     clearTimeout(quietTimer);
@@ -143,7 +141,7 @@ export function useSlideshow() {
 
   const onTouchStart = (event: TouchEvent) => {
     // A second finger is a pinch, which stays the browser's
-    if (!pinnedMedia?.matches || event.touches.length !== 1) {
+    if (!pinnedLayout.value || event.touches.length !== 1) {
       swipe = null;
       return;
     }
@@ -171,7 +169,7 @@ export function useSlideshow() {
   };
 
   const onClick = (event: MouseEvent) => {
-    if (!pinnedMedia?.matches || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+    if (!pinnedLayout.value || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
       return;
     const link = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>('a[href^="#"]') : null;
     // A page of a pinned section is reached through its snap point
@@ -196,7 +194,7 @@ export function useSlideshow() {
     target instanceof HTMLElement && ["BUTTON", "A"].includes(target.tagName);
 
   const onKeyDown = (event: KeyboardEvent) => {
-    if (!pinnedMedia?.matches || event.altKey || event.ctrlKey || event.metaKey) return;
+    if (!pinnedLayout.value || event.altKey || event.ctrlKey || event.metaKey) return;
     if (isTypingTarget(event.target)) return;
 
     const isSpace = event.key === " " && !isActivatableTarget(event.target);
@@ -212,7 +210,6 @@ export function useSlideshow() {
   };
 
   onMounted(() => {
-    pinnedMedia = window.matchMedia(PINNED_LAYOUT_QUERY);
     window.addEventListener("wheel", onWheel, { passive: false });
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("touchstart", onTouchStart, { passive: true });

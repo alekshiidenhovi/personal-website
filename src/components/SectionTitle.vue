@@ -65,33 +65,31 @@ h2 {
 }
 
 /*
- * PINNED_LAYOUT_QUERY not matching: the number sits beside the title on one
+ * Stacked layout (no .pinned on the root): the number sits beside the title on one
  * row, and the subtitle runs the full width below them.
  */
-@media not ((min-width: 57.75rem) and (min-height: 40rem) and (orientation: landscape)) {
-  .title-container {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: end;
-    column-gap: 1rem;
-  }
+:root:not(.pinned) .title-container {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: end;
+  column-gap: 1rem;
+}
 
-  .text {
-    display: contents;
-  }
+:root:not(.pinned) .text {
+  display: contents;
+}
 
-  .index {
-    font-size: 2.75rem;
-  }
+:root:not(.pinned) .index {
+  font-size: 2.75rem;
+}
 
-  h2 {
-    font-size: 2.5rem;
-  }
+:root:not(.pinned) h2 {
+  font-size: 2.5rem;
+}
 
-  p {
-    grid-column: 1 / -1;
-    padding-top: 0.75rem;
-  }
+:root:not(.pinned) p {
+  grid-column: 1 / -1;
+  padding-top: 0.75rem;
 }
 
 p {

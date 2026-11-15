@@ -306,19 +306,17 @@ h3 {
 }
 
 /* Matches PinnedSection's stacked fallback: the years move above the degree */
-@media not ((min-width: 57.75rem) and (min-height: 40rem) and (orientation: landscape)) {
-  .studies {
-    --years-size: 14cqi;
-    height: auto;
-  }
+:root:not(.pinned) .studies {
+  --years-size: 14cqi;
+  height: auto;
+}
 
-  .card {
-    grid-template-columns: minmax(0, 1fr);
-  }
+:root:not(.pinned) .card {
+  grid-template-columns: minmax(0, 1fr);
+}
 
-  .blocks {
-    grid-column: auto;
-  }
+:root:not(.pinned) .blocks {
+  grid-column: auto;
 }
 
 @media (max-width: 40rem) {

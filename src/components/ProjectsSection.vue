@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import { PROJECTS } from "../data/projects";
-import { PINNED_LAYOUT_QUERY, closestToViewportCenter } from "../lib/layout";
+import { pinnedLayout } from "../composables/usePinnedLayout";
+import { closestToViewportCenter } from "../lib/layout";
 import PinnedSection from "./PinnedSection.vue";
 import ProjectCard from "./ProjectCard.vue";
 
@@ -19,10 +20,9 @@ const pages = Array.from({ length: Math.ceil(PROJECTS.length / PROJECTS_PER_PAGE
  */
 const cardRefs: HTMLElement[] = [];
 const playingTitle = ref<string | null>(null);
-let pinnedMedia: MediaQueryList | null = null;
 
 const updatePlaying = () => {
-  if (pinnedMedia?.matches) {
+  if (pinnedLayout.value) {
     playingTitle.value = null;
     return;
   }
@@ -30,16 +30,15 @@ const updatePlaying = () => {
   playingTitle.value = cardRefs[index]?.dataset.project ?? null;
 };
 
+watch(pinnedLayout, updatePlaying);
+
 onMounted(() => {
-  pinnedMedia = window.matchMedia(PINNED_LAYOUT_QUERY);
-  pinnedMedia.addEventListener("change", updatePlaying);
   window.addEventListener("scroll", updatePlaying, { passive: true });
   window.addEventListener("resize", updatePlaying);
   updatePlaying();
 });
 
 onUnmounted(() => {
-  pinnedMedia?.removeEventListener("change", updatePlaying);
   window.removeEventListener("scroll", updatePlaying);
   window.removeEventListener("resize", updatePlaying);
 });
@@ -85,18 +84,16 @@ onUnmounted(() => {
 }
 
 /* Matches PinnedSection's stacked fallback */
-@media not ((min-width: 57.75rem) and (min-height: 40rem) and (orientation: landscape)) {
-  .page-grid {
-    grid-template-columns: 1fr;
-    grid-template-rows: none;
-    grid-auto-rows: 20rem;
-    height: auto;
-  }
+:root:not(.pinned) .page-grid {
+  grid-template-columns: 1fr;
+  grid-template-rows: none;
+  grid-auto-rows: 20rem;
+  height: auto;
+}
 
-  .page-grid> :first-child,
-  .page-grid.mirrored> :first-child {
-    grid-column: auto;
-    grid-row: auto;
-  }
+:root:not(.pinned) .page-grid> :first-child,
+:root:not(.pinned) .page-grid.mirrored> :first-child {
+  grid-column: auto;
+  grid-row: auto;
 }
 </style>

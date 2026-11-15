@@ -1,13 +1,16 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
-import { PINNED_LAYOUT_QUERY, closestToViewportCenter } from "../lib/layout";
+import { onMounted, onUnmounted, ref, watch } from "vue";
+import { pinnedLayout } from "../composables/usePinnedLayout";
+import { PAGE_ATTRIBUTE, closestToViewportCenter } from "../lib/layout";
+import { jumpTo } from "../lib/scroll";
 import SectionTitle from "./SectionTitle.vue";
 
 /**
  * A full-viewport section: the title stays pinned at the top while the section
  * scrolls past, and scrolling snaps through its pages, which crossfade in place.
- * Narrow or short screens fall back to a normal stacked layout, where the page
- * closest to the middle of the viewport counts as active.
+ * Screens too small, or with a page too tall to fit, fall back to a normal
+ * stacked layout (see usePinnedLayout), where the page closest to the middle of
+ * the viewport counts as active.
  *
  * The default slot is rendered once per page with `{ page, active }`, where
  * `active` is the current page while the section is on screen, so visuals only
@@ -31,17 +34,14 @@ const PAGE_SCROLL_RATIO = 0.5;
 const scrollerRef = ref<HTMLElement | null>(null);
 const pageRefs: HTMLElement[] = [];
 const activePage = ref(0);
-const isPinned = ref(true);
 const isInView = ref(false);
-let pinnedMedia: MediaQueryList | null = null;
 let visibilityObserver: IntersectionObserver | null = null;
 
 const updateActivePage = () => {
   const scroller = scrollerRef.value;
   if (!scroller) return;
-  isPinned.value = pinnedMedia?.matches ?? true;
 
-  if (isPinned.value) {
+  if (pinnedLayout.value) {
     const scrolledIntoSection = -scroller.getBoundingClientRect().top;
     const page = Math.round(scrolledIntoSection / (PAGE_SCROLL_RATIO * window.innerHeight));
     activePage.value = Math.min(Math.max(page, 0), props.pageCount - 1);
@@ -51,21 +51,22 @@ const updateActivePage = () => {
   activePage.value = closestToViewportCenter(pageRefs);
 };
 
+watch(pinnedLayout, updateActivePage);
+
 const formatPageNumber = (page: number) => String(page).padStart(2, "0");
 
 const goToPage = (page: number) => {
   if (!scrollerRef.value) return;
-  if (!isPinned.value) {
+  if (!pinnedLayout.value) {
     pageRefs[page]?.scrollIntoView({ behavior: "smooth", block: "center" });
     return;
   }
+  // Straight to the page, like the nav, rather than scrolling through the pages between
   const sectionTop = scrollerRef.value.getBoundingClientRect().top + window.scrollY;
-  window.scrollTo({ top: sectionTop + page * PAGE_SCROLL_RATIO * window.innerHeight, behavior: "smooth" });
+  jumpTo(sectionTop + page * PAGE_SCROLL_RATIO * window.innerHeight);
 };
 
 onMounted(() => {
-  pinnedMedia = window.matchMedia(PINNED_LAYOUT_QUERY);
-  pinnedMedia.addEventListener("change", updateActivePage);
   window.addEventListener("scroll", updateActivePage, { passive: true });
   window.addEventListener("resize", updateActivePage);
   updateActivePage();
@@ -81,7 +82,6 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  pinnedMedia?.removeEventListener("change", updateActivePage);
   window.removeEventListener("scroll", updateActivePage);
   window.removeEventListener("resize", updateActivePage);
   visibilityObserver?.disconnect();
@@ -97,7 +97,7 @@ onUnmounted(() => {
         :data-slide-for="props.pageIds?.[n - 1]" :style="{ '--page': n - 1 }"></span>
       <div class="stage">
         <SectionTitle :index="props.index" :title="props.title" :subtitle="props.subtitle">
-          <nav v-if="isPinned && props.pageCount > 1" class="page-indicator" :aria-label="`${props.title} pages`">
+          <nav v-if="pinnedLayout && props.pageCount > 1" class="page-indicator" :aria-label="`${props.title} pages`">
             <button v-for="n in props.pageCount" :key="n" type="button" class="page-tick"
               :class="{ current: n - 1 === activePage }" :aria-label="`Page ${n}`"
               :aria-current="n - 1 === activePage ? 'step' : undefined" @click="goToPage(n - 1)"></button>
@@ -107,7 +107,7 @@ onUnmounted(() => {
         </SectionTitle>
         <div class="pages">
           <div v-for="n in props.pageCount" :id="props.pageIds?.[n - 1]" :key="n"
-            :ref="(el) => { if (el) pageRefs[n - 1] = el as HTMLElement; }" class="page"
+            :ref="(el) => { if (el) pageRefs[n - 1] = el as HTMLElement; }" :[PAGE_ATTRIBUTE]="true" class="page"
             :class="{ current: n - 1 === activePage, past: n - 1 < activePage }">
             <slot :page="n - 1" :active="isInView && n - 1 === activePage" />
           </div>
@@ -215,37 +215,35 @@ onUnmounted(() => {
   pointer-events: auto;
 }
 
-/* PINNED_LAYOUT_QUERY not matching */
-@media not ((min-width: 57.75rem) and (min-height: 40rem) and (orientation: landscape)) {
-  .scroller {
-    height: auto;
-  }
+/* The stacked layout, for screens too small or pages too tall for the slideshow */
+:root:not(.pinned) .scroller {
+  height: auto;
+}
 
-  .snap-point {
-    display: none;
-  }
+:root:not(.pinned) .snap-point {
+  display: none;
+}
 
-  /* The slideshow's height cap doesn't apply to a normal scrolling page */
-  .stage {
-    --letterbox: 0px;
-    position: static;
-    height: auto;
-    padding-top: 3rem;
-    padding-bottom: 1rem;
-  }
+/* The slideshow's height cap doesn't apply to a normal scrolling page */
+:root:not(.pinned) .stage {
+  --letterbox: 0px;
+  position: static;
+  height: auto;
+  padding-top: 3rem;
+  padding-bottom: 1rem;
+}
 
-  /* Sections can tighten this, e.g. so project cards flow as one list */
-  .pages {
-    display: flex;
-    flex-direction: column;
-    gap: var(--stacked-page-gap, 3rem);
-  }
+/* Sections can tighten this, e.g. so project cards flow as one list */
+:root:not(.pinned) .pages {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stacked-page-gap, 3rem);
+}
 
-  .page,
-  .page.past {
-    opacity: 1;
-    translate: none;
-    pointer-events: auto;
-  }
+:root:not(.pinned) .page,
+:root:not(.pinned) .page.past {
+  opacity: 1;
+  translate: none;
+  pointer-events: auto;
 }
 </style>

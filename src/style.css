@@ -45,13 +45,16 @@ html {
 
 /*
  * Snap points, the hero and each page of the pinned sections, only in the
- * pinned layout (PINNED_LAYOUT_QUERY). Stacked layouts hide the section snap
- * points, so the hero would be the only one left and pull short scrolls back.
+ * pinned layout. Stacked layouts hide the section snap points, so the hero
+ * would be the only one left and pull short scrolls back.
  */
-@media (min-width: 57.75rem) and (min-height: 40rem) and (orientation: landscape) {
-  html {
-    scroll-snap-type: y proximity;
-  }
+:root.pinned {
+  scroll-snap-type: y proximity;
+}
+
+/* While usePinnedLayout tries a layout, so trying it never starts transitions */
+.measuring-layout * {
+  transition: none !important;
 }
 
 /* Blue by default; content tied to a discipline sets --selection-color to its color */

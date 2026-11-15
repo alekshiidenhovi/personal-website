@@ -20,19 +20,22 @@ const props = defineProps<Props>();
 <template>
   <article class="slide" :style="{ '--card-color': EXPERTISE_COLOR[props.role.discipline] }">
     <div class="info">
-      <!-- The logo alone identifies the company; the name stays for screen readers -->
-      <a class="company" :href="props.role.companyUrl" target="_blank" rel="noreferrer"
-        :aria-label="COMPANY_NAMES[props.role.company]">
-        <span class="logo" :class="props.role.company">
-          <SupercellLogo v-if="props.role.company === 'supercell'" />
-          <VeriLogo v-else-if="props.role.company === 'veri'" />
-        </span>
-      </a>
       <h3>{{ props.role.title }}</h3>
-      <span class="dates">
-        {{ formatYearMonth(props.role.start) }} — {{ formatYearMonth(props.role.end) }}
-        <span class="duration">· {{ durationMonths(props.role) }} months</span>
-      </span>
+      <!-- Where and when on one row below the title, so the logo doesn't take a row of its own -->
+      <div class="meta">
+        <!-- The logo alone identifies the company; the name stays for screen readers -->
+        <a class="company" :href="props.role.companyUrl" target="_blank" rel="noreferrer"
+          :aria-label="COMPANY_NAMES[props.role.company]">
+          <span class="logo" :class="props.role.company">
+            <SupercellLogo v-if="props.role.company === 'supercell'" />
+            <VeriLogo v-else-if="props.role.company === 'veri'" />
+          </span>
+        </a>
+        <span class="dates">
+          {{ formatYearMonth(props.role.start) }} — {{ formatYearMonth(props.role.end) }}
+          <span class="duration">· {{ durationMonths(props.role) }} months</span>
+        </span>
+      </div>
 
       <ul class="highlights">
         <li v-for="highlight in props.role.highlights" :key="highlight"><HighlightedText :text="highlight" /></li>
@@ -73,6 +76,13 @@ const props = defineProps<Props>();
   gap: 1rem;
 }
 
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.875rem;
+}
+
 .company {
   display: inline-flex;
   align-items: center;
@@ -83,12 +93,12 @@ const props = defineProps<Props>();
 
 .logo {
   display: flex;
-  height: 1.75rem;
+  height: 1.25rem;
 }
 
 /* The stacked three-line mark needs more height to match the one-line wordmark */
 .logo.supercell {
-  height: 2.5rem;
+  height: 1.75rem;
 }
 
 .logo svg {
@@ -216,13 +226,11 @@ figcaption {
 }
 
 /* Matches PinnedSection's stacked fallback */
-@media not ((min-width: 57.75rem) and (min-height: 40rem) and (orientation: landscape)) {
-  .slide {
-    grid-template-columns: 1fr;
-  }
+:root:not(.pinned) .slide {
+  grid-template-columns: 1fr;
+}
 
-  figure {
-    height: 20rem;
-  }
+:root:not(.pinned) figure {
+  height: 20rem;
 }
 </style>

@@ -6,8 +6,10 @@ import HeroSection from "./components/HeroSection.vue";
 import NavBar from "./components/NavBar.vue";
 import ProfessionalExperienceSection from "./components/ProfessionalExperienceSection.vue";
 import ProjectsSection from "./components/ProjectsSection.vue";
+import { usePinnedLayout } from "./composables/usePinnedLayout";
 import { useSlideshow } from "./composables/useSlideshow";
 
+usePinnedLayout();
 useSlideshow();
 </script>
 
