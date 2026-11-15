@@ -35,8 +35,9 @@ type Direction = 1 | -1;
  * Slideshow navigation for the pinned layout: each wheel gesture or arrow key
  * moves exactly one slide (any element marked with `data-slide`) forwards or
  * backwards, scrolling smoothly. In-page links always crossfade straight to
- * their slide, however near; Home/End do too once the target is more than a
- * slide away. Narrow screens keep normal scrolling.
+ * their slide, however near, unless marked `data-scroll` to scroll like the
+ * wheel; Home/End crossfade once the target is more than a slide away. Narrow
+ * screens keep normal scrolling.
  */
 export function useSlideshow() {
   let pinnedMedia: MediaQueryList | null = null;
@@ -144,8 +145,8 @@ export function useSlideshow() {
     if (isAnimating) return;
     const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
     history.pushState(null, "", `#${id}`);
-    // A click jumps, so it crossfades even to the neighboring slide
-    scrollTo(Math.min(target.getBoundingClientRect().top + window.scrollY, maxScroll), true);
+    // A click jumps, so it crossfades even to the neighboring slide, unless the link asks to scroll
+    scrollTo(Math.min(target.getBoundingClientRect().top + window.scrollY, maxScroll), !link?.hasAttribute("data-scroll"));
   };
 
   const isTypingTarget = (target: EventTarget | null) =>

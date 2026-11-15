@@ -35,7 +35,7 @@ import EmbeddingSpace from "./EmbeddingSpace.vue";
       </div>
       <EmbeddingSpace class="embedding" />
     </div>
-    <a class="scroll-cue" href="#expertise" aria-label="Scroll to expertise">
+    <a class="scroll-cue" href="#expertise" data-scroll aria-label="Scroll to expertise">
       <Icon icon="heroicons:arrow-down" class="scroll-arrow" />
     </a>
   </section>
