@@ -158,16 +158,19 @@ const readColors = () => {
   };
 };
 
+/** Sizes the canvas buffer to its box and redraws, since resizing the buffer clears it */
 const resize = () => {
   const canvas = canvasRef.value;
   if (!canvas) return;
   const { width, height } = canvas.getBoundingClientRect();
+  // Observers report the initial size again; skip it rather than clear the canvas for nothing
+  if (width === size.width && height === size.height) return;
   const dpr = Math.min(window.devicePixelRatio, 2);
   size = { width, height };
   canvas.width = width * dpr;
   canvas.height = height * dpr;
   canvas.getContext("2d")?.setTransform(dpr, 0, 0, dpr, 0, 0);
-  if (prefersReducedMotion) draw(performance.now());
+  draw(performance.now());
 };
 
 /** Where the loop is: the current phase and how far through it */
@@ -328,8 +331,7 @@ onMounted(() => {
     isVisible = entry.isIntersecting;
   });
   if (containerRef.value) visibilityObserver.observe(containerRef.value);
-  // The raw scatter shows straight away; the loop waits until the page has painted and settled
-  draw(performance.now());
+  // The raw scatter, drawn by the resize above, shows straight away; the loop waits until the page has settled
   cancelStart = whenIdle(() => {
     startCycle(performance.now());
     frameId = requestAnimationFrame(loop);
@@ -388,10 +390,13 @@ canvas {
   cursor: crosshair;
 }
 
+/* A fixed height, so the canvas gets the same space whichever font the labels render in */
 .labels {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  height: 0.9rem;
 }
 
 /* Phones only have room for the phase labels */
