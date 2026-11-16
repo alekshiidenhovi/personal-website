@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, watch } from "vue";
 import { prefersReducedMotion } from "../lib/motion";
+import StatusBadge from "./StatusBadge.vue";
 
 /**
  * An illustrative self-supervised pretraining run, shaped like the thesis
@@ -162,6 +163,7 @@ const status = computed(() => {
   if (props.active) return "training";
   return progress.value ? "paused" : "ready";
 });
+const STATUS_TONE = { training: "active", done: "success", paused: "idle", ready: "idle" } as const;
 const reveal = computed(() => ({ clipPath: `inset(-10% ${100 - toX(progress.value)}% -10% 0)` }));
 const selectedT = computed(() => hoveredT.value ?? progress.value);
 const formatStep = (t: number) => (Math.round((t * TOTAL_STEPS) / 100) * 100).toLocaleString("en-US");
@@ -209,7 +211,7 @@ const onPointerMove = (event: PointerEvent) => {
 <template>
   <div class="visual">
     <div class="header">
-      <span class="status" :class="status">{{ status }}</span>
+      <StatusBadge :label="status" :tone="STATUS_TONE[status]" color="primary" />
       <span>step <span class="step">{{ formatStep(selectedT) }}</span></span>
     </div>
 
@@ -278,48 +280,6 @@ const onPointerMove = (event: PointerEvent) => {
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 0.5rem 1rem;
-}
-
-.status {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  color: var(--primary-300);
-}
-
-.status::before {
-  content: "";
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background-color: var(--primary-400);
-  animation: pulse 1.2s ease-in-out infinite;
-}
-
-.status.done {
-  color: var(--success-400);
-}
-
-.status.done::before {
-  background-color: var(--success-400);
-  animation: none;
-}
-
-.status.paused,
-.status.ready {
-  color: var(--neutral-400);
-}
-
-.status.paused::before,
-.status.ready::before {
-  background-color: var(--neutral-500);
-  animation: none;
-}
-
-@keyframes pulse {
-  50% {
-    opacity: 0.3;
-  }
 }
 
 .step {

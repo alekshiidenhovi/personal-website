@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, toRef } from "vue";
 import { useLiveTicker } from "../composables/useLiveTicker";
+import StatusBadge from "./StatusBadge.vue";
 
 /**
  * A miniature of the ticket analysis dashboard, drawn to illustrate rather
@@ -163,7 +164,7 @@ const status = computed(() => (props.active ? "live" : "idle"));
   <div class="browser">
     <div class="browser-bar">
       <span class="url">tickets.local/topics</span>
-      <span class="live" :class="{ paused: status !== 'live' }">{{ status }}</span>
+      <StatusBadge class="live" :label="status" :tone="status === 'live' ? 'active' : 'idle'" color="warning" />
     </div>
 
     <div class="dashboard">
@@ -250,36 +251,9 @@ const status = computed(() => (props.active ? "live" : "idle"));
   color: var(--neutral-400);
 }
 
+/* Uppercase in the address bar, like a live indicator */
 .live {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  color: var(--warning-300);
   text-transform: uppercase;
-}
-
-.live.paused {
-  color: var(--neutral-400);
-}
-
-.live.paused::before {
-  background-color: var(--neutral-400);
-  animation: none;
-}
-
-.live::before {
-  content: "";
-  width: 0.4rem;
-  height: 0.4rem;
-  border-radius: 50%;
-  background-color: var(--warning-400);
-  animation: pulse 1s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  50% {
-    opacity: 0.25;
-  }
 }
 
 .dashboard {

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, toRef } from "vue";
 import { useLiveTicker } from "../composables/useLiveTicker";
+import StatusBadge from "./StatusBadge.vue";
 
 /**
  * A miniature micro-batch pipeline job, drawn to illustrate rather than
@@ -178,6 +179,7 @@ const checkState = (index: number) => {
 
 const todayFull = computed(() => days.value[0].written === BATCHES_PER_DAY);
 const status = computed(() => (props.active ? (todayFull.value ? "sealing" : "running") : "idle"));
+const STATUS_TONE = { running: "active", sealing: "success", idle: "idle" } as const;
 const partitionState = (index: number) => (index > 0 || todayFull.value ? "sealed" : "writing");
 </script>
 
@@ -185,7 +187,7 @@ const partitionState = (index: number) => (index > 0 || todayFull.value ? "seale
   <div class="visual" :class="{ running: props.active }"
     :style="{ '--batch-size': BATCH_SIZE, '--seal-duration': `${SEAL_HOLD_MS}ms` }">
     <div class="header">
-      <span class="status" :class="status">{{ status }}</span>
+      <StatusBadge :label="status" :tone="STATUS_TONE[status]" color="accent" />
       <span>job events_daily</span>
     </div>
 
@@ -270,39 +272,6 @@ const partitionState = (index: number) => (index > 0 || todayFull.value ? "seale
   display: flex;
   align-items: center;
   gap: 1rem;
-}
-
-.status {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  color: var(--accent-300);
-}
-
-.status::before {
-  content: "";
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background-color: var(--accent-400);
-  animation: pulse 1.2s ease-in-out infinite;
-}
-
-.status.sealing {
-  color: var(--success-400);
-}
-
-.status.sealing::before {
-  background-color: var(--success-400);
-}
-
-.status.idle {
-  color: var(--neutral-400);
-}
-
-.status.idle::before {
-  background-color: var(--neutral-500);
-  animation: none;
 }
 
 @keyframes pulse {
