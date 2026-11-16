@@ -145,10 +145,10 @@ onUnmounted(() => {
   flex-direction: column;
   gap: clamp(1.25rem, 3vh, 2.5rem);
   height: 100svh;
-  max-width: 96rem;
+  max-width: var(--content-width);
   margin: 0 auto;
   padding:
-    calc(var(--nav-height) + 1rem + var(--letterbox)) clamp(1.25rem, 5vw, 5rem) calc(clamp(1.5rem, 4vh, 3rem) + var(--letterbox));
+    calc(var(--nav-height) + 1rem + var(--letterbox)) var(--gutter) calc(clamp(1.5rem, 4vh, 3rem) + var(--letterbox));
 }
 
 .page-indicator {

@@ -50,7 +50,7 @@ import EmbeddingSpace from "./EmbeddingSpace.vue";
   min-height: 100svh;
   width: 100%;
   overflow: hidden;
-  padding: clamp(6rem, 10vh, 8rem) clamp(1.25rem, 5vw, 5rem) clamp(5rem, 10vh, 7rem);
+  padding: clamp(6rem, 10vh, 8rem) var(--gutter) clamp(5rem, 10vh, 7rem);
 }
 
 #hero::after {
@@ -80,7 +80,8 @@ import EmbeddingSpace from "./EmbeddingSpace.vue";
   align-items: center;
   gap: clamp(2rem, 5vw, 6rem);
   width: 100%;
-  max-width: 96rem;
+  /* The hero pads its gutters outside this box, so the column matches the sections' */
+  max-width: calc(var(--content-width) - 2 * var(--gutter));
 }
 
 .intro {

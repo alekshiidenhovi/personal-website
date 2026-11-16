@@ -95,10 +95,9 @@ header {
   view-transition-name: site-nav;
   translate: 0 -100%;
   transition: translate 0.4s cubic-bezier(0.2, 0.7, 0.2, 1);
-  /* Same content width and gutters as the sections, the home link sits in the left gutter */
-  --gutter: clamp(1.25rem, 5vw, 5rem);
+  /* Same content column as the sections, the home link sits in the left gutter */
   display: grid;
-  grid-template-columns: 1fr calc(min(100%, 96rem) - 2 * var(--gutter)) 1fr;
+  grid-template-columns: 1fr calc(min(100%, var(--content-width)) - 2 * var(--gutter)) 1fr;
 }
 
 header.visible {

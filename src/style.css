@@ -38,6 +38,9 @@ html {
    */
   font-size: clamp(100%, min(0.926vw, 1.66vh), 200%);
   --nav-height: 5rem;
+  /* Every section's frame: a content column centered within --content-width, with --gutter on each side */
+  --content-width: 96rem;
+  --gutter: clamp(1.25rem, 5vw, 5rem);
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   background-color: var(--neutral-950);
