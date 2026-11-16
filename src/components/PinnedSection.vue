@@ -13,9 +13,11 @@ import SectionTitle from "./SectionTitle.vue";
  * swipe, wheel step or key press settles on a whole page, and a fast one can't
  * skip any.
  *
- * Scroll progress through the section, from 0 on the first page to
- * pageCount - 1 on the last, is written to `--progress` on the section, and
- * everything that moves with the pages reads it, so nothing can fall out of step.
+ * The sliding is a CSS scroll-driven animation on the section's own view
+ * timeline, so the browser moves the pages in step with the scroll itself,
+ * off the main thread, as smoothly as the scrolling. Browsers without scroll
+ * timelines fall back to `--progress`, written from a scroll handler: 0 on the
+ * first page to pageCount - 1 on the last.
  *
  * The default slot is rendered once per page with `{ page, active }`, where
  * `active` is the current page while the section is on screen, so visuals only
@@ -39,6 +41,9 @@ const { title, subtitle } = SECTIONS[index];
 
 const pageId = (page: number) => props.pageIds?.[page] ?? `${props.id}-${page + 1}`;
 
+/** Whether the browser slides the pages itself (see the scroll-driven animations below) */
+const hasScrollTimelines = CSS.supports("animation-timeline: view()");
+
 const sectionRef = ref<HTMLElement | null>(null);
 const stopRefs: HTMLElement[] = [];
 const activePage = ref(0);
@@ -60,7 +65,7 @@ const updateProgress = () => {
   const first = stops[0].getBoundingClientRect().top;
   const pageScroll = stops.length > 1 ? stops[1].getBoundingClientRect().top - first : 1;
   const progress = Math.min(Math.max(-first / pageScroll, 0), props.pageCount - 1);
-  section.style.setProperty("--progress", String(progress));
+  if (!hasScrollTimelines) section.style.setProperty("--progress", String(progress));
   activePage.value = Math.round(progress);
 
   // The arrows' color, partway from the page being left to the one coming in
@@ -100,7 +105,8 @@ onUnmounted(() => visibilityObserver?.disconnect());
 </script>
 
 <template>
-  <section :id="props.id" ref="sectionRef" class="pinned-section" :style="{ '--page-count': props.pageCount }">
+  <section :id="props.id" ref="sectionRef" class="pinned-section" :class="{ 'multi-page': props.pageCount > 1 }"
+    :style="{ '--page-count': props.pageCount }">
     <!-- Snap stops, one per page; each carries its page's anchor id, so links and loaded URLs land on it -->
     <span v-for="n in props.pageCount" :id="props.pageCount > 1 ? pageId(n - 1) : undefined" :key="n"
       :ref="(el) => { if (el) stopRefs[n - 1] = el as HTMLElement; }" class="slide-stop" data-slide
@@ -149,6 +155,8 @@ onUnmounted(() => visibilityObserver?.disconnect());
   position: relative;
   width: 100%;
   height: calc(100svh + (var(--page-count) - 1) * var(--page-scroll));
+  /* Its scroll position, which the sliding and the arrows' fades follow */
+  view-timeline: --section block;
 }
 
 /*
@@ -316,5 +324,71 @@ onUnmounted(() => visibilityObserver?.disconnect());
   height: 100%;
   overflow-y: auto;
   scrollbar-width: thin;
+}
+
+/*
+ * Where supported, the browser runs the sliding and the arrows' fades on the
+ * section's view timeline. The range starts as the section's top reaches the
+ * top of the screen and spans one page scroll per page, exactly the snap
+ * stops, whatever the screen's height.
+ */
+@supports (animation-timeline: view()) {
+  .multi-page .track {
+    animation: slide-pages linear both;
+    animation-timeline: --section;
+    animation-range: exit-crossing 0px exit-crossing calc((var(--page-count) - 1) * var(--page-scroll));
+  }
+
+  .multi-page .previous {
+    opacity: 1;
+    animation: fade-in linear both;
+    animation-timeline: --section;
+    animation-range: exit-crossing 0px exit-crossing var(--page-scroll);
+  }
+
+  .multi-page .next {
+    opacity: 1;
+    animation: fade-out linear both;
+    animation-timeline: --section;
+    animation-range: exit-crossing calc((var(--page-count) - 2) * var(--page-scroll)) exit-crossing calc((var(--page-count) - 1) * var(--page-scroll));
+  }
+
+  /* These follow the user's own scrolling, so reduced motion doesn't shorten them like timed animations */
+  @media (prefers-reduced-motion: reduce) {
+    .multi-page .track,
+    .multi-page .slide-arrow {
+      animation-duration: auto !important;
+    }
+  }
+}
+
+@keyframes slide-pages {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(calc((var(--page-count) - 1) * (-100% - var(--page-gap))));
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
 }
 </style>
