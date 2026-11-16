@@ -1,5 +1,5 @@
-import { useEventListener, useParallax } from "@vueuse/core";
-import { computed, type Ref, ref, watch } from "vue";
+import { useEventListener } from "@vueuse/core";
+import { computed, type Ref, ref, shallowRef } from "vue";
 
 /** How fast the gyroscope's resting angle follows the device, per reading */
 const BASELINE_FOLLOW = 0.03;
@@ -7,6 +7,22 @@ const BASELINE_FOLLOW = 0.03;
 const GYRO_GAIN = 4;
 
 const clamp1 = (value: number) => Math.min(Math.max(value, -1), 1);
+
+/** The device's tilt (sideways) and roll (forwards), each -0.5..0.5, in the screen's frame, so turning it doesn't swap the axes */
+const deviceAngles = ({ beta, gamma }: DeviceOrientationEvent) => {
+  const b = (beta ?? 0) / 90;
+  const g = (gamma ?? 0) / 90;
+  switch (screen.orientation?.type) {
+    case "landscape-primary":
+      return { tilt: b, roll: g };
+    case "landscape-secondary":
+      return { tilt: -b, roll: -g };
+    case "portrait-secondary":
+      return { tilt: -g, roll: b };
+    default:
+      return { tilt: g, roll: -b };
+  }
+};
 
 /**
  * A 3D tilt for an element, as `--tilt-x` and `--tilt-y` in -1..1.
@@ -32,24 +48,24 @@ export function useTilt(target: Ref<HTMLElement | null>) {
     pointer.value = null;
   });
 
-  // Only its gyroscope readings are used; the pointer is tracked above
-  const { tilt, roll, source } = useParallax(target);
-  const baseline = ref({ tilt: 0, roll: 0 });
-  watch([tilt, roll], ([tiltNow, rollNow]) => {
-    if (source.value !== "deviceOrientation") return;
-    baseline.value = {
-      tilt: baseline.value.tilt + (tiltNow - baseline.value.tilt) * BASELINE_FOLLOW,
-      roll: baseline.value.roll + (rollNow - baseline.value.roll) * BASELINE_FOLLOW,
+  // The gyroscope's latest angles relative to a resting angle that follows them a little on every reading
+  const gyro = shallowRef<{ tilt: number; roll: number } | null>(null);
+  let baseline: { tilt: number; roll: number } | null = null;
+  useEventListener(window, "deviceorientation", (event: DeviceOrientationEvent) => {
+    if (event.alpha === null && event.gamma === null) return;
+    const angles = deviceAngles(event);
+    baseline ??= angles;
+    baseline = {
+      tilt: baseline.tilt + (angles.tilt - baseline.tilt) * BASELINE_FOLLOW,
+      roll: baseline.roll + (angles.roll - baseline.roll) * BASELINE_FOLLOW,
     };
+    gyro.value = { tilt: angles.tilt - baseline.tilt, roll: angles.roll - baseline.roll };
   });
 
   return computed(() => {
     if (pointer.value) return { "--tilt-x": clamp1(pointer.value.x), "--tilt-y": clamp1(pointer.value.y) };
-    if (source.value === "deviceOrientation") {
-      return {
-        "--tilt-x": clamp1((tilt.value - baseline.value.tilt) * GYRO_GAIN),
-        "--tilt-y": clamp1(-(roll.value - baseline.value.roll) * GYRO_GAIN),
-      };
+    if (gyro.value) {
+      return { "--tilt-x": clamp1(gyro.value.tilt * GYRO_GAIN), "--tilt-y": clamp1(-gyro.value.roll * GYRO_GAIN) };
     }
     return { "--tilt-x": 0, "--tilt-y": 0 };
   });
