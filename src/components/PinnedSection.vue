@@ -21,7 +21,8 @@ import SectionTitle from "./SectionTitle.vue";
  *
  * The default slot is rendered once per page with `{ page, active }`, where
  * `active` is the current page while the section is on screen, so visuals only
- * play while visible. Multi-page sections show a page indicator next to the
+ * play while visible. It turns on once the scrolling has settled, so a
+ * visual's start-up work never lands in the middle of a slide. Multi-page sections show a page indicator next to the
  * title and, with a mouse or trackpad on a wide screen, arrows in the side
  * margins that fade out at the first and last page.
  */
@@ -48,6 +49,11 @@ const previousRef = ref<HTMLElement | null>(null);
 const nextRef = ref<HTMLElement | null>(null);
 const stopRefs: HTMLElement[] = [];
 const activePage = ref(0);
+/** The page the scrolling last came to rest on, which `active` follows */
+const settledPage = ref(0);
+/** How long the scrolling must pause to count as settled */
+const SETTLE_MS = 150;
+let settleTimer: ReturnType<typeof setTimeout> | undefined;
 const isInView = ref(false);
 let visibilityObserver: IntersectionObserver | null = null;
 
@@ -71,6 +77,10 @@ const measureProgress = () => {
 
   return () => {
     activePage.value = Math.round(progress);
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(() => {
+      settledPage.value = activePage.value;
+    }, SETTLE_MS);
     if (targetPage !== null && Math.abs(progress - targetPage) < 0.01) targetPage = null;
     // The fallback writes only to what moves; --progress doesn't inherit (see style.css), so nothing else restyles
     if (!hasScrollTimelines) {
@@ -106,7 +116,10 @@ onMounted(() => {
   if (sectionRef.value) visibilityObserver.observe(sectionRef.value);
 });
 
-onUnmounted(() => visibilityObserver?.disconnect());
+onUnmounted(() => {
+  visibilityObserver?.disconnect();
+  clearTimeout(settleTimer);
+});
 </script>
 
 <template>
@@ -132,7 +145,7 @@ onUnmounted(() => visibilityObserver?.disconnect());
           <div ref="trackRef" class="track">
             <!-- Pages off to the side can't be focused or clicked -->
             <div v-for="n in props.pageCount" :key="n" class="page" :inert="n - 1 !== activePage">
-              <slot :page="n - 1" :active="isInView && n - 1 === activePage" />
+              <slot :page="n - 1" :active="isInView && n - 1 === settledPage" />
             </div>
           </div>
         </div>
