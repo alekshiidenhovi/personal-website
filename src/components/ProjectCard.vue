@@ -35,18 +35,16 @@ const linkType = computed(() => (new URL(props.project.link).hostname === "githu
     @blur="isHovered = false">
     <div class="metadata-container">
       <span class="tag">{{ props.project.tag }}</span>
+      <span class="link-type">
+        {{ linkType }}
+        <Icon icon="heroicons:arrow-up-right-20-solid" class="arrow" />
+      </span>
     </div>
     <div class="cover-container" role="img" :aria-label="props.project.coverDescription">
       <component :is="props.project.cover" :active="isActive" />
     </div>
     <div class="title-container">
-      <div class="title-row">
-        <h3>{{ props.project.title }}</h3>
-        <span class="link-type">
-          {{ linkType }}
-          <Icon icon="heroicons:arrow-up-right-20-solid" class="arrow" />
-        </span>
-      </div>
+      <h3>{{ props.project.title }}</h3>
       <p>{{ props.project.description }}</p>
     </div>
   </a>
@@ -134,13 +132,6 @@ const linkType = computed(() => (new URL(props.project.link).hostname === "githu
   padding: 0 1.5rem 1.5rem;
 }
 
-.title-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
 h3 {
   font-size: 1.5rem;
   line-height: 1.2;
@@ -168,8 +159,6 @@ p {
   align-items: center;
   flex-shrink: 0;
   gap: 0.25rem;
-  font-family: var(--font-mono);
-  font-size: 0.8125rem;
   color: var(--text-muted);
   transition: color 0.2s ease;
 }
