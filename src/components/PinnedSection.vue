@@ -133,14 +133,17 @@ onUnmounted(() => {
       :style="{ '--page': n - 1 }"></span>
     <div class="stage">
       <SectionTitle :index="index + 1" :title="title" :subtitle="subtitle">
-        <nav v-if="props.pageCount > 1" class="page-indicator" :aria-label="`${title} pages`">
-          <!-- Links to the pages' stops, which crossfade like the nav's links -->
-          <a v-for="n in props.pageCount" :key="n" :href="`#${pageId(n - 1)}`" class="page-tick"
-            :class="{ current: n - 1 === activePage }" :aria-label="`Page ${n}`"
-            :aria-current="n - 1 === activePage ? 'step' : undefined"></a>
-          <span class="page-number">{{ formatPageNumber(activePage + 1) }} / {{ formatPageNumber(props.pageCount)
-            }}</span>
-        </nav>
+        <!-- Passed only with several pages, so a single page's title doesn't keep an empty row for it -->
+        <template v-if="props.pageCount > 1" #default>
+          <nav class="page-indicator" :aria-label="`${title} pages`">
+            <!-- Links to the pages' stops, which crossfade like the nav's links -->
+            <a v-for="n in props.pageCount" :key="n" :href="`#${pageId(n - 1)}`" class="page-tick"
+              :class="{ current: n - 1 === activePage }" :aria-label="`Page ${n}`"
+              :aria-current="n - 1 === activePage ? 'step' : undefined"></a>
+            <span class="page-number">{{ formatPageNumber(activePage + 1) }} / {{ formatPageNumber(props.pageCount)
+              }}</span>
+          </nav>
+        </template>
       </SectionTitle>
       <div class="pages-frame">
         <div class="pages">
