@@ -21,7 +21,7 @@ interface Point {
   /** Where training puts the point; new clusters every cycle */
   target: Vec;
   cluster: number;
-  /** 0 to 1: when the point starts moving during training */
+  /** 0 to 1: when the point starts moving during training, and again in the dissolve */
   delay: number;
   /** Phase of the idle drift, which every point keeps, scattered or trained */
   wobble: number;
@@ -41,12 +41,12 @@ const PHASES = [
   { name: "raw", label: "raw events", duration: 1800 },
   { name: "train", label: "training", duration: 5600 },
   { name: "query", label: "retrieval", duration: 4600 },
-  { name: "dissolve", label: "next run", duration: 1600 },
+  { name: "dissolve", label: "next run", duration: 3600 },
 ] as const;
 type PhaseName = (typeof PHASES)[number]["name"];
 const LOOP_MS = PHASES.reduce((total, phase) => total + phase.duration, 0);
-/** Share of the training phase over which point start times are spread */
-const TRAIN_STAGGER = 0.45;
+/** Share of the training and dissolve phases over which point start times are spread */
+const STAGGER = 0.45;
 const NEIGHBOUR_DRAW_MS = 200;
 const HOVER_RADIUS_PX = 14;
 /** Opacity levels a point's training fade is rounded to, so points can share a fill */
@@ -198,8 +198,10 @@ const phaseAt = (elapsed: number): { name: PhaseName; label: string; progress: n
 /** 0 while scattered, 1 once trained */
 const trainedAmount = (point: Point, phase: ReturnType<typeof phaseAt>) => {
   if (phase.name === "raw") return 0;
-  if (phase.name === "train") return easeInOut(clamp01((phase.progress - point.delay * TRAIN_STAGGER) / (1 - TRAIN_STAGGER)));
-  if (phase.name === "dissolve") return 1 - easeInOut(phase.progress);
+  // Each point moves in its own window of the phase, so the points don't set off or land all at once
+  const moved = easeInOut(clamp01((phase.progress - point.delay * STAGGER) / (1 - STAGGER)));
+  if (phase.name === "train") return moved;
+  if (phase.name === "dissolve") return 1 - moved;
   return 1;
 };
 
