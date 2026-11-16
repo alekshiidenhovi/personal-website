@@ -251,6 +251,45 @@ h1 {
   }
 }
 
+/*
+ * Tablets in portrait: everything spans the content width, so the stack
+ * doesn't leave the right side empty. The last name runs edge to edge, the
+ * actions share one row, and the embedding fills what height is left.
+ */
+@media (min-width: 40.0625rem) and (max-width: 64rem) and (orientation: portrait) {
+  #hero {
+    padding-block: 4rem;
+  }
+
+  h1 {
+    font-size: 17vw;
+  }
+
+  .headline,
+  .pitch {
+    font-size: 1.375rem;
+  }
+
+  .pitch {
+    max-width: none;
+  }
+
+  .cta-container {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .cta {
+    justify-content: center;
+  }
+
+  .embedding {
+    max-width: none;
+    max-height: 40svh;
+    aspect-ratio: 4 / 3;
+  }
+}
+
 /* Phones: the introduction alone fills the screen; one full-width primary action, the two profiles side by side below it */
 @media (max-width: 40rem) {
   #hero {
