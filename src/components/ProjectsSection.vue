@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { useMediaQuery } from "@vueuse/core";
 import { computed } from "vue";
+import { useMatchMedia } from "../composables/useMatchMedia";
 import { PROJECTS } from "../data/projects";
 import { FINE_POINTER_QUERY, PHONE_QUERY, WIDE_QUERY } from "../lib/layout";
 import PinnedSection from "./PinnedSection.vue";
 import ProjectCard from "./ProjectCard.vue";
 
-const isPhone = useMediaQuery(PHONE_QUERY);
-const isWide = useMediaQuery(WIDE_QUERY);
-const hasFinePointer = useMediaQuery(FINE_POINTER_QUERY);
+const isPhone = useMatchMedia(PHONE_QUERY);
+const isWide = useMatchMedia(WIDE_QUERY);
+const hasFinePointer = useMatchMedia(FINE_POINTER_QUERY);
 
 /** Wide screens show one featured project next to two smaller ones; tablets two stacked; phones one */
 const perPage = computed(() => (isPhone.value ? 1 : isWide.value ? 3 : 2));

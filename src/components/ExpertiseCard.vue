@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useMediaQuery } from "@vueuse/core";
 import type { Component } from "vue";
+import { useMatchMedia } from "../composables/useMatchMedia";
 import { EXPERTISE_COLOR, type ExpertiseArea } from "../data/expertise";
 import { PHONE_QUERY } from "../lib/layout";
 import type { Expertise } from "../types";
@@ -27,7 +27,7 @@ const VISUALS: Record<Expertise, Component> = {
 };
 
 // Phones show the visual in a popup instead, so the hidden one on the page stays still
-const isPhone = useMediaQuery(PHONE_QUERY);
+const isPhone = useMatchMedia(PHONE_QUERY);
 </script>
 
 <template>

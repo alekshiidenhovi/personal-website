@@ -1,8 +1,9 @@
-import { useEventListener, useMediaQuery } from "@vueuse/core";
+import { useEventListener } from "@vueuse/core";
 import { onUnmounted, watch } from "vue";
 import { FINE_POINTER_QUERY, SLIDE_ATTRIBUTE } from "../lib/layout";
 import { prefersReducedMotion } from "../lib/motion";
 import { jumpTo } from "../lib/scroll";
+import { useMatchMedia } from "./useMatchMedia";
 
 /*
  * Wheel gestures: trackpad swipes ramp up from tiny deltas and trail off in a
@@ -190,7 +191,7 @@ export function useSlideshow() {
     window.removeEventListener("keydown", onKeyDown);
   };
 
-  watch(useMediaQuery(FINE_POINTER_QUERY), (hasFinePointer) => (hasFinePointer ? attach() : detach()), {
+  watch(useMatchMedia(FINE_POINTER_QUERY), (hasFinePointer) => (hasFinePointer ? attach() : detach()), {
     immediate: true,
   });
   onUnmounted(detach);

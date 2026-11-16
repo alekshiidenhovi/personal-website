@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useMediaQuery } from "@vueuse/core";
+import { useMatchMedia } from "../composables/useMatchMedia";
 import { COMPANY_NAMES, durationMonths, formatYearMonth, type Role } from "../data/experience";
 import { EXPERTISE_COLOR } from "../data/expertise";
 import { PHONE_QUERY } from "../lib/layout";
@@ -22,7 +22,7 @@ const props = defineProps<Props>();
 
 const figureNumber = `Fig. ${String(props.index + 1).padStart(2, "0")}`;
 // Phones show the figure in a popup instead, so the hidden one on the page stays still
-const isPhone = useMediaQuery(PHONE_QUERY);
+const isPhone = useMatchMedia(PHONE_QUERY);
 </script>
 
 <template>

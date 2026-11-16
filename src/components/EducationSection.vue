@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useMediaQuery } from "@vueuse/core";
+import { useMatchMedia } from "../composables/useMatchMedia";
 import { computed, onUnmounted, ref } from "vue";
 import { STUDIES } from "../data/education";
 import { EXPERTISE_COLOR } from "../data/expertise";
@@ -7,7 +7,7 @@ import { PHONE_QUERY } from "../lib/layout";
 import Icon from "./Icon.vue";
 import PinnedSection from "./PinnedSection.vue";
 
-const isPhone = useMediaQuery(PHONE_QUERY);
+const isPhone = useMatchMedia(PHONE_QUERY);
 
 /** "2024 – 26": the end year shortened, as the century repeats */
 const formatYears = (start: number, end: number) => `${start} – ${String(end).slice(2)}`;
