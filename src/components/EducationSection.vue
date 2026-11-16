@@ -169,23 +169,32 @@ h3 {
   color: var(--neutral-600);
 }
 
-/* Thesis and exchange as cells of one bordered panel */
+/*
+ * The thesis and exchange as columns below a hairline, without a box of their
+ * own: a box inside the card would crowd it, most of all on phones
+ */
 .blocks {
   grid-column: 2;
   display: grid;
   grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-  gap: 1px;
-  border: 1px solid var(--neutral-800);
-  background-color: var(--neutral-800);
+  padding-top: clamp(1rem, 2.5vh, 1.5rem);
+  border-top: 1px solid var(--neutral-800);
 }
 
 .block {
   display: flex;
   flex-direction: column;
   gap: 0.375rem;
-  padding: 1rem 1.25rem;
-  background-color: var(--neutral-900);
   text-decoration: none;
+}
+
+.thesis {
+  padding-right: clamp(1.25rem, 2.5vw, 2rem);
+}
+
+.exchange {
+  padding-left: clamp(1.25rem, 2.5vw, 2rem);
+  border-left: 1px solid var(--neutral-800);
 }
 
 .block-label {
@@ -202,6 +211,7 @@ h3 {
   display: none;
   width: 0.875rem;
   height: 0.875rem;
+  transition: translate 0.2s ease;
 }
 
 .block-title {
@@ -209,6 +219,7 @@ h3 {
   font-weight: 500;
   line-height: 1.35;
   color: var(--neutral-100);
+  transition: color 0.2s ease;
 }
 
 .block-detail {
@@ -234,15 +245,13 @@ h3 {
   transition: translate 0.2s ease;
 }
 
-.thesis {
-  transition: background-color 0.2s ease;
+/* The thesis is a link: its title takes on the card's color, and the arrow nudges */
+.thesis:hover .block-title {
+  color: color-mix(in srgb, var(--card-color) 35%, var(--neutral-100));
 }
 
-.thesis:hover {
-  background-color: color-mix(in srgb, var(--card-color), var(--neutral-900) 94%);
-}
-
-.thesis:hover .read-arrow {
+.thesis:hover .read-arrow,
+.thesis:hover .label-arrow {
   translate: 2px -2px;
 }
 
@@ -354,16 +363,16 @@ h3 {
 
 /*
  * Compact cards, for narrow pages (phones) and very short ones (phones in
- * landscape). The years shrink to a heading, and the thesis and exchange
- * become compact rows: the thesis summary repeats the experience section, the
- * route adds nothing beyond the exchange school's name, and the whole thesis
- * row is its link.
+ * landscape): the same card with less in it. The years shrink, and the
+ * details keep the thesis and exchange by name: the thesis summary repeats
+ * the experience section, the route adds nothing beyond the school's name,
+ * and the thesis's arrow moves onto its label, the whole row being the link.
  */
 @container page (width < 36rem) or (height < 16rem) {
   .card {
     --years-size: 1.75rem;
-    gap: 0.375rem;
-    padding: 1rem;
+    row-gap: 0.375rem;
+    padding: 1.125rem 1.25rem;
   }
 
   h3 {
@@ -382,9 +391,13 @@ h3 {
     display: none;
   }
 
+  .blocks {
+    margin-top: 0.625rem;
+    padding-top: 1rem;
+  }
+
   .block {
     gap: 0.25rem;
-    padding: 0.5rem 0.875rem;
   }
 
   .block-label {
@@ -399,8 +412,12 @@ h3 {
     display: block;
   }
 
+  /* Details, a step below the degree */
   .block-title {
     font-size: 0.9375rem;
+    font-weight: 400;
+    line-height: 1.45;
+    color: var(--neutral-300);
   }
 }
 
@@ -408,29 +425,52 @@ h3 {
 @container page (width < 36rem) {
   .studies {
     justify-content: flex-start;
-    gap: 0.75rem;
+    gap: 0.875rem;
   }
 
   .blocks {
     grid-template-columns: 1fr;
+    row-gap: 1rem;
+  }
+
+  .thesis {
+    padding-right: 0;
+  }
+
+  .exchange {
+    padding-left: 0;
+    border-left: none;
   }
 }
 
-/* Short narrow pages (small phones): the thesis row keeps its label and link, without the title */
-@container page (width < 36rem) and (height < 24rem) {
+/*
+ * Shorter narrow pages give up detail a step at a time, keeping the cards'
+ * spacing: the thesis title shortens to a line, then leaves its label alone,
+ * then the minors go and the cards tighten. Measured to keep some room spare
+ * at phone widths from 360 to 430px.
+ */
+@container page (width < 36rem) and (height < 28rem) {
+  .thesis .block-title {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    overflow: hidden;
+  }
+}
+
+@container page (width < 36rem) and (height < 25rem) {
   .thesis .block-title {
     display: none;
   }
 }
 
-/* Shorter still: the minors go too, and the cards tighten */
-@container page (width < 36rem) and (height < 22rem) {
+@container page (width < 36rem) and (height < 23.5rem) {
   .minor {
     display: none;
   }
 
   .card {
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 1.25rem;
   }
 }
 
@@ -456,7 +496,8 @@ h3 {
 
   .blocks {
     grid-column: 1 / -1;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 0.25rem;
+    padding-top: 0.5rem;
   }
 
   .block {
@@ -464,7 +505,6 @@ h3 {
     flex-wrap: wrap;
     align-items: center;
     column-gap: 0.75rem;
-    padding-block: 0.375rem;
   }
 
   .thesis .block-title {

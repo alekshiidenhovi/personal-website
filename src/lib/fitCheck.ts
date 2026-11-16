@@ -18,8 +18,9 @@ export function watchPageFit() {
 
         for (const element of page.querySelectorAll<HTMLElement>("*")) {
           const style = getComputedStyle(element);
-          // A one-line text cut short with an ellipsis is clipped on purpose
-          if (!["hidden", "clip"].includes(style.overflowY) || style.textOverflow === "ellipsis") continue;
+          // Text cut short with an ellipsis, on one line or a set number, is clipped on purpose
+          const isTruncated = style.textOverflow === "ellipsis" || style.webkitLineClamp !== "none";
+          if (!["hidden", "clip"].includes(style.overflowY) || isTruncated) continue;
           const clipped = element.scrollHeight - element.clientHeight;
           if (clipped > 0) console.warn(`[fit] ${where} clips ${clipped}px of`, element);
         }
