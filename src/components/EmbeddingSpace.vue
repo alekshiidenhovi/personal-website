@@ -56,6 +56,8 @@ const phaseLabel = ref<string>(PHASES[0].label);
 const step = ref(0);
 
 let points: Point[] = [];
+/** The points' canvas positions this frame; reused across frames, so drawing doesn't allocate */
+const positions: Vec[] = Array.from({ length: POINT_COUNT }, () => [0, 0]);
 let query: { position: Vec; neighbours: number[] } = { position: [0.5, 0.5], neighbours: [] };
 let colors = { raw: "", clusters: [] as string[], query: "", grid: "" };
 let size = { width: 0, height: 0 };
@@ -199,12 +201,13 @@ const trainedAmount = (point: Point, phase: ReturnType<typeof phaseAt>) => {
   return 1;
 };
 
-const positionOf = (point: Point, phase: ReturnType<typeof phaseAt>, now: number): Vec => {
-  const trained = trainedAmount(point, phase);
+/** Writes the point's canvas position into `out` */
+const placePoint = (point: Point, trained: number, now: number, out: Vec) => {
   const drift = 0.004 * trained;
   const wobbleX = Math.sin(now / 1400 + point.wobble) * drift;
   const wobbleY = Math.cos(now / 1700 + point.wobble) * drift;
-  return [lerp(point.noise[0], point.target[0], trained) + wobbleX, lerp(point.noise[1], point.target[1], trained) + wobbleY];
+  out[0] = (lerp(point.noise[0], point.target[0], trained) + wobbleX) * size.width;
+  out[1] = (lerp(point.noise[1], point.target[1], trained) + wobbleY) * size.height;
 };
 
 const toCanvas = ([x, y]: Vec): Vec => [x * size.width, y * size.height];
@@ -214,8 +217,8 @@ const drawLink = (ctx: CanvasRenderingContext2D, from: Vec, to: Vec, color: stri
   ctx.strokeStyle = color;
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(...from);
-  ctx.lineTo(...to);
+  ctx.moveTo(from[0], from[1]);
+  ctx.lineTo(to[0], to[1]);
   ctx.stroke();
 };
 
@@ -301,11 +304,12 @@ function draw(now: number) {
   const unit = Math.min(size.width, size.height);
   ctx.clearRect(0, 0, size.width, size.height);
 
-  const positions = points.map((point) => toCanvas(positionOf(point, phase, now)));
-
   // Points: raw data in pink, turning into their cluster's blue as they train
-  for (const [index, point] of points.entries()) {
-    const trained = Math.round(trainedAmount(point, phase) * FADE_STEPS) / FADE_STEPS;
+  for (let index = 0; index < points.length; index++) {
+    const point = points[index];
+    const exactTrained = trainedAmount(point, phase);
+    placePoint(point, exactTrained, now, positions[index]);
+    const trained = Math.round(exactTrained * FADE_STEPS) / FADE_STEPS;
     const radius = unit * 0.0042 * point.radius;
     const clusterColor = point.cluster >= 0 ? colors.clusters[point.cluster % colors.clusters.length] : colors.grid;
     addDot(positions[index], radius, colors.raw, 0.55 * (1 - trained));
