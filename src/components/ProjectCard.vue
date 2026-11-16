@@ -25,7 +25,7 @@ const linkType = computed(() => (new URL(props.project.link).hostname === "githu
 </script>
 
 <template>
-  <a ref="cardRef" class="card" :class="{ featured: props.featured, active: isActive }"
+  <a ref="cardRef" class="card dot-grid" :class="{ featured: props.featured, active: isActive }"
     :style="{
       '--card-color': PROJECT_TAG_COLOR[props.project.tag],
       // Side projects aren't a discipline, so their selection stays the default blue
@@ -63,8 +63,6 @@ const linkType = computed(() => (new URL(props.project.link).hostname === "githu
   /* A faint tint of the card's color at rest, brightening on hover */
   border: 1px solid color-mix(in srgb, var(--card-color) 18%, var(--neutral-800));
   background-color: var(--neutral-900);
-  background-image: radial-gradient(color-mix(in srgb, var(--neutral-500), transparent 85%) 1px, transparent 1px);
-  background-size: 1.25rem 1.25rem;
   text-decoration: none;
   outline: none;
   transform: perspective(75rem) rotateX(calc(var(--tilt-y) * -3deg)) rotateY(calc(var(--tilt-x) * 3deg));

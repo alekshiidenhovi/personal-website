@@ -39,7 +39,7 @@ const routeArc = computed(() => {
   <PinnedSection id="education" :index="4" title="Education"
     subtitle="Industrial engineering into computer science, with data and machine learning throughout.">
     <ol class="studies">
-      <li v-for="study in STUDIES" :key="study.degree" class="card"
+      <li v-for="study in STUDIES" :key="study.degree" class="card dot-grid"
         :style="{ '--card-color': EXPERTISE_COLOR[study.discipline], '--selection-color': EXPERTISE_COLOR[study.discipline] }">
         <span class="years">{{ formatYears(study.start, study.end) }}</span>
 
@@ -110,8 +110,6 @@ const routeArc = computed(() => {
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--card-color) 18%, var(--neutral-800));
   background-color: var(--neutral-900);
-  background-image: radial-gradient(color-mix(in srgb, var(--neutral-500), transparent 85%) 1px, transparent 1px);
-  background-size: 1.25rem 1.25rem;
 }
 
 /* A dim glow in the discipline's color, behind the years */

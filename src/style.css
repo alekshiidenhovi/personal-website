@@ -92,6 +92,12 @@ html {
   animation-duration: 0.4s;
 }
 
+/* The faint dotted grid behind cards and figures */
+.dot-grid {
+  background-image: radial-gradient(color-mix(in srgb, var(--neutral-500), transparent 85%) 1px, transparent 1px);
+  background-size: 1.25rem 1.25rem;
+}
+
 /* Applied by the v-reveal directive. Animates `translate` so it doesn't clash with hover transforms. */
 .reveal:not(.revealed) {
   opacity: 0;

@@ -45,7 +45,7 @@ const props = defineProps<Props>();
 
     <!-- Presented as a figure with crop marks, distinct from the project cards -->
     <figure>
-      <div class="figure-body">
+      <div class="figure-body dot-grid">
         <span class="crop crop-top-left"></span>
         <span class="crop crop-top-right"></span>
         <span class="crop crop-bottom-left"></span>
@@ -170,8 +170,6 @@ figure {
   flex-grow: 1;
   min-height: 0;
   padding: clamp(1.25rem, 3vw, 2.5rem);
-  background-image: radial-gradient(color-mix(in srgb, var(--neutral-500), transparent 85%) 1px, transparent 1px);
-  background-size: 1.25rem 1.25rem;
 }
 
 /* Corner crop marks */
