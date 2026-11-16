@@ -1,7 +1,7 @@
 import { useEventListener } from "@vueuse/core";
 import { getScroller, SLIDE_ATTRIBUTE } from "../lib/layout";
 import { prefersReducedMotion } from "../lib/motion";
-import { jumpTo } from "../lib/scroll";
+import { jumpTo, scrollPositionOf } from "../lib/scroll";
 
 /** Fallback for browsers without the `scrollend` event */
 const SCROLL_END_FALLBACK_MS = 900;
@@ -30,15 +30,8 @@ type Direction = 1 | -1;
 export function useSlideshow() {
   let isAnimating = false;
 
-  /** Where an element's top edge sits in the scroller, as far as the scroller can go */
-  const positionOf = (element: Element) => {
-    const scroller = getScroller();
-    const top = Math.round(element.getBoundingClientRect().top + scroller.scrollTop);
-    return Math.min(top, scroller.scrollHeight - scroller.clientHeight);
-  };
-
   const slidePositions = () => {
-    const positions = [...document.querySelectorAll(`[${SLIDE_ATTRIBUTE}]`)].map(positionOf);
+    const positions = [...document.querySelectorAll(`[${SLIDE_ATTRIBUTE}]`)].map(scrollPositionOf);
     return [...new Set(positions)].sort((a, b) => a - b);
   };
 
@@ -98,7 +91,7 @@ export function useSlideshow() {
     if (isAnimating) return;
     history.pushState(null, "", `#${id}`);
     // A click jumps, so it crossfades even to the neighboring slide, unless the link asks to scroll
-    scrollTo(positionOf(target), !link?.hasAttribute("data-scroll"));
+    scrollTo(scrollPositionOf(target), !link?.hasAttribute("data-scroll"));
   };
 
   const isTypingTarget = (target: EventTarget | null) =>

@@ -7,12 +7,12 @@ import NavBar from "./components/NavBar.vue";
 import ProfessionalExperienceSection from "./components/ProfessionalExperienceSection.vue";
 import ProjectsSection from "./components/ProjectsSection.vue";
 import { useActiveSection } from "./composables/useActiveSection";
-import { useScrollRestoration } from "./composables/useScrollRestoration";
+import { useSlideAnchor } from "./composables/useSlideAnchor";
 import { useSlideshow } from "./composables/useSlideshow";
 
 useActiveSection();
 useSlideshow();
-useScrollRestoration();
+useSlideAnchor();
 </script>
 
 <template>
