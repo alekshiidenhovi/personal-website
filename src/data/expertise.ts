@@ -39,7 +39,7 @@ export const EXPERTISE_AREAS: ExpertiseArea[] = [
     title: "Web Development",
     text: "Full-stack web apps and dashboards that put data and models in front of the people who use them.",
     fileName: "dashboard.vue",
-    tags: ["React", "Vue", "FastAPI", "PostgreSQL", "Figma"],
+    tags: ["React", "Vue", "FastAPI", "PostgreSQL"],
     source: { label: "Ticket analysis platform", href: "#role-ml-engineer" },
   },
 ];

@@ -252,11 +252,14 @@ h1 {
   }
 }
 
-/* Phones: one full-width primary action, the two profiles side by side below it */
+/* Phones: the introduction alone fills the screen; one full-width primary action, the two profiles side by side below it */
 @media (max-width: 40rem) {
-  /* Taller than the screen here, so start near the top instead of centering */
   #hero {
-    padding-top: 3rem;
+    padding-block: 4rem;
+  }
+
+  .embedding {
+    display: none;
   }
 
   .cta-container {
