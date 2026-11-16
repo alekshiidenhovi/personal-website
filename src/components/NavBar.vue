@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 
 const LINKS = [
   { label: "Expertise", id: "expertise" },
@@ -16,6 +16,25 @@ const isVisible = computed(() => activeId.value !== HERO_ID);
 let sectionObserver: IntersectionObserver | null = null;
 
 const SECTION_IDS = [HERO_ID, ...LINKS.map((link) => link.id)];
+
+/*
+ * On phones the links scroll sideways and some sit out of view. Reaching a
+ * section brings its link into view, once per change, so the bar can still be
+ * scrolled freely while on the section.
+ */
+const navRef = ref<HTMLElement | null>(null);
+const linkRefs: HTMLElement[] = [];
+
+watch(activeId, (id) => {
+  const nav = navRef.value;
+  const link = linkRefs[LINKS.findIndex((candidate) => candidate.id === id)];
+  if (!nav || !link) return;
+  const navRect = nav.getBoundingClientRect();
+  const linkRect = link.getBoundingClientRect();
+  const overflow =
+    linkRect.left < navRect.left ? linkRect.left - navRect.left : Math.max(0, linkRect.right - navRect.right);
+  if (overflow) nav.scrollBy({ left: overflow, behavior: "smooth" });
+});
 
 onMounted(() => {
   /*
@@ -51,8 +70,9 @@ onUnmounted(() => {
 <template>
   <header :class="{ visible: isVisible }" :inert="!isVisible">
     <a :href="`#${HERO_ID}`" class="nav-home" aria-label="Back to start">AH</a>
-    <nav>
-      <a v-for="(link, index) in LINKS" :key="link.id" :href="`#${link.id}`" class="nav-link"
+    <nav ref="navRef">
+      <a v-for="(link, index) in LINKS" :key="link.id"
+        :ref="(el) => { if (el) linkRefs[index] = el as HTMLElement; }" :href="`#${link.id}`" class="nav-link"
         :class="{ active: activeId === link.id }" :aria-current="activeId === link.id ? 'location' : undefined">
         <span class="nav-index">0{{ index + 1 }}</span>
         <span>{{ link.label }}</span>
