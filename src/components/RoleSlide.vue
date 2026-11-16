@@ -233,4 +233,47 @@ figcaption {
 :root:not(.pinned) figure {
   height: 20rem;
 }
+
+/*
+ * Phones: tight enough that a whole role fits on one screen, down to an
+ * iPhone 13 mini with Safari's toolbars showing. The figure takes the
+ * drawing's own shape instead of a fixed box.
+ */
+@media (max-width: 40rem) {
+  :root:not(.pinned) .slide {
+    gap: 1.25rem;
+  }
+
+  .info {
+    gap: 0.75rem;
+  }
+
+  h3 {
+    font-size: 1.5rem;
+  }
+
+  .highlights {
+    gap: 0.5rem;
+  }
+
+  .highlights li {
+    font-size: 0.9375rem;
+    line-height: 1.5;
+  }
+
+  .info :deep(.stack) {
+    padding-top: 0.75rem;
+  }
+
+  :root:not(.pinned) figure {
+    height: auto;
+    gap: 0.5rem;
+  }
+
+  .figure-body {
+    flex-grow: 0;
+    aspect-ratio: 400 / 220;
+    padding: 0.75rem;
+  }
+}
 </style>

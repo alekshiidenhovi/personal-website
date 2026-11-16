@@ -43,6 +43,13 @@ html {
   background-color: var(--neutral-950);
 }
 
+/* The phone nav bar is a single slim row; room for it plus a little air */
+@media (max-width: 40rem) {
+  :root {
+    --nav-height: 3.5rem;
+  }
+}
+
 /* While usePinnedLayout tries a layout, so trying it never starts transitions */
 .measuring-layout * {
   transition: none !important;

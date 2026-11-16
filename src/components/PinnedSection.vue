@@ -237,6 +237,8 @@ onUnmounted(() => {
 
 :root:not(.pinned) .page,
 :root:not(.pinned) .page.past {
+  /* Links to a page land below the fixed nav bar */
+  scroll-margin-top: var(--nav-height);
   opacity: 1;
   translate: none;
   pointer-events: auto;

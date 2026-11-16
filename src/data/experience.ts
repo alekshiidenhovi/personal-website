@@ -48,7 +48,7 @@ export const ROLES: Role[] = [
     ],
     stack: ["PyTorch", "Ray", "Spark", "Databricks"],
     figure: LearnedFeaturesFigure,
-    figureCaption: "Embedding alone matches aggregated features; together they predict best",
+    figureCaption: "Learned vs. aggregated features",
   },
   {
     slug: "role-ml-engineer",
@@ -62,7 +62,7 @@ export const ROLES: Role[] = [
       "Built an end-to-end ticket analysis platform to surface the issues players face daily across all games for Player Support and game teams.",
       "Replacing a manual reporting chain through hundreds of agents brought feedback in **minutes rather than days**, higher-quality analysis of every ticket, and more time to serve players.",
     ],
-    stack: ["React", "TypeScript", "Python", "FastAPI", "SQL"],
+    stack: ["React", "TypeScript", "FastAPI", "SQL"],
     figure: TicketPipelineFigure,
     figureCaption: "Ticket analysis pipeline",
   },
