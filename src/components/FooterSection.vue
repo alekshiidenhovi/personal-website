@@ -6,7 +6,7 @@ import PinnedSection from "./PinnedSection.vue";
 </script>
 
 <template>
-  <PinnedSection id="contact" keep-subtitle-on-phones>
+  <PinnedSection id="contact">
     <footer>
       <div class="cta-block">
         <a class="big-cta" :href="`mailto:${EMAIL}`">

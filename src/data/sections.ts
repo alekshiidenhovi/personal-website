@@ -11,7 +11,7 @@ export const SECTIONS = [
   {
     id: "professional-experience",
     title: "Experience",
-    subtitle: "Shipping ML and data products at a global games company and a health-tech startup.",
+    subtitle: "ML and data products, from mobile games to health-tech.",
   },
   {
     id: "projects",

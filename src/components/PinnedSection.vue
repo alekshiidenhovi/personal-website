@@ -31,7 +31,6 @@ interface Props {
   pageIds?: string[];
   /** Each page's color, which the arrows blend between as the pages slide; blue by default */
   pageColors?: string[];
-  keepSubtitleOnPhones?: boolean;
 }
 const props = withDefaults(defineProps<Props>(), { pageCount: 1 });
 
@@ -107,8 +106,7 @@ onUnmounted(() => visibilityObserver?.disconnect());
       :ref="(el) => { if (el) stopRefs[n - 1] = el as HTMLElement; }" class="slide-stop" data-slide
       :style="{ '--page': n - 1 }"></span>
     <div class="stage">
-      <SectionTitle :index="index + 1" :title="title" :subtitle="subtitle"
-        :keep-subtitle-on-phones="props.keepSubtitleOnPhones">
+      <SectionTitle :index="index + 1" :title="title" :subtitle="subtitle">
         <nav v-if="props.pageCount > 1" class="page-indicator" :aria-label="`${title} pages`">
           <!-- Links to the pages' stops, which crossfade like the nav's links -->
           <a v-for="n in props.pageCount" :key="n" :href="`#${pageId(n - 1)}`" class="page-tick"
@@ -279,6 +277,14 @@ onUnmounted(() => visibilityObserver?.disconnect());
 .next {
   left: calc(100% + var(--gutter) / 2);
   opacity: min(1, calc(var(--page-count) - 1 - var(--progress, 0)));
+}
+
+/* Phones: less space around the title row */
+@media (width < 40rem) {
+  .stage {
+    gap: 0.875rem;
+    padding-bottom: 1rem;
+  }
 }
 
 /* Short screens (phones in landscape) need every line for the slide */

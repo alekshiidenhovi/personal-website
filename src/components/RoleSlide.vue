@@ -248,7 +248,7 @@ figcaption {
   }
 
   .highlights li {
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
     line-height: 1.5;
   }
 

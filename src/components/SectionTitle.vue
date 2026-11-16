@@ -3,8 +3,6 @@ interface Props {
   index: number;
   title: string;
   subtitle?: string;
-  /** Subtitles give way to the slide's content on phones, except where there's room, as on Contact */
-  keepSubtitleOnPhones?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -15,7 +13,7 @@ const props = defineProps<Props>();
     <span class="index" aria-hidden="true">{{ String(props.index).padStart(2, "0") }}</span>
     <div class="text">
       <h2>{{ props.title }}</h2>
-      <p v-if="props.subtitle" :class="{ 'except-phones': !props.keepSubtitleOnPhones }">{{ props.subtitle }}</p>
+      <p v-if="props.subtitle">{{ props.subtitle }}</p>
     </div>
     <!-- Optional content aligned to the right end, such as a page indicator -->
     <div v-if="$slots.default" class="aside">
@@ -107,6 +105,19 @@ p {
     grid-column: 1 / -1;
     margin-left: 0;
     padding-top: 0.5rem;
+  }
+}
+
+/* Phones: a slightly smaller subtitle and a tighter row, leaving the slide its room */
+@media (width < 40rem) {
+  .title-container {
+    padding-bottom: 0.75rem;
+  }
+
+  p {
+    padding-top: 0.5rem;
+    font-size: 0.9375rem;
+    line-height: 1.5;
   }
 }
 
