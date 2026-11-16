@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, toRef, watch } from "vue";
 import { useLiveTicker } from "../../composables/useLiveTicker";
-import { prefersReducedMotion } from "../../lib/motion";
+import { easeOut, prefersReducedMotion, tween } from "../../lib/motion";
 
 /**
  * Why the learned embedding matters: the model runs on aggregated features
@@ -60,7 +60,7 @@ const features = ref(randomValues(FEATURES.length));
 const embedding = ref(randomValues(DIMENSIONS));
 const curveExponent = ref(condition.value.exponent);
 let ticks = 0;
-let frameId = 0;
+let cancelTween = () => {};
 
 useLiveTicker(
   toRef(props, "active"),
@@ -78,18 +78,13 @@ useLiveTicker(
 
 // The curve eases between its shapes; polyline points can't be transitioned with CSS
 watch(condition, ({ exponent: to }) => {
-  cancelAnimationFrame(frameId);
+  cancelTween();
   const from = curveExponent.value;
-  const start = performance.now();
-  const step = (now: number) => {
-    const t = Math.min((now - start) / CURVE_TWEEN_MS, 1);
-    const eased = 1 - (1 - t) ** 3;
-    curveExponent.value = from + (to - from) * eased;
-    if (t < 1) frameId = requestAnimationFrame(step);
-  };
-  frameId = requestAnimationFrame(step);
+  cancelTween = tween(CURVE_TWEEN_MS, (t) => {
+    curveExponent.value = from + (to - from) * easeOut(t);
+  });
 });
-onUnmounted(() => cancelAnimationFrame(frameId));
+onUnmounted(() => cancelTween());
 
 /** Samples cluster near the origin, where the curve is steepest */
 const curvePoints = (exponent: number) =>

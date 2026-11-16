@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, toRef } from "vue";
 import { useLiveTicker } from "../../composables/useLiveTicker";
+import { easeInOut, tween } from "../../lib/motion";
 
 /**
  * A simplified user growth model simulated as a Markov chain: every tick each
@@ -159,7 +160,6 @@ const pointAlong = (route: Point[], t: number): Point => {
   return route[route.length - 1];
 };
 
-const easeInOut = (t: number) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
 
 const INITIAL_STATES: State[] = ["current", "current", "current", "atRisk", "atRisk", "dormant", "new", "reactivated"];
 const players = ref<Player[]>(
@@ -171,13 +171,11 @@ const players = ref<Player[]>(
 );
 const day = ref(1);
 const busyArrows = ref(new Set<string>());
-let frameId = 0;
+let cancelMoves = () => {};
 
 /** Moves travelling players along their routes, then settles them in their new box */
 const animateMoves = (destinations: Map<number, State>) => {
-  const startTime = performance.now();
-  const frame = (now: number) => {
-    const t = Math.min((now - startTime) / MOVE_MS, 1);
+  cancelMoves = tween(MOVE_MS, (t) => {
     for (const player of players.value) {
       if (!player.route) continue;
       [player.x, player.y] = pointAlong(player.route, easeInOut(t));
@@ -186,10 +184,8 @@ const animateMoves = (destinations: Map<number, State>) => {
         player.route = null;
       }
     }
-    if (t < 1) frameId = requestAnimationFrame(frame);
-    else busyArrows.value = new Set();
-  };
-  frameId = requestAnimationFrame(frame);
+    if (t === 1) busyArrows.value = new Set();
+  });
 };
 
 useLiveTicker(
@@ -222,7 +218,7 @@ useLiveTicker(
   TICK_MS,
 );
 
-onUnmounted(() => cancelAnimationFrame(frameId));
+onUnmounted(() => cancelMoves());
 
 const counts = computed(() =>
   Object.fromEntries(STATES.map((state) => [state, players.value.filter((p) => p.state === state && !p.route).length])),

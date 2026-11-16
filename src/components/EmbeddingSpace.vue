@@ -2,7 +2,7 @@
 import { onMounted, onUnmounted, ref } from "vue";
 import { toCanvasColor } from "../lib/color";
 import { whenIdle } from "../lib/idle";
-import { prefersReducedMotion } from "../lib/motion";
+import { easeInOut, prefersReducedMotion } from "../lib/motion";
 
 /**
  * The hero visual: an embedding space that learns its structure on loop.
@@ -67,7 +67,6 @@ let cancelStart: (() => void) | null = null;
 
 const clamp01 = (value: number) => Math.min(Math.max(value, 0), 1);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-const easeInOut = (t: number) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
 const gaussian = () => Math.sqrt(-2 * Math.log(1 - Math.random())) * Math.cos(2 * Math.PI * Math.random());
 const distance = (a: Vec, b: Vec) => Math.hypot(a[0] - b[0], a[1] - b[1]);
 const randomNoise = (): Vec => [0.04 + Math.random() * 0.92, 0.04 + Math.random() * 0.92];
