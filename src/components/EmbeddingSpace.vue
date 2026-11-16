@@ -59,6 +59,7 @@ let points: Point[] = [];
 let query: { position: Vec; neighbours: number[] } = { position: [0.5, 0.5], neighbours: [] };
 let colors = { raw: "", clusters: [] as string[], query: "", grid: "" };
 let size = { width: 0, height: 0 };
+let dpr = 1;
 let cycleStart = 0;
 let frameId = 0;
 let isVisible = true;
@@ -168,8 +169,9 @@ const resize = () => {
   const { width, height } = canvas.getBoundingClientRect();
   // Observers report the initial size again; skip it rather than clear the canvas for nothing
   if (width === size.width && height === size.height) return;
-  const dpr = Math.min(window.devicePixelRatio, 2);
+  dpr = Math.min(window.devicePixelRatio, 2);
   size = { width, height };
+  glowSprites.clear();
   canvas.width = width * dpr;
   canvas.height = height * dpr;
   canvas.getContext("2d")?.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -217,17 +219,47 @@ const drawLink = (ctx: CanvasRenderingContext2D, from: Vec, to: Vec, color: stri
   ctx.stroke();
 };
 
-const drawDot = (ctx: CanvasRenderingContext2D, at: Vec, radius: number, color: string, alpha: number, glow = 0) => {
+const drawDot = (ctx: CanvasRenderingContext2D, at: Vec, radius: number, color: string, alpha: number) => {
   ctx.globalAlpha = alpha;
   ctx.fillStyle = color;
-  if (glow) {
-    ctx.shadowColor = color;
-    ctx.shadowBlur = glow;
-  }
   ctx.beginPath();
   ctx.arc(at[0], at[1], radius, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+};
+
+/** Glowing dots by color and radius; cleared on resize, since their size follows the canvas */
+const glowSprites = new Map<string, { image: HTMLCanvasElement; extent: number }>();
+
+/**
+ * A glowing dot, blurred once onto its own canvas and then copied each frame,
+ * since a canvas shadow blur is slow in Safari
+ */
+const glowSprite = (radius: number, color: string, glow: number) => {
+  const key = `${color} ${radius}`;
+  const cached = glowSprites.get(key);
+  if (cached) return cached;
+  // Half the sprite's width in CSS pixels, with room for the blur's falloff
+  const extent = Math.ceil(radius + glow);
+  const image = document.createElement("canvas");
+  image.width = image.height = extent * 2 * dpr;
+  const ctx = image.getContext("2d");
+  if (ctx) {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.shadowColor = color;
+    ctx.shadowBlur = glow;
+    drawDot(ctx, [extent, extent], radius, color, 1);
+  }
+  const sprite = { image, extent };
+  glowSprites.set(key, sprite);
+  return sprite;
+};
+
+/** A glowing dot, scaled down by `scale` as it appears */
+const drawGlowingDot = (ctx: CanvasRenderingContext2D, at: Vec, radius: number, color: string, alpha: number, scale = 1) => {
+  const { image, extent } = glowSprite(radius, color, Math.min(size.width, size.height) * 0.04);
+  const half = extent * scale;
+  ctx.globalAlpha = alpha;
+  ctx.drawImage(image, at[0] - half, at[1] - half, half * 2, half * 2);
 };
 
 /** Dots grouped by color, then by opacity, so each group is drawn with a single fill */
@@ -308,14 +340,14 @@ function draw(now: number) {
     ctx.beginPath();
     ctx.arc(queryAt[0], queryAt[1], unit * (0.012 + pulse * 0.05), 0, Math.PI * 2);
     ctx.stroke();
-    drawDot(ctx, queryAt, unit * 0.01 * appear, colors.query, fadeOut, unit * 0.04);
+    drawGlowingDot(ctx, queryAt, unit * 0.01, colors.query, fadeOut, appear);
   }
 
   // Hover: the hovered point's nearest neighbours, once the space has structure
   if (hovered !== null && trainedAmount(points[hovered], phase) > 0.9) {
     const color = colors.clusters[Math.max(points[hovered].cluster, 0) % colors.clusters.length];
     for (const index of hoveredNeighbours) drawLink(ctx, positions[hovered], positions[index], color, 0.6);
-    drawDot(ctx, positions[hovered], unit * 0.009, color, 1, unit * 0.04);
+    drawGlowingDot(ctx, positions[hovered], unit * 0.009, color, 1);
   }
   ctx.globalAlpha = 1;
 
