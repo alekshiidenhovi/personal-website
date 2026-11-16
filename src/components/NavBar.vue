@@ -186,13 +186,13 @@ nav {
 }
 
 /* Tablets squeeze the links, so drop their numbering */
-@media (max-width: 48rem) {
+@media (width < 48rem) {
   .nav-index {
     display: none;
   }
 }
 
-@media (max-width: 40rem) {
+@media (width < 40rem) {
   header {
     display: flex;
   }

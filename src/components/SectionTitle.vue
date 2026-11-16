@@ -64,38 +64,41 @@ h2 {
   color: var(--neutral-100);
 }
 
-/*
- * Stacked layout (no .pinned on the root): the number sits beside the title on one
- * row, and the subtitle runs the full width below them.
- */
-:root:not(.pinned) .title-container {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: end;
-  column-gap: 1rem;
-}
-
-:root:not(.pinned) .text {
-  display: contents;
-}
-
-:root:not(.pinned) .index {
-  font-size: 2.75rem;
-}
-
-:root:not(.pinned) h2 {
-  font-size: 2.5rem;
-}
-
-:root:not(.pinned) p {
-  grid-column: 1 / -1;
-  padding-top: 0.75rem;
-}
-
 p {
   padding-top: 0.25rem;
   font-size: clamp(1rem, 1.3vw, 1.125rem);
   line-height: 1.6;
   color: var(--neutral-400);
 }
+
+/*
+ * Below lg the number sits beside the title on one row, and the subtitle runs
+ * the full width below them.
+ */
+@media (width < 64rem) {
+  .title-container {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: end;
+    column-gap: 1rem;
+  }
+
+  .text {
+    display: contents;
+  }
+
+  .index {
+    font-size: 2.75rem;
+  }
+
+  h2 {
+    font-size: 2.5rem;
+  }
+
+  p {
+    grid-column: 1 / -1;
+    padding-top: 0.75rem;
+  }
+}
+
 </style>

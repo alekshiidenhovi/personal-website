@@ -400,13 +400,6 @@ canvas {
   height: 0.9rem;
 }
 
-/* Phones only have room for the phase labels */
-@media (max-width: 30rem) {
-  .projection {
-    display: none;
-  }
-}
-
 .step {
   font-variant-numeric: tabular-nums;
   color: var(--text-muted);

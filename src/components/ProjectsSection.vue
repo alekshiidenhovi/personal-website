@@ -83,17 +83,24 @@ onUnmounted(() => {
   grid-column: 2 / 4;
 }
 
-/* Matches PinnedSection's stacked fallback */
+/* Scrolling, the grid gets fixed rows instead of the slide's height */
 :root:not(.pinned) .page-grid {
-  grid-template-columns: 1fr;
-  grid-template-rows: none;
-  grid-auto-rows: 20rem;
+  grid-template-rows: repeat(2, 18rem);
   height: auto;
 }
 
-:root:not(.pinned) .page-grid> :first-child,
-:root:not(.pinned) .page-grid.mirrored> :first-child {
-  grid-column: auto;
-  grid-row: auto;
+/* Below lg (always the scrolling layout) the cards run as one list */
+@media (width < 64rem) {
+  :root:not(.pinned) .page-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+    grid-auto-rows: 20rem;
+  }
+
+  .page-grid> :first-child,
+  .page-grid.mirrored> :first-child {
+    grid-column: auto;
+    grid-row: auto;
+  }
 }
 </style>

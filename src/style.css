@@ -43,8 +43,15 @@ html {
   background-color: var(--neutral-950);
 }
 
+/*
+ * Breakpoints, matching Tailwind's: sm 40rem, md 48rem, lg 64rem. Media
+ * queries use the range form, e.g. `(width < 40rem)` for below sm. Width
+ * decides columns and type sizes; the pinned layout (see PINNED_LAYOUT_QUERY)
+ * only decides whether sections pin and slide.
+ */
+
 /* The phone nav bar is a single slim row; room for it plus a little air */
-@media (max-width: 40rem) {
+@media (width < 40rem) {
   :root {
     --nav-height: 3.5rem;
   }

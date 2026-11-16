@@ -225,22 +225,29 @@ figcaption {
   color: var(--card-color);
 }
 
-/* Matches PinnedSection's stacked fallback */
-:root:not(.pinned) .slide {
-  grid-template-columns: 1fr;
+/* Below lg the figure moves under the text */
+@media (width < 64rem) {
+  .slide {
+    grid-template-columns: 1fr;
+  }
 }
 
+/* Scrolling, the figure takes the drawing's own shape instead of filling the slide's height */
 :root:not(.pinned) figure {
-  height: 20rem;
+  height: auto;
+}
+
+:root:not(.pinned) .figure-body {
+  flex-grow: 0;
+  aspect-ratio: 400 / 220;
 }
 
 /*
  * Phones: tight enough that a whole role fits on one screen, down to an
- * iPhone 13 mini with Safari's toolbars showing. The figure takes the
- * drawing's own shape instead of a fixed box.
+ * iPhone 13 mini with Safari's toolbars showing.
  */
-@media (max-width: 40rem) {
-  :root:not(.pinned) .slide {
+@media (width < 40rem) {
+  .slide {
     gap: 1.25rem;
   }
 
@@ -261,18 +268,15 @@ figcaption {
     line-height: 1.5;
   }
 
-  .info :deep(.stack) {
+  .info .stack {
     padding-top: 0.75rem;
   }
 
-  :root:not(.pinned) figure {
-    height: auto;
+  figure {
     gap: 0.5rem;
   }
 
   .figure-body {
-    flex-grow: 0;
-    aspect-ratio: 400 / 220;
     padding: 0.75rem;
   }
 }

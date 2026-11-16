@@ -503,7 +503,7 @@ svg {
   background-color: var(--neutral-200);
 }
 
-@media (max-width: 40rem) {
+@media (width < 40rem) {
   .body {
     grid-template-columns: 1fr;
     grid-template-areas: "plot" "legend" "charts" "axis";

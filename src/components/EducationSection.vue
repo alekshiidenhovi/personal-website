@@ -305,18 +305,23 @@ h3 {
   justify-self: end;
 }
 
-/* Matches PinnedSection's stacked fallback: the years move above the degree */
 :root:not(.pinned) .studies {
-  --years-size: 14cqi;
   height: auto;
 }
 
-:root:not(.pinned) .card {
-  grid-template-columns: minmax(0, 1fr);
-}
+/* Below lg the years move above the degree */
+@media (width < 64rem) {
+  .studies {
+    --years-size: 14cqi;
+  }
 
-:root:not(.pinned) .blocks {
-  grid-column: auto;
+  .card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .blocks {
+    grid-column: auto;
+  }
 }
 
 /*
@@ -324,7 +329,7 @@ h3 {
  * summary repeat what the cards and the experience section already say, and
  * the route adds nothing beyond the exchange school's name.
  */
-@media (max-width: 40rem) {
+@media (width < 40rem) {
   :deep(.text p),
   .thesis .block-detail,
   .exchange .block-detail,

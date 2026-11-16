@@ -240,8 +240,8 @@ h1 {
   }
 }
 
-/* Narrower screens stack the embedding space below the introduction */
-@media (max-width: 64rem) {
+/* Below lg the embedding space stacks below the introduction */
+@media (width < 64rem) {
   .content {
     grid-template-columns: 1fr;
   }
@@ -256,7 +256,7 @@ h1 {
  * doesn't leave the right side empty. The last name runs edge to edge, the
  * actions share one row, and the embedding fills what height is left.
  */
-@media (min-width: 40.0625rem) and (max-width: 64rem) and (orientation: portrait) {
+@media (40rem <= width < 64rem) and (orientation: portrait) {
   #hero {
     padding-block: 4rem;
   }
@@ -291,7 +291,7 @@ h1 {
 }
 
 /* Phones: the introduction alone fills the screen; one full-width primary action, the two profiles side by side below it */
-@media (max-width: 40rem) {
+@media (width < 40rem) {
   #hero {
     padding-block: 4rem;
   }

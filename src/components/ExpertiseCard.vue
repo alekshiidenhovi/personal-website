@@ -163,7 +163,7 @@ p {
   padding: clamp(1.25rem, 2.5vw, 2rem);
 }
 
-@media (max-width: 57.75rem) {
+@media (width < 64rem) {
   .panel {
     grid-template-columns: 1fr;
   }

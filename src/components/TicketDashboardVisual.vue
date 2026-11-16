@@ -295,7 +295,7 @@ const status = computed(() => (props.active ? "live" : "idle"));
   gap: 0.875rem;
 }
 
-@media (max-width: 40rem) {
+@media (width < 40rem) {
   .main {
     grid-template-columns: 1fr;
   }

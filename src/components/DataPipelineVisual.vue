@@ -692,7 +692,7 @@ const partitionState = (index: number) => (index > 0 || todayFull.value ? "seale
 }
 
 /* Narrow screens stack the stages, each header above its own column */
-@media (max-width: 40rem) {
+@media (width < 40rem) {
   .pipeline {
     grid-template-columns: minmax(0, 1fr);
   }
