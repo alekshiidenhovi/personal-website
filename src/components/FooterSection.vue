@@ -18,7 +18,6 @@ import PinnedSection from "./PinnedSection.vue";
             class="social-link">
             <Icon :icon="link.icon" class="social-icon" />
             {{ link.label }}
-            <Icon icon="heroicons:arrow-up-right-20-solid" class="social-arrow" />
           </a>
         </div>
       </div>
@@ -125,18 +124,6 @@ footer {
 .social-icon {
   width: 1.125rem;
   height: 1.125rem;
-}
-
-.social-arrow {
-  width: 1rem;
-  height: 1rem;
-  color: var(--text-muted);
-  transition: color 0.2s ease, transform 0.2s ease;
-}
-
-.social-link:hover .social-arrow {
-  color: var(--primary-300);
-  transform: translate(2px, -2px);
 }
 
 .bottom-row {
