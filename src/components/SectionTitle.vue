@@ -110,7 +110,7 @@ p {
   }
 }
 
-@media (width < 40rem) {
+@media (width < 40rem), (height < 30rem) {
   .hide-on-phones {
     display: none;
   }

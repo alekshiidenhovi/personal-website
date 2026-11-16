@@ -200,7 +200,7 @@ figcaption {
  * Phones: tight enough that a whole role fits on one screen, down to an
  * iPhone 13 mini with Safari's toolbars showing.
  */
-@media (width < 40rem) {
+@media (width < 40rem), (height < 30rem) {
   .slide {
     gap: 1.25rem;
   }

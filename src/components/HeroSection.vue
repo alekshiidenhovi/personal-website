@@ -302,8 +302,8 @@ h1 {
   }
 }
 
-/* Phones: the introduction alone fills the screen; one full-width primary action, the two profiles side by side below it */
-@media (width < 40rem) {
+/* Phones (see PHONE_QUERY): the introduction alone fills the screen; one full-width primary action, the two profiles side by side below it */
+@media (width < 40rem), (height < 30rem) {
   #hero {
     padding-block: 4rem;
   }

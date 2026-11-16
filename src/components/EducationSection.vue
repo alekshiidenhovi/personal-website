@@ -1,9 +1,13 @@
 <script setup lang="ts">
+import { useMediaQuery } from "@vueuse/core";
 import { computed, onUnmounted, ref } from "vue";
 import { STUDIES } from "../data/education";
 import { EXPERTISE_COLOR } from "../data/expertise";
+import { PHONE_QUERY } from "../lib/layout";
 import Icon from "./Icon.vue";
 import PinnedSection from "./PinnedSection.vue";
+
+const isPhone = useMediaQuery(PHONE_QUERY);
 
 /** "2024 – 26": the end year shortened, as the century repeats */
 const formatYears = (start: number, end: number) => `${start} – ${String(end).slice(2)}`;
@@ -36,47 +40,50 @@ const routeArc = computed(() => {
 </script>
 
 <template>
-  <PinnedSection id="education" hide-subtitle-on-phones>
-    <ol class="studies">
-      <li v-for="study in STUDIES" :key="study.degree" class="card dot-grid"
-        :style="{ '--card-color': EXPERTISE_COLOR[study.discipline], '--selection-color': EXPERTISE_COLOR[study.discipline] }">
-        <span class="years">{{ formatYears(study.start, study.end) }}</span>
+  <PinnedSection id="education" :page-count="isPhone ? STUDIES.length : 1" hide-subtitle-on-phones>
+    <!-- Phones show one degree per page -->
+    <template #default="{ page }">
+      <ol class="studies">
+        <li v-for="study in isPhone ? [STUDIES[page]] : STUDIES" :key="study.degree" class="card dot-grid"
+          :style="{ '--card-color': EXPERTISE_COLOR[study.discipline], '--selection-color': EXPERTISE_COLOR[study.discipline] }">
+          <span class="years">{{ formatYears(study.start, study.end) }}</span>
 
-        <div class="degree">
-          <h3>{{ study.degree }}</h3>
-          <p class="meta">{{ study.school }}<span class="separator">·</span>{{ study.detail }}</p>
-        </div>
+          <div class="degree">
+            <h3>{{ study.degree }}</h3>
+            <p class="meta">{{ study.school }}<span class="separator">·</span>{{ study.detail }}</p>
+          </div>
 
-        <div v-if="study.thesis || study.exchange" class="blocks">
-          <a v-if="study.thesis" class="block thesis" :href="study.thesis.href" target="_blank" rel="noreferrer">
-            <span class="block-label">Master's thesis</span>
-            <span class="block-title">{{ study.thesis.title }}</span>
-            <span class="block-detail">{{ study.thesis.summary }}</span>
-            <span class="read">
-              Read the thesis
-              <Icon icon="heroicons:arrow-up-right-20-solid" class="read-arrow" />
-            </span>
-          </a>
+          <div v-if="study.thesis || study.exchange" class="blocks">
+            <a v-if="study.thesis" class="block thesis" :href="study.thesis.href" target="_blank" rel="noreferrer">
+              <span class="block-label">Master's thesis</span>
+              <span class="block-title">{{ study.thesis.title }}</span>
+              <span class="block-detail">{{ study.thesis.summary }}</span>
+              <span class="read">
+                Read the thesis
+                <Icon icon="heroicons:arrow-up-right-20-solid" class="read-arrow" />
+              </span>
+            </a>
 
-          <div v-if="study.exchange" class="block exchange">
-            <span class="block-label">Exchange · {{ study.exchange.year }}</span>
-            <span class="block-title">{{ study.exchange.school }}</span>
-            <span class="block-detail">{{ study.exchange.location }}</span>
-            <div class="route" aria-hidden="true">
-              <svg :ref="(el) => observeRoute(el as Element | null)"
-                :viewBox="`0 0 ${routeSize.width} ${routeSize.height}`">
-                <path :d="routeArc" class="route-line" />
-                <path :d="routeArc" class="route-pulse" pathLength="100" />
-              </svg>
-              <span class="route-city"></span>
-              <span class="route-city route-end"></span>
-              <span class="route-label">Calgary</span>
-              <span class="route-label route-end">Helsinki</span>
+            <div v-if="study.exchange" class="block exchange">
+              <span class="block-label">Exchange · {{ study.exchange.year }}</span>
+              <span class="block-title">{{ study.exchange.school }}</span>
+              <span class="block-detail">{{ study.exchange.location }}</span>
+              <div class="route" aria-hidden="true">
+                <svg :ref="(el) => observeRoute(el as Element | null)"
+                  :viewBox="`0 0 ${routeSize.width} ${routeSize.height}`">
+                  <path :d="routeArc" class="route-line" />
+                  <path :d="routeArc" class="route-pulse" pathLength="100" />
+                </svg>
+                <span class="route-city"></span>
+                <span class="route-city route-end"></span>
+                <span class="route-label">Calgary</span>
+                <span class="route-label route-end">Helsinki</span>
+              </div>
             </div>
           </div>
-        </div>
-      </li>
-    </ol>
+        </li>
+      </ol>
+    </template>
   </PinnedSection>
 </template>
 
@@ -323,7 +330,7 @@ h3 {
  * too, see hide-subtitle-on-phones), and the route adds nothing beyond the
  * exchange school's name.
  */
-@media (width < 40rem) {
+@media (width < 40rem), (height < 30rem) {
   .thesis .block-detail,
   .exchange .block-detail,
   .route {
