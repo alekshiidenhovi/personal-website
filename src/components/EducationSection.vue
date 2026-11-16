@@ -319,9 +319,34 @@ h3 {
   grid-column: auto;
 }
 
+/*
+ * Phones: close to the whole section on one screen. The subtitle and thesis
+ * summary repeat what the cards and the experience section already say, and
+ * the route adds nothing beyond the exchange school's name.
+ */
 @media (max-width: 40rem) {
+  :deep(.text p),
+  .thesis .block-detail,
+  .exchange .block-detail,
+  .route {
+    display: none;
+  }
+
+  .card {
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+
   .blocks {
     grid-template-columns: 1fr;
+  }
+
+  .block {
+    padding: 0.75rem 1rem;
+  }
+
+  .read {
+    padding-top: 0.25rem;
   }
 }
 </style>

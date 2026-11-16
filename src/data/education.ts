@@ -17,7 +17,7 @@ export const STUDIES: Study[] = [
   {
     degree: "MSc Computer Science",
     school: "Aalto University",
-    detail: "Minor in Machine Learning, Data Science and Artificial Intelligence",
+    detail: "Minor in ML, Data Science & AI",
     start: 2024,
     end: 2026,
     discipline: "machine learning",
