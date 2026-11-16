@@ -211,6 +211,12 @@ onUnmounted(() => {
 }
 
 /* The stacked layout, for screens too small or pages too tall for the slideshow */
+
+/* Links to the section land with air between the nav bar and the title, which the stage's padding adds to */
+:root:not(.pinned) .pinned-section {
+  scroll-margin-top: calc(var(--nav-height) - 1.5rem);
+}
+
 :root:not(.pinned) .scroller {
   height: auto;
 }
