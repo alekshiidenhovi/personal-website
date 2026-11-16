@@ -80,7 +80,8 @@ p {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
     align-items: end;
-    column-gap: 1rem;
+    /* The rows' spacing comes from the subtitle's and aside's own padding, not the wide layout's gap */
+    gap: 0 1rem;
   }
 
   .text {
