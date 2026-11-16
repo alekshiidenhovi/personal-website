@@ -1,3 +1,4 @@
+import { getScroller } from "./layout";
 import { prefersReducedMotion } from "./motion";
 
 /**
@@ -6,7 +7,7 @@ import { prefersReducedMotion } from "./motion";
  * with reduced motion or without view transitions. Resolves once it is done.
  */
 export function jumpTo(top: number): Promise<void> {
-  const cut = () => window.scrollTo({ top, behavior: "instant" });
+  const cut = () => getScroller().scrollTo({ top, behavior: "instant" });
   if (prefersReducedMotion || !document.startViewTransition) {
     cut();
     return Promise.resolve();

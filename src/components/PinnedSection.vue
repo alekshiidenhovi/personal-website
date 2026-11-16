@@ -2,6 +2,7 @@
 import { onMounted, onUnmounted, ref } from "vue";
 import { useViewportUpdates } from "../composables/useViewportUpdates";
 import { SECTIONS, type SectionId } from "../data/sections";
+import { getScroller } from "../lib/layout";
 import { prefersReducedMotion } from "../lib/motion";
 import Icon from "./Icon.vue";
 import SectionTitle from "./SectionTitle.vue";
@@ -95,8 +96,9 @@ const measureProgress = () => {
 const step = (direction: 1 | -1) => {
   const target = Math.min(Math.max((targetPage ?? activePage.value) + direction, 0), props.pageCount - 1);
   targetPage = target;
-  window.scrollTo({
-    top: stopRefs[target].getBoundingClientRect().top + window.scrollY,
+  const scroller = getScroller();
+  scroller.scrollTo({
+    top: stopRefs[target].getBoundingClientRect().top + scroller.scrollTop,
     behavior: prefersReducedMotion ? "instant" : "smooth",
   });
 };
@@ -175,15 +177,6 @@ onUnmounted(() => {
   height: calc(100svh + (var(--page-count) - 1) * var(--page-scroll));
   /* Its scroll position, which the sliding and the arrows' fades follow */
   view-timeline: --section block;
-}
-
-/*
- * The page ends here, so make room for this section to reach the top even
- * with the browser's toolbars hidden, when the screen is taller than 100svh.
- * The stage keeps its 100svh height, pinned at the top.
- */
-.pinned-section:last-child {
-  height: calc(100lvh + (var(--page-count) - 1) * var(--page-scroll));
 }
 
 /* Chrome ignores zero-size snap areas, hence the 1px size */

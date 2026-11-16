@@ -41,9 +41,6 @@ html {
   /* Every section's frame: a content column centered within --content-width, with --gutter on each side */
   --content-width: 96rem;
   --gutter: clamp(1.25rem, 5vw, 5rem);
-  scroll-behavior: smooth;
-  /* The page is a slideshow: every scroll settles on a slide stop (the hero, and each page of each section) */
-  scroll-snap-type: y mandatory;
   -webkit-font-smoothing: antialiased;
   background-color: var(--neutral-950);
 }
@@ -72,10 +69,6 @@ html {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-
   *,
   *::before,
   *::after {

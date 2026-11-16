@@ -14,19 +14,37 @@ useSlideshow();
 </script>
 
 <template>
-  <NavBar />
-  <main>
-    <HeroSection />
-    <ExpertiseSection />
-    <ProfessionalExperienceSection />
-    <ProjectsSection />
-    <EducationSection />
-    <FooterSection />
-  </main>
+  <!-- The page scrolls in here rather than the document (see getScroller); the nav inside, so the wheel scrolls over it too -->
+  <div id="scroller">
+    <NavBar />
+    <main>
+      <HeroSection />
+      <ExpertiseSection />
+      <ProfessionalExperienceSection />
+      <ProjectsSection />
+      <EducationSection />
+      <FooterSection />
+    </main>
+  </div>
   <div class="grain" aria-hidden="true"></div>
 </template>
 
 <style scoped>
+#scroller {
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  /* The page is a slideshow: every scroll settles on a slide stop (the hero, and each page of each section) */
+  scroll-snap-type: y mandatory;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #scroller {
+    scroll-behavior: auto;
+  }
+}
+
 main {
   display: flex;
   flex-direction: column;

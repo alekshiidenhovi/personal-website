@@ -1,5 +1,5 @@
 import { useEventListener } from "@vueuse/core";
-import { SLIDE_ATTRIBUTE } from "../lib/layout";
+import { getScroller, SLIDE_ATTRIBUTE } from "../lib/layout";
 import { prefersReducedMotion } from "../lib/motion";
 import { jumpTo } from "../lib/scroll";
 
@@ -30,18 +30,24 @@ type Direction = 1 | -1;
 export function useSlideshow() {
   let isAnimating = false;
 
+  /** Where an element's top edge sits in the scroller, as far as the scroller can go */
+  const positionOf = (element: Element) => {
+    const scroller = getScroller();
+    const top = Math.round(element.getBoundingClientRect().top + scroller.scrollTop);
+    return Math.min(top, scroller.scrollHeight - scroller.clientHeight);
+  };
+
   const slidePositions = () => {
-    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-    const positions = [...document.querySelectorAll(`[${SLIDE_ATTRIBUTE}]`)].map((slide) =>
-      Math.min(Math.round(slide.getBoundingClientRect().top + window.scrollY), maxScroll),
-    );
+    const positions = [...document.querySelectorAll(`[${SLIDE_ATTRIBUTE}]`)].map(positionOf);
     return [...new Set(positions)].sort((a, b) => a - b);
   };
 
   /** Scrolls to a position; a jump, or a move farther than a slide, crossfades instead of scrolling */
   const scrollTo = (top: number, isJump = false) => {
+    const scroller = getScroller();
     const isFar =
-      isJump || Math.abs(top - window.scrollY) > MAX_SCROLL_VIEWPORTS * window.innerHeight + POSITION_TOLERANCE_PX;
+      isJump ||
+      Math.abs(top - scroller.scrollTop) > MAX_SCROLL_VIEWPORTS * scroller.clientHeight + POSITION_TOLERANCE_PX;
     if (isFar) {
       isAnimating = true;
       jumpTo(top).finally(() => {
@@ -50,23 +56,23 @@ export function useSlideshow() {
       return;
     }
     if (prefersReducedMotion) {
-      window.scrollTo({ top, behavior: "instant" });
+      scroller.scrollTo({ top, behavior: "instant" });
       return;
     }
 
     isAnimating = true;
     const finish = () => {
       clearTimeout(fallbackTimer);
-      window.removeEventListener("scrollend", finish);
+      scroller.removeEventListener("scrollend", finish);
       isAnimating = false;
     };
     const fallbackTimer = setTimeout(finish, SCROLL_END_FALLBACK_MS);
-    window.addEventListener("scrollend", finish, { once: true });
-    window.scrollTo({ top, behavior: "smooth" });
+    scroller.addEventListener("scrollend", finish, { once: true });
+    scroller.scrollTo({ top, behavior: "smooth" });
   };
 
   const goTo = (direction: Direction) => {
-    const current = window.scrollY;
+    const current = getScroller().scrollTop;
     const positions = slidePositions();
     const target =
       direction === 1
@@ -90,10 +96,9 @@ export function useSlideshow() {
 
     event.preventDefault();
     if (isAnimating) return;
-    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
     history.pushState(null, "", `#${id}`);
     // A click jumps, so it crossfades even to the neighboring slide, unless the link asks to scroll
-    scrollTo(Math.min(target.getBoundingClientRect().top + window.scrollY, maxScroll), !link?.hasAttribute("data-scroll"));
+    scrollTo(positionOf(target), !link?.hasAttribute("data-scroll"));
   };
 
   const isTypingTarget = (target: EventTarget | null) =>

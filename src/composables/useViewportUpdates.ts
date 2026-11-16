@@ -1,4 +1,5 @@
 import { onMounted, onUnmounted } from "vue";
+import { getScroller } from "../lib/layout";
 
 /** Measures what it needs, and returns the changes to make from it, if any */
 type Update = () => (() => void) | undefined;
@@ -27,7 +28,7 @@ const schedule = () => {
 export function useViewportUpdates(update: Update) {
   onMounted(() => {
     if (!updates.size) {
-      window.addEventListener("scroll", schedule, { passive: true });
+      getScroller().addEventListener("scroll", schedule, { passive: true });
       window.addEventListener("resize", schedule, { passive: true });
     }
     updates.add(update);
@@ -37,7 +38,7 @@ export function useViewportUpdates(update: Update) {
   onUnmounted(() => {
     updates.delete(update);
     if (updates.size) return;
-    window.removeEventListener("scroll", schedule);
+    getScroller().removeEventListener("scroll", schedule);
     window.removeEventListener("resize", schedule);
     cancelAnimationFrame(frameId);
     frameId = 0;
