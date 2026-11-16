@@ -59,4 +59,26 @@ const pages = computed(() =>
 .page-grid.trio.mirrored> :first-child {
   grid-column: 2 / 4;
 }
+
+/*
+ * Short pages: the page's cards side by side in one row, each the page's full
+ * height. Stacked, or small beside a featured card, a card's text would leave
+ * its cover hardly any height. The text is sized in rem, so the threshold is
+ * too: at 34rem the small covers of the featured layout still get about 100px.
+ * ProjectCard drops the featured styling below the same height.
+ */
+@container page (height < 34rem) {
+  .page-grid,
+  .page-grid.trio {
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-template-columns: none;
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .page-grid.trio> :first-child {
+    grid-column: auto;
+    grid-row: auto;
+  }
+}
 </style>

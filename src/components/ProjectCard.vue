@@ -120,10 +120,6 @@ const linkType = computed(() => (new URL(props.project.link).hostname === "githu
   padding: 0.75rem 1.25rem;
 }
 
-.featured .cover-container {
-  padding: 2rem 3rem;
-}
-
 .title-container {
   position: relative;
   display: flex;
@@ -140,18 +136,25 @@ h3 {
   color: var(--neutral-100);
 }
 
-.featured h3 {
-  font-size: clamp(1.75rem, 3vw, 2.75rem);
-}
-
 p {
   font-size: 1rem;
   line-height: 1.5;
   color: var(--neutral-400);
 }
 
-.featured p {
-  font-size: 1.125rem;
+/* The featured card stands out only where the page is tall enough for the featured layout (see ProjectsSection) */
+@container page (height >= 34rem) {
+  .featured .cover-container {
+    padding: 2rem 3rem;
+  }
+
+  .featured h3 {
+    font-size: clamp(1.75rem, 3vw, 2.75rem);
+  }
+
+  .featured p {
+    font-size: 1.125rem;
+  }
 }
 
 .link-type {
