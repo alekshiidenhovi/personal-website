@@ -3,7 +3,6 @@ import { onMounted, onUnmounted, ref, watch } from "vue";
 import { pinnedLayout } from "../composables/usePinnedLayout";
 import { SECTIONS, type SectionId } from "../data/sections";
 import { closestToViewportCenter } from "../lib/layout";
-import { jumpTo } from "../lib/scroll";
 import SectionTitle from "./SectionTitle.vue";
 
 /**
@@ -21,7 +20,7 @@ import SectionTitle from "./SectionTitle.vue";
 interface Props {
   id: SectionId;
   pageCount?: number;
-  /** Anchor ids for the pages, so in-page links can target a single page */
+  /** Anchor ids for the pages, so in-page links can target a single page; numbered after the section by default */
   pageIds?: string[];
 }
 const props = withDefaults(defineProps<Props>(), { pageCount: 1 });
@@ -29,10 +28,10 @@ const props = withDefaults(defineProps<Props>(), { pageCount: 1 });
 const index = SECTIONS.findIndex((section) => section.id === props.id);
 const { title, subtitle } = SECTIONS[index];
 
-/** Scroll distance between pages, as a fraction of the viewport height */
-const PAGE_SCROLL_RATIO = 0.5;
+const pageId = (page: number) => props.pageIds?.[page] ?? `${props.id}-${page + 1}`;
 
 const scrollerRef = ref<HTMLElement | null>(null);
+const stopRefs: HTMLElement[] = [];
 const pageRefs: HTMLElement[] = [];
 const activePage = ref(0);
 const isInView = ref(false);
@@ -42,10 +41,10 @@ const updateActivePage = () => {
   const scroller = scrollerRef.value;
   if (!scroller) return;
 
+  // Pinned, the current page is the one whose stop is nearest the top of the viewport
   if (pinnedLayout.value) {
-    const scrolledIntoSection = -scroller.getBoundingClientRect().top;
-    const page = Math.round(scrolledIntoSection / (PAGE_SCROLL_RATIO * window.innerHeight));
-    activePage.value = Math.min(Math.max(page, 0), props.pageCount - 1);
+    const distances = stopRefs.map((stop) => Math.abs(stop.getBoundingClientRect().top));
+    activePage.value = distances.indexOf(Math.min(...distances));
     return;
   }
 
@@ -55,17 +54,6 @@ const updateActivePage = () => {
 watch(pinnedLayout, updateActivePage);
 
 const formatPageNumber = (page: number) => String(page).padStart(2, "0");
-
-const goToPage = (page: number) => {
-  if (!scrollerRef.value) return;
-  if (!pinnedLayout.value) {
-    pageRefs[page]?.scrollIntoView({ behavior: "smooth", block: "center" });
-    return;
-  }
-  // Straight to the page, like the nav, rather than scrolling through the pages between
-  const sectionTop = scrollerRef.value.getBoundingClientRect().top + window.scrollY;
-  jumpTo(sectionTop + page * PAGE_SCROLL_RATIO * window.innerHeight);
-};
 
 onMounted(() => {
   window.addEventListener("scroll", updateActivePage, { passive: true });
@@ -91,23 +79,24 @@ onUnmounted(() => {
 
 <template>
   <section :id="props.id" class="pinned-section"
-    :style="{ '--page-count': props.pageCount, '--page-scroll': `${PAGE_SCROLL_RATIO * 100}svh` }">
+    :style="{ '--page-count': props.pageCount }">
     <div ref="scrollerRef" class="scroller">
       <!-- Slideshow stops, one per page; a link to a page goes to its stop (see useSlideshow) -->
-      <span v-for="n in props.pageCount" :key="n" class="slide-stop" data-slide
-        :data-slide-for="props.pageIds?.[n - 1]" :style="{ '--page': n - 1 }"></span>
+      <span v-for="n in props.pageCount" :key="n" :ref="(el) => { if (el) stopRefs[n - 1] = el as HTMLElement; }"
+        class="slide-stop" data-slide :data-slide-for="pageId(n - 1)" :style="{ '--page': n - 1 }"></span>
       <div class="stage">
         <SectionTitle :index="index + 1" :title="title" :subtitle="subtitle">
           <nav v-if="pinnedLayout && props.pageCount > 1" class="page-indicator" :aria-label="`${title} pages`">
-            <button v-for="n in props.pageCount" :key="n" type="button" class="page-tick"
+            <!-- Links to the pages' stops, which the slideshow jumps to like the nav's links -->
+            <a v-for="n in props.pageCount" :key="n" :href="`#${pageId(n - 1)}`" class="page-tick"
               :class="{ current: n - 1 === activePage }" :aria-label="`Page ${n}`"
-              :aria-current="n - 1 === activePage ? 'step' : undefined" @click="goToPage(n - 1)"></button>
+              :aria-current="n - 1 === activePage ? 'step' : undefined"></a>
             <span class="page-number">{{ formatPageNumber(activePage + 1) }} / {{ formatPageNumber(props.pageCount)
               }}</span>
           </nav>
         </SectionTitle>
         <div class="pages">
-          <div v-for="n in props.pageCount" :id="props.pageIds?.[n - 1]" :key="n"
+          <div v-for="n in props.pageCount" :id="pageId(n - 1)" :key="n"
             :ref="(el) => { if (el) pageRefs[n - 1] = el as HTMLElement; }" class="page"
             :class="{ current: n - 1 === activePage, past: n - 1 < activePage }">
             <slot :page="n - 1" :active="isInView && n - 1 === activePage" />
@@ -124,6 +113,8 @@ onUnmounted(() => {
 }
 
 .scroller {
+  /* Scroll distance between pages */
+  --page-scroll: 50svh;
   position: relative;
   height: calc(100svh + (var(--page-count) - 1) * var(--page-scroll));
 }
@@ -165,9 +156,7 @@ onUnmounted(() => {
 .page-tick {
   width: 1.75rem;
   padding: 0.625rem 0;
-  border: none;
   background: linear-gradient(var(--neutral-700), var(--neutral-700)) center / 100% 2px no-repeat;
-  cursor: pointer;
   transition: background 0.3s ease;
 }
 
