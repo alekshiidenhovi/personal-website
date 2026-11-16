@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { usePointerVars } from "../composables/usePointerVars";
+import { useTilt } from "../composables/useTilt";
 import { PROJECT_TAG_COLOR, type Project } from "../data/projects";
 import Icon from "./Icon.vue";
 import "./covers/cover.css";
@@ -17,9 +17,8 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const cardRef = ref<HTMLElement | null>(null);
-usePointerVars(cardRef);
-
 const isHovered = ref(false);
+const tilt = useTilt(cardRef);
 const isActive = computed(() => isHovered.value || props.playing);
 const linkType = computed(() => (new URL(props.project.link).hostname === "github.com" ? "source" : "live demo"));
 </script>
@@ -30,6 +29,7 @@ const linkType = computed(() => (new URL(props.project.link).hostname === "githu
       '--card-color': PROJECT_TAG_COLOR[props.project.tag],
       // Side projects aren't a discipline, so their selection stays the default blue
       '--selection-color': props.project.tag === 'side project' ? undefined : PROJECT_TAG_COLOR[props.project.tag],
+      ...tilt,
     }" :href="props.project.link" target="_blank"
     rel="noreferrer" @pointerenter="isHovered = true" @pointerleave="isHovered = false" @focus="isHovered = true"
     @blur="isHovered = false">
