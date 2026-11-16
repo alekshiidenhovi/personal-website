@@ -95,8 +95,6 @@ const routeArc = computed(() => {
  */
 .studies {
   container-type: inline-size;
-  /* As large as the rail allows, and the same on every row */
-  --years-size: min(4.4cqi, 9svh);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -106,6 +104,8 @@ const routeArc = computed(() => {
 }
 
 .card {
+  /* As large as the rail allows, and the same on every row; a share of the list's width (its container) */
+  --years-size: min(5.5cqi, 9svh);
   position: relative;
   display: grid;
   grid-template-columns: calc(var(--years-size) * 4.9) minmax(0, 1fr);
@@ -113,7 +113,8 @@ const routeArc = computed(() => {
   align-items: center;
   gap: clamp(1rem, 2.5vh, 1.5rem) clamp(1.5rem, 3vw, 3rem);
   padding: clamp(1.25rem, 2.5vw, 2rem);
-  overflow: hidden;
+  /* Clips the glow to the card. Clip rather than hidden: a hidden overflow would let the card shrink below its content and cut it off */
+  overflow: clip;
   border: 1px solid color-mix(in srgb, var(--card-color) 18%, var(--neutral-800));
   background-color: var(--neutral-900);
 }
@@ -309,13 +310,36 @@ h3 {
   justify-self: end;
 }
 
-/* Below lg the years move above the degree */
-@media (width < 64rem) {
-  .studies {
-    --years-size: 14cqi;
+/*
+ * Short pages, such as tablets in landscape: the thesis summary and the
+ * exchange's location (the route names the cities) go, as on phones, and the
+ * cards and route tighten, so both degrees still fit
+ */
+@container page (height < 30rem) {
+  .thesis .block-detail,
+  .exchange .block-detail {
+    display: none;
   }
 
   .card {
+    padding: 1.25rem;
+  }
+
+  .route {
+    padding-top: 2.25rem;
+  }
+
+  /* The arc still ends on the dots' centers: top + 95% of the height = padding + half a dot */
+  .route svg {
+    top: 0.75rem;
+    height: 1.85rem;
+  }
+}
+
+/* Below lg the years move above the degree */
+@media (width < 64rem) {
+  .card {
+    --years-size: 14cqi;
     grid-template-columns: minmax(0, 1fr);
   }
 

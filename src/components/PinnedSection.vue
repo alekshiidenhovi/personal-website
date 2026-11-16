@@ -339,8 +339,14 @@ onUnmounted(() => {
   will-change: transform;
 }
 
-/* A page too tall for the screen scrolls on its own, as a last resort; pages are designed to fit */
+/*
+ * A page too tall for the screen scrolls on its own, as a last resort; pages
+ * are designed to fit (in development, lib/fitCheck warns when one doesn't).
+ * A size container named `page`, so content can drop optional details when
+ * the page is short, whatever the screen: `@container page (height < …)`.
+ */
 .page {
+  container: page / size;
   flex: 0 0 100%;
   height: 100%;
   overflow-y: auto;
