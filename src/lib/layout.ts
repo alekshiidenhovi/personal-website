@@ -1,4 +1,4 @@
-/** A mouse or trackpad: wheel-driven slides, hover effects and the slide arrows */
+/** A mouse or trackpad: hover effects and the slide arrows */
 export const FINE_POINTER_QUERY = "(hover: hover) and (pointer: fine)";
 
 /*
