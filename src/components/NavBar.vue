@@ -1,14 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
+import { activeSection } from "../composables/useActiveSection";
 import { HERO_ID, SECTIONS } from "../data/sections";
 
-
-const activeId = ref<string>(HERO_ID);
 // The hero is the landing page; the navigation appears once a section is reached
-const isVisible = computed(() => activeId.value !== HERO_ID);
-let sectionObserver: IntersectionObserver | null = null;
-
-const SECTION_IDS = [HERO_ID, ...SECTIONS.map((section) => section.id)];
+const isVisible = computed(() => activeSection.value !== HERO_ID);
 
 /*
  * On phones the links scroll sideways and some sit out of view. Reaching a
@@ -18,7 +14,7 @@ const SECTION_IDS = [HERO_ID, ...SECTIONS.map((section) => section.id)];
 const navRef = ref<HTMLElement | null>(null);
 const linkRefs: HTMLElement[] = [];
 
-watch(activeId, (id) => {
+watch(activeSection, (id) => {
   const nav = navRef.value;
   const link = linkRefs[SECTIONS.findIndex((candidate) => candidate.id === id)];
   if (!nav || !link) return;
@@ -28,36 +24,6 @@ watch(activeId, (id) => {
     linkRect.left < navRect.left ? linkRect.left - navRect.left : Math.max(0, linkRect.right - navRect.right);
   if (overflow) nav.scrollBy({ left: overflow, behavior: "smooth" });
 });
-
-onMounted(() => {
-  /*
-   * A section counts as active while it crosses the middle of the viewport.
-   * Leaving the line is tracked as well as entering it: while the layout
-   * settles on load, several sections can touch the line at once, and acting
-   * only on entries would leave a section that has since moved away active.
-   */
-  const crossing = new Set<string>();
-  sectionObserver = new IntersectionObserver(
-    (entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting) crossing.add(entry.target.id);
-        else crossing.delete(entry.target.id);
-      }
-      // Two sections only share the line at their common edge; the lower one is the one being entered
-      const active = [...SECTION_IDS].reverse().find((id) => crossing.has(id));
-      if (active) activeId.value = active;
-    },
-    { rootMargin: "-50% 0px -50% 0px" },
-  );
-  for (const id of SECTION_IDS) {
-    const section = document.getElementById(id);
-    if (section) sectionObserver.observe(section);
-  }
-});
-
-onUnmounted(() => {
-  sectionObserver?.disconnect();
-});
 </script>
 
 <template>
@@ -66,7 +32,7 @@ onUnmounted(() => {
     <nav ref="navRef">
       <a v-for="(section, index) in SECTIONS" :key="section.id"
         :ref="(el) => { if (el) linkRefs[index] = el as HTMLElement; }" :href="`#${section.id}`" class="nav-link"
-        :class="{ active: activeId === section.id }" :aria-current="activeId === section.id ? 'location' : undefined">
+        :class="{ active: activeSection === section.id }" :aria-current="activeSection === section.id ? 'location' : undefined">
         <span class="nav-index">{{ String(index + 1).padStart(2, "0") }}</span>
         <span>{{ section.title }}</span>
       </a>
