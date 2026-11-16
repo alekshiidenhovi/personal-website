@@ -87,6 +87,8 @@ const [currentRole] = ROLES;
 }
 
 .intro {
+  /* A size container, so the name can be capped to the column's width */
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   gap: clamp(1rem, 2vw, 1.5rem);
@@ -95,7 +97,12 @@ const [currentRole] = ROLES;
 h1 {
   display: flex;
   flex-direction: column;
-  font-size: clamp(3.25rem, 9vw, 9.5rem);
+  /*
+   * Scales with the window, but never past the column: "Hiidenhovi" is about
+   * 4.8em wide, so 20cqi keeps it inside. Its gradient only paints within the
+   * column, so overflowing letters would be cut off.
+   */
+  font-size: min(clamp(3.25rem, 9vw, 9.5rem), 20cqi);
   font-weight: 700;
   letter-spacing: -0.045em;
   line-height: 0.92;
