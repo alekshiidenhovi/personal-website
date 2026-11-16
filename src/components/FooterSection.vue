@@ -165,6 +165,22 @@ footer {
   color: var(--primary-400);
 }
 
+/* Narrow pages (phones): the profiles side by side as two equal buttons, a step smaller */
+@container page (width < 36rem) {
+  .social-container {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .social-link {
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+  }
+}
+
 /* Short screens (phones in landscape): a smaller call to action, closer together */
 @media (height < 30rem) {
   footer {
