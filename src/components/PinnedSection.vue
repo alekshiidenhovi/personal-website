@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { pinnedLayout } from "../composables/usePinnedLayout";
+import { SECTIONS, type SectionId } from "../data/sections";
 import { closestToViewportCenter } from "../lib/layout";
 import { jumpTo } from "../lib/scroll";
 import SectionTitle from "./SectionTitle.vue";
@@ -18,15 +19,15 @@ import SectionTitle from "./SectionTitle.vue";
  */
 
 interface Props {
-  id: string;
-  index: number;
-  title: string;
-  subtitle?: string;
+  id: SectionId;
   pageCount?: number;
   /** Anchor ids for the pages, so in-page links can target a single page */
   pageIds?: string[];
 }
 const props = withDefaults(defineProps<Props>(), { pageCount: 1 });
+
+const index = SECTIONS.findIndex((section) => section.id === props.id);
+const { title, subtitle } = SECTIONS[index];
 
 /** Scroll distance between pages, as a fraction of the viewport height */
 const PAGE_SCROLL_RATIO = 0.5;
@@ -96,8 +97,8 @@ onUnmounted(() => {
       <span v-for="n in props.pageCount" :key="n" class="slide-stop" data-slide
         :data-slide-for="props.pageIds?.[n - 1]" :style="{ '--page': n - 1 }"></span>
       <div class="stage">
-        <SectionTitle :index="props.index" :title="props.title" :subtitle="props.subtitle">
-          <nav v-if="pinnedLayout && props.pageCount > 1" class="page-indicator" :aria-label="`${props.title} pages`">
+        <SectionTitle :index="index + 1" :title="title" :subtitle="subtitle">
+          <nav v-if="pinnedLayout && props.pageCount > 1" class="page-indicator" :aria-label="`${title} pages`">
             <button v-for="n in props.pageCount" :key="n" type="button" class="page-tick"
               :class="{ current: n - 1 === activePage }" :aria-label="`Page ${n}`"
               :aria-current="n - 1 === activePage ? 'step' : undefined" @click="goToPage(n - 1)"></button>

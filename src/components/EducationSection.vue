@@ -36,8 +36,7 @@ const routeArc = computed(() => {
 </script>
 
 <template>
-  <PinnedSection id="education" :index="4" title="Education"
-    subtitle="Industrial engineering into computer science, with data and machine learning throughout.">
+  <PinnedSection id="education">
     <ol class="studies">
       <li v-for="study in STUDIES" :key="study.degree" class="card dot-grid"
         :style="{ '--card-color': EXPERTISE_COLOR[study.discipline], '--selection-color': EXPERTISE_COLOR[study.discipline] }">

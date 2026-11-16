@@ -1,21 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { HERO_ID, SECTIONS } from "../data/sections";
 
-const LINKS = [
-  { label: "Expertise", id: "expertise" },
-  { label: "Experience", id: "professional-experience" },
-  { label: "Projects", id: "projects" },
-  { label: "Education", id: "education" },
-  { label: "Contact", id: "contact" },
-];
-const HERO_ID = "hero";
 
-const activeId = ref(HERO_ID);
+const activeId = ref<string>(HERO_ID);
 // The hero is the landing page; the navigation appears once a section is reached
 const isVisible = computed(() => activeId.value !== HERO_ID);
 let sectionObserver: IntersectionObserver | null = null;
 
-const SECTION_IDS = [HERO_ID, ...LINKS.map((link) => link.id)];
+const SECTION_IDS = [HERO_ID, ...SECTIONS.map((section) => section.id)];
 
 /*
  * On phones the links scroll sideways and some sit out of view. Reaching a
@@ -27,7 +20,7 @@ const linkRefs: HTMLElement[] = [];
 
 watch(activeId, (id) => {
   const nav = navRef.value;
-  const link = linkRefs[LINKS.findIndex((candidate) => candidate.id === id)];
+  const link = linkRefs[SECTIONS.findIndex((candidate) => candidate.id === id)];
   if (!nav || !link) return;
   const navRect = nav.getBoundingClientRect();
   const linkRect = link.getBoundingClientRect();
@@ -71,11 +64,11 @@ onUnmounted(() => {
   <header :class="{ visible: isVisible }" :inert="!isVisible">
     <a :href="`#${HERO_ID}`" class="nav-home" aria-label="Back to start">AH</a>
     <nav ref="navRef">
-      <a v-for="(link, index) in LINKS" :key="link.id"
-        :ref="(el) => { if (el) linkRefs[index] = el as HTMLElement; }" :href="`#${link.id}`" class="nav-link"
-        :class="{ active: activeId === link.id }" :aria-current="activeId === link.id ? 'location' : undefined">
-        <span class="nav-index">0{{ index + 1 }}</span>
-        <span>{{ link.label }}</span>
+      <a v-for="(section, index) in SECTIONS" :key="section.id"
+        :ref="(el) => { if (el) linkRefs[index] = el as HTMLElement; }" :href="`#${section.id}`" class="nav-link"
+        :class="{ active: activeId === section.id }" :aria-current="activeId === section.id ? 'location' : undefined">
+        <span class="nav-index">{{ String(index + 1).padStart(2, "0") }}</span>
+        <span>{{ section.title }}</span>
       </a>
     </nav>
   </header>

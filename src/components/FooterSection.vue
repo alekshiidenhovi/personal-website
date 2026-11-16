@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
 import { EMAIL, PROFILES } from "../data/contact";
+import { HERO_ID } from "../data/sections";
 import PinnedSection from "./PinnedSection.vue";
 </script>
 
 <template>
-  <PinnedSection id="contact" :index="5" title="Contact"
-    subtitle="Building something ambitious in the ML or data space? I'd love to hear about it.">
+  <PinnedSection id="contact">
     <footer>
       <div class="cta-block">
         <a class="big-cta" :href="`mailto:${EMAIL}`">
@@ -24,7 +24,7 @@ import PinnedSection from "./PinnedSection.vue";
       </div>
       <div class="bottom-row">
         <span>© 2026 Aleks Hiidenhovi</span>
-        <a class="back-to-top" href="#hero">
+        <a class="back-to-top" :href="`#${HERO_ID}`">
           Back to top
           <Icon icon="heroicons:arrow-up-20-solid" />
         </a>

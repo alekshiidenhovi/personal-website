@@ -45,8 +45,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <PinnedSection id="projects" class="projects" :index="3" title="Projects"
-    subtitle="Built from the ground up — some for research, some for fun." :page-count="pages.length">
+  <PinnedSection id="projects" class="projects" :page-count="pages.length">
     <template #default="{ page }">
       <!-- Alternate pages mirror the layout so the featured card swaps sides -->
       <div class="page-grid" :class="{ mirrored: page % 2 === 1 }">

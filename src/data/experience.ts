@@ -11,9 +11,12 @@ export interface YearMonth {
   month: number;
 }
 
+/** Anchor ids of the roles' slides; links to a role use these, so a renamed role can't leave a link dangling */
+export type RoleSlug = "role-data-scientist" | "role-ml-engineer" | "role-data-analyst" | "role-software-developer";
+
 export interface Role {
   /** Anchor id of the role's slide, for in-page links */
-  slug: string;
+  slug: RoleSlug;
   title: string;
   company: "supercell" | "veri";
   companyUrl: string;

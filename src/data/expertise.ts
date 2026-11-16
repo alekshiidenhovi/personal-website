@@ -1,4 +1,5 @@
 import type { Expertise } from "../types";
+import type { RoleSlug } from "./experience";
 
 export const EXPERTISE_COLOR: Record<Expertise, string> = {
   "machine learning": "var(--primary-500)",
@@ -13,8 +14,8 @@ export interface ExpertiseArea {
   /** Shown in the card's window bar */
   fileName: string;
   tags: string[];
-  /** The work the visual is based on; an in-page link */
-  source: { label: string; href: string };
+  /** The work the visual is based on, linked to its role */
+  source: { label: string; role: RoleSlug };
 }
 
 export const EXPERTISE_AREAS: ExpertiseArea[] = [
@@ -24,7 +25,7 @@ export const EXPERTISE_AREAS: ExpertiseArea[] = [
     text: "Specialized in **embedding models**: self-supervised representation learning, retrieval and recommendation, taken from research to measured results.",
     fileName: "pretrain.py",
     tags: ["PyTorch", "Ray", "MLflow"],
-    source: { label: "Data Scientist @ Supercell", href: "#role-data-scientist" },
+    source: { label: "Data Scientist @ Supercell", role: "role-data-scientist" },
   },
   {
     expertise: "data foundations",
@@ -32,7 +33,7 @@ export const EXPERTISE_AREAS: ExpertiseArea[] = [
     text: "Analysis, pipelines and data quality on **terabyte-scale data**, from the first query to the production job.",
     fileName: "pipeline.py",
     tags: ["SQL", "Spark", "Databricks"],
-    source: { label: "Ticket analysis platform", href: "#role-ml-engineer" },
+    source: { label: "Ticket analysis platform", role: "role-ml-engineer" },
   },
   {
     expertise: "web development",
@@ -40,6 +41,6 @@ export const EXPERTISE_AREAS: ExpertiseArea[] = [
     text: "Full-stack web apps and dashboards that put data and models in front of the people who use them.",
     fileName: "dashboard.vue",
     tags: ["React", "Vue", "FastAPI", "PostgreSQL"],
-    source: { label: "Ticket analysis platform", href: "#role-ml-engineer" },
+    source: { label: "Ticket analysis platform", role: "role-ml-engineer" },
   },
 ];

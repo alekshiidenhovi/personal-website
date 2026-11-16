@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
 import { PROFILES } from "../data/contact";
+import { COMPANY_NAMES, ROLES } from "../data/experience";
 import EmbeddingSpace from "./EmbeddingSpace.vue";
+
+/** Roles are listed newest first */
+const [currentRole] = ROLES;
 </script>
 
 <template>
@@ -26,9 +30,9 @@ import EmbeddingSpace from "./EmbeddingSpace.vue";
             {{ profile.label }}
           </a>
         </div>
-        <a class="status" href="#role-data-scientist">
+        <a class="status" :href="`#${currentRole.slug}`">
           <span class="status-dot"></span>
-          Data Scientist at Supercell
+          {{ currentRole.title }} at {{ COMPANY_NAMES[currentRole.company] }}
         </a>
       </div>
       <EmbeddingSpace class="embedding" />

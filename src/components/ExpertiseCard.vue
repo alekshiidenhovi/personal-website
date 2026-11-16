@@ -42,7 +42,7 @@ const VISUALS: Record<Expertise, Component> = {
           <component :is="VISUALS[props.area.expertise]" :active="props.active" />
         </div>
       </div>
-      <a class="source" :href="props.area.source.href">
+      <a class="source" :href="`#${props.area.source.role}`">
         <span class="source-label">From</span> {{ props.area.source.label }}
         <Icon icon="heroicons:arrow-right-20-solid" class="source-arrow" />
       </a>
