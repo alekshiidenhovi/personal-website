@@ -334,12 +334,16 @@ onUnmounted(() => {
   }
 }
 
-/* The pages side by side, moved one page width (plus the gap) per unit of progress */
+/*
+ * The pages side by side, moved one page width (plus the gap) per unit of
+ * progress. On a layer of its own, so moving it never repaints the pages.
+ */
 .track {
   display: flex;
   gap: var(--page-gap);
   height: 100%;
   transform: translateX(calc(var(--progress, 0) * (-100% - var(--page-gap))));
+  will-change: transform;
 }
 
 /* A page too tall for the screen scrolls on its own, as a last resort; pages are designed to fit */
