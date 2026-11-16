@@ -90,6 +90,23 @@ html {
   animation-duration: 0.4s;
 }
 
+/*
+ * Content for phones only (PHONE_QUERY), and its counterpart for everything
+ * else. The second query is the first negated, so of a pair, such as a visual
+ * and the button that opens it on phones, exactly one is ever shown.
+ */
+@media (width >= 40rem) and (height >= 30rem) {
+  .phone-only {
+    display: none !important;
+  }
+}
+
+@media (width < 40rem), (height < 30rem) {
+  .except-phones {
+    display: none !important;
+  }
+}
+
 /* The faint dotted grid behind cards and figures */
 .dot-grid {
   background-image: radial-gradient(color-mix(in srgb, var(--neutral-500), transparent 85%) 1px, transparent 1px);

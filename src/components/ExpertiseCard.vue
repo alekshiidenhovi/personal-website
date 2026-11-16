@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { useMediaQuery } from "@vueuse/core";
 import type { Component } from "vue";
 import { EXPERTISE_COLOR, type ExpertiseArea } from "../data/expertise";
+import { PHONE_QUERY } from "../lib/layout";
 import type { Expertise } from "../types";
 import DataPipelineVisual from "./DataPipelineVisual.vue";
 import HighlightedText from "./HighlightedText.vue";
@@ -8,6 +10,8 @@ import Icon from "./Icon.vue";
 import PretrainingRunVisual from "./PretrainingRunVisual.vue";
 import StackLine from "./StackLine.vue";
 import TicketDashboardVisual from "./TicketDashboardVisual.vue";
+import VisualPopup from "./VisualPopup.vue";
+import VisualWindow from "./VisualWindow.vue";
 
 interface Props {
   area: ExpertiseArea;
@@ -21,6 +25,9 @@ const VISUALS: Record<Expertise, Component> = {
   "data foundations": DataPipelineVisual,
   "web development": TicketDashboardVisual,
 };
+
+// Phones show the visual in a popup instead, so the hidden one on the page stays still
+const isPhone = useMediaQuery(PHONE_QUERY);
 </script>
 
 <template>
@@ -30,18 +37,20 @@ const VISUALS: Record<Expertise, Component> = {
       <h3>{{ props.area.title }}</h3>
       <p><HighlightedText :text="props.area.text" /></p>
       <StackLine :items="props.area.tags" />
+      <!-- On phones in place of the visual column; see .phone-only in style.css -->
+      <VisualPopup class="phone-only" label="Open demo" :title="props.area.fileName">
+        <template #default="{ active }">
+          <VisualWindow :file-name="props.area.fileName">
+            <component :is="VISUALS[props.area.expertise]" :active="active" />
+          </VisualWindow>
+        </template>
+      </VisualPopup>
     </div>
 
-    <div class="visual-column">
-      <div class="window">
-        <header class="window-bar">
-          <span class="window-dots"><span></span><span></span><span></span></span>
-          <span class="file-name">{{ props.area.fileName }}</span>
-        </header>
-        <div class="visual-container">
-          <component :is="VISUALS[props.area.expertise]" :active="props.active" />
-        </div>
-      </div>
+    <div class="visual-column except-phones">
+      <VisualWindow :file-name="props.area.fileName">
+        <component :is="VISUALS[props.area.expertise]" :active="props.active && !isPhone" />
+      </VisualWindow>
       <a class="source" :href="`#${props.area.source.role}`">
         <span class="source-label">From</span> {{ props.area.source.label }}
         <Icon icon="heroicons:arrow-right-20-solid" class="source-arrow" />
@@ -121,55 +130,9 @@ p {
   translate: 0.25rem 0;
 }
 
-.window {
-  display: flex;
-  flex-direction: column;
-  border: 1px solid color-mix(in srgb, var(--card-color), transparent 50%);
-  background-color: var(--neutral-900);
-  box-shadow: 0 2rem 6rem -3rem color-mix(in srgb, var(--card-color), transparent 50%);
-}
-
-.window-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--neutral-800);
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--neutral-400);
-}
-
-.window-dots {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.window-dots span {
-  width: 0.75rem;
-  height: 0.75rem;
-  border-radius: 50%;
-  background-color: var(--card-color);
-}
-
-/* A size container, so visuals can scale their type to the window */
-.visual-container {
-  container-type: inline-size;
-  flex-grow: 1;
-  display: flex;
-  align-items: center;
-  min-height: min(40svh, 24rem);
-  padding: clamp(1.25rem, 2.5vw, 2rem);
-}
-
 @media (width < 64rem) {
   .panel {
     grid-template-columns: 1fr;
-  }
-
-  .visual-container {
-    min-height: 20rem;
   }
 }
 </style>

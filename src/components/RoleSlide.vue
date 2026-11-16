@@ -1,12 +1,15 @@
 <script setup lang="ts">
+import { useMediaQuery } from "@vueuse/core";
 import { COMPANY_NAMES, durationMonths, formatYearMonth, type Role } from "../data/experience";
 import { EXPERTISE_COLOR } from "../data/expertise";
+import { PHONE_QUERY } from "../lib/layout";
 import "./covers/cover.css";
 import CropMarks from "./CropMarks.vue";
 import HighlightedText from "./HighlightedText.vue";
 import StackLine from "./StackLine.vue";
 import SupercellLogo from "./SupercellLogo.vue";
 import VeriLogo from "./VeriLogo.vue";
+import VisualPopup from "./VisualPopup.vue";
 
 interface Props {
   role: Role;
@@ -16,6 +19,10 @@ interface Props {
   active: boolean;
 }
 const props = defineProps<Props>();
+
+const figureNumber = `Fig. ${String(props.index + 1).padStart(2, "0")}`;
+// Phones show the figure in a popup instead, so the hidden one on the page stays still
+const isPhone = useMediaQuery(PHONE_QUERY);
 </script>
 
 <template>
@@ -42,16 +49,25 @@ const props = defineProps<Props>();
         <li v-for="highlight in props.role.highlights" :key="highlight"><HighlightedText :text="highlight" /></li>
       </ul>
       <StackLine :items="props.role.stack" />
+      <!-- On phones in place of the figure; see .phone-only in style.css -->
+      <VisualPopup class="phone-only" label="Open figure" :title="`${figureNumber} · ${props.role.figureCaption}`">
+        <template #default="{ active }">
+          <div class="popup-figure dot-grid">
+            <CropMarks />
+            <component :is="props.role.figure" :active="active" />
+          </div>
+        </template>
+      </VisualPopup>
     </div>
 
     <!-- Presented as a figure with crop marks, distinct from the project cards -->
-    <figure>
+    <figure class="except-phones">
       <div class="figure-body dot-grid">
         <CropMarks />
-        <component :is="props.role.figure" :active="props.active" />
+        <component :is="props.role.figure" :active="props.active && !isPhone" />
       </div>
       <figcaption>
-        <span class="figure-number">Fig. {{ String(props.index + 1).padStart(2, "0") }}</span>
+        <span class="figure-number">{{ figureNumber }}</span>
         {{ props.role.figureCaption }}
       </figcaption>
     </figure>
@@ -183,6 +199,13 @@ figcaption {
   color: var(--card-color);
 }
 
+/* The figure in the phone popup takes the drawing's own shape */
+.popup-figure {
+  position: relative;
+  aspect-ratio: 400 / 220;
+  padding: 0.75rem;
+}
+
 /* Below lg the figure moves under the text and takes the height left over */
 @media (width < 64rem) {
   .slide {
@@ -224,14 +247,6 @@ figcaption {
 
   .info .stack {
     padding-top: 0.75rem;
-  }
-
-  figure {
-    gap: 0.5rem;
-  }
-
-  .figure-body {
-    padding: 0.75rem;
   }
 }
 </style>
