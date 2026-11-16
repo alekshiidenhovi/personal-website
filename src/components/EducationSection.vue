@@ -1,13 +1,9 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref } from "vue";
-import { useMatchMedia } from "../composables/useMatchMedia";
 import { STUDIES } from "../data/education";
 import { EXPERTISE_COLOR } from "../data/expertise";
-import { PHONE_QUERY } from "../lib/layout";
 import Icon from "./Icon.vue";
 import PinnedSection from "./PinnedSection.vue";
-
-const isPhone = useMatchMedia(PHONE_QUERY);
 
 /** "2024 – 26": the end year shortened, as the century repeats */
 const formatYears = (start: number, end: number) => `${start} – ${String(end).slice(2)}`;
@@ -40,50 +36,51 @@ const routeArc = computed(() => {
 </script>
 
 <template>
-  <PinnedSection id="education" :page-count="isPhone ? STUDIES.length : 1">
-    <!-- Phones show one degree per page -->
-    <template #default="{ page }">
-      <ol class="studies">
-        <li v-for="study in isPhone ? [STUDIES[page]] : STUDIES" :key="study.degree" class="card dot-grid"
-          :style="{ '--card-color': EXPERTISE_COLOR[study.discipline], '--selection-color': EXPERTISE_COLOR[study.discipline] }">
-          <span class="years">{{ formatYears(study.start, study.end) }}</span>
+  <PinnedSection id="education">
+    <ol class="studies">
+      <li v-for="study in STUDIES" :key="study.degree" class="card dot-grid"
+        :style="{ '--card-color': EXPERTISE_COLOR[study.discipline], '--selection-color': EXPERTISE_COLOR[study.discipline] }">
+        <span class="years">{{ formatYears(study.start, study.end) }}</span>
 
-          <div class="degree">
-            <h3>{{ study.degree }}</h3>
-            <p class="meta">{{ study.school }}<span class="separator">·</span>{{ study.detail }}</p>
-          </div>
+        <div class="degree">
+          <h3>{{ study.degree }}</h3>
+          <p class="meta">{{ study.school }}<span class="minor"><span class="separator">·</span>{{ study.detail }}</span></p>
+        </div>
 
-          <div v-if="study.thesis || study.exchange" class="blocks">
-            <a v-if="study.thesis" class="block thesis" :href="study.thesis.href" target="_blank" rel="noreferrer">
-              <span class="block-label">Master's thesis</span>
-              <span class="block-title">{{ study.thesis.title }}</span>
-              <span class="block-detail">{{ study.thesis.summary }}</span>
-              <span class="read">
-                Read the thesis
-                <Icon icon="heroicons:arrow-up-right-20-solid" class="read-arrow" />
-              </span>
-            </a>
+        <div v-if="study.thesis || study.exchange" class="blocks">
+          <a v-if="study.thesis" class="block thesis" :href="study.thesis.href" target="_blank" rel="noreferrer">
+            <!-- The arrow stands in for "Read the thesis" where that line is left out -->
+            <span class="block-label">
+              Master's thesis
+              <Icon icon="heroicons:arrow-up-right-20-solid" class="label-arrow" />
+            </span>
+            <span class="block-title">{{ study.thesis.title }}</span>
+            <span class="block-detail">{{ study.thesis.summary }}</span>
+            <span class="read">
+              Read the thesis
+              <Icon icon="heroicons:arrow-up-right-20-solid" class="read-arrow" />
+            </span>
+          </a>
 
-            <div v-if="study.exchange" class="block exchange">
-              <span class="block-label">Exchange · {{ study.exchange.year }}</span>
-              <span class="block-title">{{ study.exchange.school }}</span>
-              <span class="block-detail">{{ study.exchange.location }}</span>
-              <div class="route" aria-hidden="true">
-                <svg :ref="(el) => observeRoute(el as Element | null)"
-                  :viewBox="`0 0 ${routeSize.width} ${routeSize.height}`">
-                  <path :d="routeArc" class="route-line" />
-                  <path :d="routeArc" class="route-pulse" pathLength="100" />
-                </svg>
-                <span class="route-city"></span>
-                <span class="route-city route-end"></span>
-                <span class="route-label">Calgary</span>
-                <span class="route-label route-end">Helsinki</span>
-              </div>
+          <div v-if="study.exchange" class="block exchange">
+            <span class="block-label">Exchange · {{ study.exchange.year }}</span>
+            <span class="block-title">{{ study.exchange.school }}</span>
+            <span class="block-detail">{{ study.exchange.location }}</span>
+            <div class="route" aria-hidden="true">
+              <svg :ref="(el) => observeRoute(el as Element | null)"
+                :viewBox="`0 0 ${routeSize.width} ${routeSize.height}`">
+                <path :d="routeArc" class="route-line" />
+                <path :d="routeArc" class="route-pulse" pathLength="100" />
+              </svg>
+              <span class="route-city"></span>
+              <span class="route-city route-end"></span>
+              <span class="route-label">Calgary</span>
+              <span class="route-label route-end">Helsinki</span>
             </div>
           </div>
-        </li>
-      </ol>
-    </template>
+        </div>
+      </li>
+    </ol>
   </PinnedSection>
 </template>
 
@@ -198,6 +195,13 @@ h3 {
   text-transform: uppercase;
   letter-spacing: 2px;
   color: var(--card-color);
+}
+
+/* Only where the "Read the thesis" line is left out (see the narrow pages below) */
+.label-arrow {
+  display: none;
+  width: 0.875rem;
+  height: 0.875rem;
 }
 
 .block-title {
@@ -349,32 +353,122 @@ h3 {
 }
 
 /*
- * Phones: a degree per page, fitting one screen. The thesis summary repeats
- * what the experience section already says, and the route adds nothing
- * beyond the exchange school's name.
+ * Compact cards, for narrow pages (phones) and very short ones (phones in
+ * landscape). The years shrink to a heading, and the thesis and exchange
+ * become compact rows: the thesis summary repeats the experience section, the
+ * route adds nothing beyond the exchange school's name, and the whole thesis
+ * row is its link.
  */
-@media (width < 40rem), (height < 30rem) {
+@container page (width < 36rem) or (height < 16rem) {
+  .card {
+    --years-size: 1.75rem;
+    gap: 0.375rem;
+    padding: 1rem;
+  }
+
+  h3 {
+    font-size: 1.25rem;
+  }
+
+  .meta {
+    font-size: 0.875rem;
+    line-height: 1.45;
+  }
+
   .thesis .block-detail,
   .exchange .block-detail,
-  .route {
+  .route,
+  .read {
     display: none;
   }
 
-  .card {
+  .block {
+    gap: 0.25rem;
+    padding: 0.5rem 0.875rem;
+  }
+
+  .block-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     gap: 0.75rem;
-    padding: 1rem;
+    margin-bottom: 0;
+  }
+
+  .label-arrow {
+    display: block;
+  }
+
+  .block-title {
+    font-size: 0.9375rem;
+  }
+}
+
+/* Narrow pages: both degrees from the top, the thesis and exchange stacked */
+@container page (width < 36rem) {
+  .studies {
+    justify-content: flex-start;
+    gap: 0.75rem;
   }
 
   .blocks {
     grid-template-columns: 1fr;
   }
+}
 
-  .block {
-    padding: 0.75rem 1rem;
+/* Short narrow pages (small phones): the thesis row keeps its label and link, without the title */
+@container page (width < 36rem) and (height < 24rem) {
+  .thesis .block-title {
+    display: none;
+  }
+}
+
+/* Shorter still: the minors go too, and the cards tighten */
+@container page (width < 36rem) and (height < 22rem) {
+  .minor {
+    display: none;
   }
 
-  .read {
-    padding-top: 0.25rem;
+  .card {
+    padding: 0.75rem 1rem;
+  }
+}
+
+/*
+ * Very short pages (phones in landscape) have the width instead: each degree
+ * is one row, the years beside it, and the thesis and exchange share a line
+ * below, the thesis by its label and link alone.
+ */
+@container page (height < 16rem) {
+  .studies {
+    gap: 0.5rem;
+  }
+
+  .card {
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 1rem;
+    padding: 0.625rem 1rem;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+  }
+
+  .blocks {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .block {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 0.75rem;
+    padding-block: 0.375rem;
+  }
+
+  .thesis .block-title {
+    display: none;
   }
 }
 </style>
