@@ -36,7 +36,7 @@ const routeArc = computed(() => {
 </script>
 
 <template>
-  <PinnedSection id="education">
+  <PinnedSection id="education" hide-subtitle-on-phones>
     <ol class="studies">
       <li v-for="study in STUDIES" :key="study.degree" class="card dot-grid"
         :style="{ '--card-color': EXPERTISE_COLOR[study.discipline], '--selection-color': EXPERTISE_COLOR[study.discipline] }">
@@ -322,12 +322,12 @@ h3 {
 }
 
 /*
- * Phones: close to the whole section on one screen. The subtitle and thesis
- * summary repeat what the cards and the experience section already say, and
- * the route adds nothing beyond the exchange school's name.
+ * Phones: close to the whole section on one screen. The thesis summary
+ * repeats what the experience section already says (the subtitle is hidden
+ * too, see hide-subtitle-on-phones), and the route adds nothing beyond the
+ * exchange school's name.
  */
 @media (width < 40rem) {
-  :deep(.text p),
   .thesis .block-detail,
   .exchange .block-detail,
   .route {

@@ -359,6 +359,16 @@ const partitionState = (index: number) => (index > 0 || todayFull.value ? "seale
       transparent var(--row-height) calc(var(--row-height) + var(--row-gap))) top / 100% var(--batch-height) no-repeat;
 }
 
+.stream,
+.partitions,
+.checks {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375em;
+  list-style: none;
+}
+
 .column-ingest .stream {
   position: absolute;
   inset: 0;
@@ -392,16 +402,6 @@ const partitionState = (index: number) => (index > 0 || todayFull.value ? "seale
 .column-write .partitions {
   flex: 1;
   justify-content: space-between;
-}
-
-.stream,
-.partitions,
-.checks {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 0.375em;
-  list-style: none;
 }
 
 /* The batch each stage is working on */

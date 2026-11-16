@@ -23,6 +23,7 @@ interface Props {
   pageCount?: number;
   /** Anchor ids for the pages, so in-page links can target a single page; numbered after the section by default */
   pageIds?: string[];
+  hideSubtitleOnPhones?: boolean;
 }
 const props = withDefaults(defineProps<Props>(), { pageCount: 1 });
 
@@ -78,7 +79,8 @@ onUnmounted(() => visibilityObserver?.disconnect());
       <span v-for="n in props.pageCount" :key="n" :ref="(el) => { if (el) stopRefs[n - 1] = el as HTMLElement; }"
         class="slide-stop" data-slide :data-slide-for="pageId(n - 1)" :style="{ '--page': n - 1 }"></span>
       <div class="stage">
-        <SectionTitle :index="index + 1" :title="title" :subtitle="subtitle">
+        <SectionTitle :index="index + 1" :title="title" :subtitle="subtitle"
+          :hide-subtitle-on-phones="props.hideSubtitleOnPhones">
           <nav v-if="pinnedLayout && props.pageCount > 1" class="page-indicator" :aria-label="`${title} pages`">
             <!-- Links to the pages' stops, which the slideshow jumps to like the nav's links -->
             <a v-for="n in props.pageCount" :key="n" :href="`#${pageId(n - 1)}`" class="page-tick"

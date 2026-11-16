@@ -3,6 +3,8 @@ interface Props {
   index: number;
   title: string;
   subtitle?: string;
+  /** For sections whose cards already say what the subtitle does, on screens with no room to spare */
+  hideSubtitleOnPhones?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -13,7 +15,7 @@ const props = defineProps<Props>();
     <span class="index" aria-hidden="true">{{ String(props.index).padStart(2, "0") }}</span>
     <div class="text">
       <h2>{{ props.title }}</h2>
-      <p v-if="props.subtitle">{{ props.subtitle }}</p>
+      <p v-if="props.subtitle" :class="{ 'hide-on-phones': props.hideSubtitleOnPhones }">{{ props.subtitle }}</p>
     </div>
     <!-- Optional content aligned to the right end, such as a page indicator -->
     <div v-if="$slots.default" class="aside">
@@ -101,4 +103,10 @@ p {
   }
 }
 
+
+@media (width < 40rem) {
+  .hide-on-phones {
+    display: none;
+  }
+}
 </style>

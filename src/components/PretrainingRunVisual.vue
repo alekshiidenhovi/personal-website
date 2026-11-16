@@ -380,16 +380,16 @@ const onPointerMove = (event: PointerEvent) => {
   background-size: 100% 25%;
 }
 
-.embedding-plot svg {
-  overflow: hidden;
-}
-
 svg {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   overflow: visible;
+}
+
+.embedding-plot svg {
+  overflow: hidden;
 }
 
 .line {
