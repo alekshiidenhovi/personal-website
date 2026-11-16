@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { pinnedLayout } from "../composables/usePinnedLayout";
-import { PAGE_ATTRIBUTE, closestToViewportCenter } from "../lib/layout";
+import { closestToViewportCenter } from "../lib/layout";
 import { jumpTo } from "../lib/scroll";
 import SectionTitle from "./SectionTitle.vue";
 
 /**
  * A full-viewport section: the title stays pinned at the top while the section
  * scrolls past, and the slideshow steps through its pages, which crossfade in place.
- * Screens too small, or with a page too tall to fit, fall back to a normal
- * stacked layout (see usePinnedLayout), where the page closest to the middle of
- * the viewport counts as active.
+ * Touch and small screens get a normal stacked layout instead (see
+ * usePinnedLayout), where the page closest to the middle of the viewport
+ * counts as active.
  *
  * The default slot is rendered once per page with `{ page, active }`, where
  * `active` is the current page while the section is on screen, so visuals only
@@ -107,7 +107,7 @@ onUnmounted(() => {
         </SectionTitle>
         <div class="pages">
           <div v-for="n in props.pageCount" :id="props.pageIds?.[n - 1]" :key="n"
-            :ref="(el) => { if (el) pageRefs[n - 1] = el as HTMLElement; }" :[PAGE_ATTRIBUTE]="true" class="page"
+            :ref="(el) => { if (el) pageRefs[n - 1] = el as HTMLElement; }" class="page"
             :class="{ current: n - 1 === activePage, past: n - 1 < activePage }">
             <slot :page="n - 1" :active="isInView && n - 1 === activePage" />
           </div>
@@ -210,7 +210,7 @@ onUnmounted(() => {
   pointer-events: auto;
 }
 
-/* The stacked layout, for screens too small or pages too tall for the slideshow */
+/* The stacked layout, for touch and small screens */
 
 /* Links to the section land with air between the nav bar and the title, which the stage's padding adds to */
 :root:not(.pinned) .pinned-section {

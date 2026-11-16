@@ -50,8 +50,8 @@ html {
   }
 }
 
-/* While usePinnedLayout tries a layout, so trying it never starts transitions */
-.measuring-layout * {
+/* While usePinnedLayout switches layouts, so the switch never starts transitions */
+.switching-layout * {
   transition: none !important;
 }
 

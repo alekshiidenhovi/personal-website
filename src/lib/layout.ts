@@ -1,17 +1,16 @@
 /**
- * Wide and tall enough to try the full-viewport, pinned sections and slideshow
- * navigation; usePinnedLayout keeps them only if every page also fits.
+ * The pinned sections and slideshow, for a mouse or trackpad on a screen of at
+ * least 1024×768. Every page fits from about 750px tall at any width, so the
+ * slides are designed to fit rather than measured. Touch screens always get
+ * the stacked, natively scrolling layout.
  */
-export const PINNED_LAYOUT_QUERY = "(min-width: 57.75rem) and (min-height: 40rem) and (orientation: landscape)";
+export const PINNED_LAYOUT_QUERY = "(hover: hover) and (pointer: fine) and (min-width: 64rem) and (min-height: 48rem)";
 
 /**
  * On the root element while the pinned layout is on. Styles for the stacked
  * layout select `:root:not(.pinned)`.
  */
 export const PINNED_CLASS = "pinned";
-
-/** Marks a page of a pinned section, whose content must fit its box for the pinned layout */
-export const PAGE_ATTRIBUTE = "data-page";
 
 /** Marks an element whose top edge is a slideshow stop */
 export const SLIDE_ATTRIBUTE = "data-slide";
