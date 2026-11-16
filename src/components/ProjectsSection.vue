@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from "vue";
-import { PROJECTS } from "../data/projects";
+import { ref } from "vue";
 import { pinnedLayout } from "../composables/usePinnedLayout";
+import { useViewportUpdates } from "../composables/useViewportUpdates";
+import { PROJECTS } from "../data/projects";
 import { closestToViewportCenter } from "../lib/layout";
 import PinnedSection from "./PinnedSection.vue";
 import ProjectCard from "./ProjectCard.vue";
@@ -30,18 +31,7 @@ const updatePlaying = () => {
   playingTitle.value = cardRefs[index]?.dataset.project ?? null;
 };
 
-watch(pinnedLayout, updatePlaying);
-
-onMounted(() => {
-  window.addEventListener("scroll", updatePlaying, { passive: true });
-  window.addEventListener("resize", updatePlaying);
-  updatePlaying();
-});
-
-onUnmounted(() => {
-  window.removeEventListener("scroll", updatePlaying);
-  window.removeEventListener("resize", updatePlaying);
-});
+useViewportUpdates(updatePlaying);
 </script>
 
 <template>

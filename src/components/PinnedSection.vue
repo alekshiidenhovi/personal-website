@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import { pinnedLayout } from "../composables/usePinnedLayout";
+import { useViewportUpdates } from "../composables/useViewportUpdates";
 import { SECTIONS, type SectionId } from "../data/sections";
 import { closestToViewportCenter } from "../lib/layout";
 import SectionTitle from "./SectionTitle.vue";
@@ -51,15 +52,11 @@ const updateActivePage = () => {
   activePage.value = closestToViewportCenter(pageRefs);
 };
 
-watch(pinnedLayout, updateActivePage);
+useViewportUpdates(updateActivePage);
 
 const formatPageNumber = (page: number) => String(page).padStart(2, "0");
 
 onMounted(() => {
-  window.addEventListener("scroll", updateActivePage, { passive: true });
-  window.addEventListener("resize", updateActivePage);
-  updateActivePage();
-
   // A section merely touching the viewport's edge reports as intersecting, so require visible overlap
   visibilityObserver = new IntersectionObserver(
     ([entry]) => {
@@ -70,11 +67,7 @@ onMounted(() => {
   if (scrollerRef.value) visibilityObserver.observe(scrollerRef.value);
 });
 
-onUnmounted(() => {
-  window.removeEventListener("scroll", updateActivePage);
-  window.removeEventListener("resize", updateActivePage);
-  visibilityObserver?.disconnect();
-});
+onUnmounted(() => visibilityObserver?.disconnect());
 </script>
 
 <template>
