@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import { COMPANY_NAMES, durationMonths, formatYearMonth, type Role } from "../data/experience";
 import { EXPERTISE_COLOR } from "../data/expertise";
-import { COMPANY_NAMES, type Role, durationMonths, formatYearMonth } from "../data/experience";
 import "./covers/cover.css";
+import CropMarks from "./CropMarks.vue";
 import HighlightedText from "./HighlightedText.vue";
 import StackLine from "./StackLine.vue";
 import SupercellLogo from "./SupercellLogo.vue";
@@ -46,10 +47,7 @@ const props = defineProps<Props>();
     <!-- Presented as a figure with crop marks, distinct from the project cards -->
     <figure>
       <div class="figure-body dot-grid">
-        <span class="crop crop-top-left"></span>
-        <span class="crop crop-top-right"></span>
-        <span class="crop crop-bottom-left"></span>
-        <span class="crop crop-bottom-right"></span>
+        <CropMarks />
         <component :is="props.role.figure" :active="props.active" />
       </div>
       <figcaption>
@@ -170,44 +168,6 @@ figure {
   flex-grow: 1;
   min-height: 0;
   padding: clamp(1.25rem, 3vw, 2.5rem);
-}
-
-/* Corner crop marks */
-.crop {
-  position: absolute;
-  width: 1.25rem;
-  height: 1.25rem;
-  border-color: var(--card-color);
-  border-style: solid;
-  border-width: 0;
-}
-
-.crop-top-left {
-  top: 0;
-  left: 0;
-  border-top-width: 2px;
-  border-left-width: 2px;
-}
-
-.crop-top-right {
-  top: 0;
-  right: 0;
-  border-top-width: 2px;
-  border-right-width: 2px;
-}
-
-.crop-bottom-left {
-  bottom: 0;
-  left: 0;
-  border-bottom-width: 2px;
-  border-left-width: 2px;
-}
-
-.crop-bottom-right {
-  bottom: 0;
-  right: 0;
-  border-bottom-width: 2px;
-  border-right-width: 2px;
 }
 
 figcaption {

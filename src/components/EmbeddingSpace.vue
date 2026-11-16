@@ -3,6 +3,7 @@ import { onMounted, onUnmounted, ref } from "vue";
 import { toCanvasColor } from "../lib/color";
 import { whenIdle } from "../lib/idle";
 import { easeInOut, prefersReducedMotion } from "../lib/motion";
+import CropMarks from "./CropMarks.vue";
 
 /**
  * The hero visual: an embedding space that learns its structure on loop.
@@ -348,10 +349,7 @@ onUnmounted(() => {
 
 <template>
   <figure ref="containerRef" class="embedding-space" aria-label="An embedding space learning clusters from raw data">
-    <span class="crop crop-top-left"></span>
-    <span class="crop crop-top-right"></span>
-    <span class="crop crop-bottom-left"></span>
-    <span class="crop crop-bottom-right"></span>
+    <CropMarks />
     <div class="labels labels-top" aria-hidden="true">
       <span>embedding space</span>
       <span class="step">step {{ step.toLocaleString("en-US") }}</span>
@@ -381,6 +379,10 @@ onUnmounted(() => {
   letter-spacing: 1px;
   text-transform: uppercase;
   color: var(--text-muted);
+  /* Fainter marks than the experience figures' */
+  --crop-size: 1rem;
+  --crop-weight: 1px;
+  --crop-color: var(--neutral-700);
 }
 
 canvas {
@@ -427,43 +429,5 @@ canvas {
 
 .phase.query.current {
   color: var(--warning-400);
-}
-
-/* Corner crop marks, as on the experience figures */
-.crop {
-  position: absolute;
-  width: 1rem;
-  height: 1rem;
-  border-color: var(--neutral-700);
-  border-style: solid;
-  border-width: 0;
-}
-
-.crop-top-left {
-  top: 0;
-  left: 0;
-  border-top-width: 1px;
-  border-left-width: 1px;
-}
-
-.crop-top-right {
-  top: 0;
-  right: 0;
-  border-top-width: 1px;
-  border-right-width: 1px;
-}
-
-.crop-bottom-left {
-  bottom: 0;
-  left: 0;
-  border-bottom-width: 1px;
-  border-left-width: 1px;
-}
-
-.crop-bottom-right {
-  right: 0;
-  bottom: 0;
-  border-right-width: 1px;
-  border-bottom-width: 1px;
 }
 </style>
