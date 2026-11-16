@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, watch } from "vue";
+import { prefersReducedMotion } from "../lib/motion";
 
 /**
  * An illustrative self-supervised pretraining run, shaped like the thesis
@@ -84,7 +85,6 @@ interface Props {
 }
 const props = defineProps<Props>();
 
-const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const chartsRef = ref<HTMLElement | null>(null);
 /** Share of the run drawn so far; without motion the run is shown finished */
 const progress = ref(prefersReducedMotion ? 1 : 0);

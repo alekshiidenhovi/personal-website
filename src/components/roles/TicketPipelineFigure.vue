@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, shallowRef, toRef } from "vue";
 import { useLiveTicker } from "../../composables/useLiveTicker";
+import { prefersReducedMotion } from "../../lib/motion";
 
 /**
  * The ticket analysis workflow in phases, on a loop:
@@ -92,7 +93,6 @@ const generatePoints = (): Point[] =>
     return { x: TOPICS[topic].x + spread(), y: TOPICS[topic].y + spread(), topic };
   });
 
-const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 // Without motion, show a finished run
 const phase = ref<Phase>(prefersReducedMotion ? "dashboard" : "ingest");

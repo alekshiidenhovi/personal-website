@@ -1,4 +1,5 @@
-import { type Ref, onUnmounted, watch } from "vue";
+import { onUnmounted, type Ref, watch } from "vue";
+import { prefersReducedMotion } from "../lib/motion";
 
 /**
  * Calls `onTick` every `intervalMs` while `isActive` is true.
@@ -7,7 +8,6 @@ import { type Ref, onUnmounted, watch } from "vue";
  */
 export function useLiveTicker(isActive: Ref<boolean>, onTick: () => void, intervalMs: number) {
   let intervalId: ReturnType<typeof setInterval> | undefined;
-  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const stop = () => {
     clearInterval(intervalId);

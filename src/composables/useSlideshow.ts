@@ -1,7 +1,8 @@
 import { onUnmounted, watch } from "vue";
 import { SLIDE_ATTRIBUTE } from "../lib/layout";
-import { pinnedLayout } from "./usePinnedLayout";
+import { prefersReducedMotion } from "../lib/motion";
 import { jumpTo } from "../lib/scroll";
+import { pinnedLayout } from "./usePinnedLayout";
 
 /*
  * Wheel gestures: trackpad swipes ramp up from tiny deltas and trail off in a
@@ -69,7 +70,7 @@ export function useSlideshow() {
       });
       return;
     }
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (prefersReducedMotion) {
       window.scrollTo({ top, behavior: "instant" });
       return;
     }

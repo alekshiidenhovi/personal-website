@@ -2,6 +2,7 @@
 import { onMounted, onUnmounted, ref } from "vue";
 import { toCanvasColor } from "../lib/color";
 import { whenIdle } from "../lib/idle";
+import { prefersReducedMotion } from "../lib/motion";
 
 /**
  * The hero visual: an embedding space that learns its structure on loop.
@@ -63,7 +64,6 @@ let hoveredNeighbours: number[] = [];
 let resizeObserver: ResizeObserver | null = null;
 let visibilityObserver: IntersectionObserver | null = null;
 let cancelStart: (() => void) | null = null;
-const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const clamp01 = (value: number) => Math.min(Math.max(value, 0), 1);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;

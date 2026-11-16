@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, toRef, watch } from "vue";
 import { useLiveTicker } from "../../composables/useLiveTicker";
+import { prefersReducedMotion } from "../../lib/motion";
 
 /**
  * Why the learned embedding matters: the model runs on aggregated features
@@ -52,7 +53,6 @@ const TICKS_PER_CONDITION = 4;
 
 const randomValues = (count: number) => Array.from({ length: count }, () => 0.2 + Math.random() * 0.8);
 
-const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 // Without motion the figure rests on both inputs, the strongest result
 const conditionIndex = ref(prefersReducedMotion ? CONDITIONS.length - 1 : 0);
 const condition = computed(() => CONDITIONS[conditionIndex.value]);
