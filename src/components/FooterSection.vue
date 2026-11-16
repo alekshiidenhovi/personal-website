@@ -1,13 +1,7 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
+import { EMAIL, PROFILES } from "../data/contact";
 import PinnedSection from "./PinnedSection.vue";
-
-const EMAIL = "hiidenhovi.aleks@gmail.com";
-
-const SOCIAL_LINKS = [
-  { label: "LinkedIn", href: "https://www.linkedin.com/in/hiidenhovi/", icon: "simple-icons:linkedin" },
-  { label: "GitHub", href: "https://github.com/alekshiidenhovi", icon: "simple-icons:github" },
-];
 </script>
 
 <template>
@@ -20,7 +14,7 @@ const SOCIAL_LINKS = [
           <Icon icon="heroicons:arrow-up-right-20-solid" class="big-arrow" />
         </a>
         <div class="social-container">
-          <a v-for="link in SOCIAL_LINKS" :key="link.href" :href="link.href" target="_blank" rel="noreferrer"
+          <a v-for="link in PROFILES" :key="link.href" :href="link.href" target="_blank" rel="noreferrer"
             class="social-link">
             <Icon :icon="link.icon" class="social-icon" />
             {{ link.label }}

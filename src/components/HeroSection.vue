@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
+import { PROFILES } from "../data/contact";
 import EmbeddingSpace from "./EmbeddingSpace.vue";
 </script>
 
@@ -19,13 +20,10 @@ import EmbeddingSpace from "./EmbeddingSpace.vue";
             See my work
             <Icon icon="heroicons:arrow-down-20-solid" class="cta-icon" />
           </a>
-          <a class="cta cta-secondary" href="https://www.linkedin.com/in/hiidenhovi/" target="_blank" rel="noreferrer">
-            <Icon icon="simple-icons:linkedin" class="cta-icon" />
-            LinkedIn
-          </a>
-          <a class="cta cta-secondary" href="https://github.com/alekshiidenhovi" target="_blank" rel="noreferrer">
-            <Icon icon="simple-icons:github" class="cta-icon" />
-            GitHub
+          <a v-for="profile in PROFILES" :key="profile.href" class="cta cta-secondary" :href="profile.href"
+            target="_blank" rel="noreferrer">
+            <Icon :icon="profile.icon" class="cta-icon" />
+            {{ profile.label }}
           </a>
         </div>
         <a class="status" href="#role-data-scientist">
