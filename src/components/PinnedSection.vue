@@ -153,6 +153,15 @@ onUnmounted(() => visibilityObserver?.disconnect());
   height: calc(100svh + (var(--page-count) - 1) * var(--page-scroll));
 }
 
+/*
+ * The page ends here, so make room for this section to reach the top even
+ * with the browser's toolbars hidden, when the screen is taller than 100svh.
+ * The stage keeps its 100svh height, pinned at the top.
+ */
+.pinned-section:last-child {
+  height: calc(100lvh + (var(--page-count) - 1) * var(--page-scroll));
+}
+
 /* Chrome ignores zero-size snap areas, hence the 1px size */
 .slide-stop {
   position: absolute;
