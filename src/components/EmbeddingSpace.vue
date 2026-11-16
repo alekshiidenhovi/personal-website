@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from "vue";
+import { toCanvasColor } from "../lib/color";
 import { whenIdle } from "../lib/idle";
 
 /**
@@ -149,7 +150,7 @@ const startCycle = (now: number) => {
 
 const readColors = () => {
   const styles = getComputedStyle(document.documentElement);
-  const read = (name: string) => styles.getPropertyValue(name).trim();
+  const read = (name: string) => toCanvasColor(styles.getPropertyValue(name).trim());
   colors = {
     raw: read("--accent-400"),
     clusters: ["--primary-300", "--primary-400", "--primary-500", "--primary-200", "--primary-600"].map(read),
