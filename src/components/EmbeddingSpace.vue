@@ -23,7 +23,7 @@ interface Point {
   cluster: number;
   /** 0 to 1: when the point starts moving during training */
   delay: number;
-  /** Phase of the idle drift around the target */
+  /** Phase of the idle drift, which every point keeps, scattered or trained */
   wobble: number;
   radius: number;
 }
@@ -32,6 +32,8 @@ const POINT_COUNT = 420;
 const CLUSTER_COUNT = 7;
 const OUTLIER_SHARE = 0.06;
 const NEIGHBOURS = 8;
+/** How far a point drifts around its position, as a share of the canvas */
+const DRIFT = 0.004;
 const TRAINING_STEPS = 24000;
 
 /** Phase durations in milliseconds, in loop order */
@@ -203,9 +205,8 @@ const trainedAmount = (point: Point, phase: ReturnType<typeof phaseAt>) => {
 
 /** Writes the point's canvas position into `out` */
 const placePoint = (point: Point, trained: number, now: number, out: Vec) => {
-  const drift = 0.004 * trained;
-  const wobbleX = Math.sin(now / 1400 + point.wobble) * drift;
-  const wobbleY = Math.cos(now / 1700 + point.wobble) * drift;
+  const wobbleX = Math.sin(now / 1400 + point.wobble) * DRIFT;
+  const wobbleY = Math.cos(now / 1700 + point.wobble) * DRIFT;
   out[0] = (lerp(point.noise[0], point.target[0], trained) + wobbleX) * size.width;
   out[1] = (lerp(point.noise[1], point.target[1], trained) + wobbleY) * size.height;
 };
