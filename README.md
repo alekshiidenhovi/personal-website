@@ -1,6 +1,6 @@
 # Personal portfolio
 
-This portfolio is built using Vue 3, TypeScript, and Vite. It is deployed with Cloudflare Workers and Cloudflare Pages. You can find the website [here](https://personal-website.hiidenhovi-aleks.workers.dev/)
+This portfolio is built using Vue 3, TypeScript, and Vite. It is deployed with Cloudflare Workers and Cloudflare Pages. You can find the website at [hiidenhovi.dev](https://hiidenhovi.dev/)
 
 ## Setup
 
