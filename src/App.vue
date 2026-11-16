@@ -7,10 +7,12 @@ import NavBar from "./components/NavBar.vue";
 import ProfessionalExperienceSection from "./components/ProfessionalExperienceSection.vue";
 import ProjectsSection from "./components/ProjectsSection.vue";
 import { useActiveSection } from "./composables/useActiveSection";
+import { useScrollRestoration } from "./composables/useScrollRestoration";
 import { useSlideshow } from "./composables/useSlideshow";
 
 useActiveSection();
 useSlideshow();
+useScrollRestoration();
 </script>
 
 <template>
@@ -34,15 +36,8 @@ useSlideshow();
   position: fixed;
   inset: 0;
   overflow-y: auto;
-  scroll-behavior: smooth;
   /* The page is a slideshow: every scroll settles on a slide stop (the hero, and each page of each section) */
   scroll-snap-type: y mandatory;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  #scroller {
-    scroll-behavior: auto;
-  }
 }
 
 main {
