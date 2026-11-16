@@ -23,7 +23,7 @@ import SectionTitle from "./SectionTitle.vue";
  * `active` is the current page while the section is on screen, so visuals only
  * play while visible. Multi-page sections show a page indicator next to the
  * title and, with a mouse or trackpad on a wide screen, arrows in the side
- * margins that fade and change color with the progress.
+ * margins that fade out at the first and last page.
  */
 
 interface Props {
@@ -31,8 +31,6 @@ interface Props {
   pageCount?: number;
   /** Anchor ids for the pages, so in-page links can target a single page; numbered after the section by default */
   pageIds?: string[];
-  /** Each page's color, which the arrows blend between as the pages slide; blue by default */
-  pageColors?: string[];
 }
 const props = withDefaults(defineProps<Props>(), { pageCount: 1 });
 
@@ -45,6 +43,9 @@ const pageId = (page: number) => props.pageIds?.[page] ?? `${props.id}-${page + 
 const hasScrollTimelines = CSS.supports("animation-timeline: view()");
 
 const sectionRef = ref<HTMLElement | null>(null);
+const trackRef = ref<HTMLElement | null>(null);
+const previousRef = ref<HTMLElement | null>(null);
+const nextRef = ref<HTMLElement | null>(null);
 const stopRefs: HTMLElement[] = [];
 const activePage = ref(0);
 const isInView = ref(false);
@@ -57,23 +58,27 @@ let visibilityObserver: IntersectionObserver | null = null;
  */
 let targetPage: number | null = null;
 
-/** Reads progress from where the stops sit, so it matches the snapping exactly */
-const updateProgress = () => {
+/**
+ * Reads progress from where the stops sit, so it matches the snapping
+ * exactly, then hands back the changes to make from it (see useViewportUpdates).
+ */
+const measureProgress = () => {
   const stops = stopRefs.slice(0, props.pageCount);
-  const section = sectionRef.value;
-  if (!section || !stops.length) return;
+  if (!stops.length) return undefined;
   const first = stops[0].getBoundingClientRect().top;
   const pageScroll = stops.length > 1 ? stops[1].getBoundingClientRect().top - first : 1;
   const progress = Math.min(Math.max(-first / pageScroll, 0), props.pageCount - 1);
-  if (!hasScrollTimelines) section.style.setProperty("--progress", String(progress));
-  activePage.value = Math.round(progress);
 
-  // The arrows' color, partway from the page being left to the one coming in
-  const color = (page: number) => props.pageColors?.[page] ?? "var(--primary-400)";
-  section.style.setProperty("--arrow-from", color(Math.floor(progress)));
-  section.style.setProperty("--arrow-to", color(Math.ceil(progress)));
-  section.style.setProperty("--arrow-mix", `${(progress % 1) * 100}%`);
-  if (targetPage !== null && Math.abs(progress - targetPage) < 0.01) targetPage = null;
+  return () => {
+    activePage.value = Math.round(progress);
+    if (targetPage !== null && Math.abs(progress - targetPage) < 0.01) targetPage = null;
+    // The fallback writes only to what moves; --progress doesn't inherit (see style.css), so nothing else restyles
+    if (!hasScrollTimelines) {
+      for (const element of [trackRef.value, previousRef.value, nextRef.value]) {
+        element?.style.setProperty("--progress", String(progress));
+      }
+    }
+  };
 };
 
 
@@ -86,7 +91,7 @@ const step = (direction: 1 | -1) => {
   });
 };
 
-useViewportUpdates(updateProgress);
+useViewportUpdates(measureProgress);
 
 const formatPageNumber = (page: number) => String(page).padStart(2, "0");
 
@@ -124,7 +129,7 @@ onUnmounted(() => visibilityObserver?.disconnect());
       </SectionTitle>
       <div class="pages-frame">
         <div class="pages">
-          <div class="track">
+          <div ref="trackRef" class="track">
             <!-- Pages off to the side can't be focused or clicked -->
             <div v-for="n in props.pageCount" :key="n" class="page" :inert="n - 1 !== activePage">
               <slot :page="n - 1" :active="isInView && n - 1 === activePage" />
@@ -133,11 +138,11 @@ onUnmounted(() => visibilityObserver?.disconnect());
         </div>
         <template v-if="props.pageCount > 1">
           <!-- Disabled at the ends, where they have faded out, so they can't be clicked or focused unseen -->
-          <button type="button" class="slide-arrow previous" aria-label="Previous page" :disabled="activePage === 0"
-            @click="step(-1)">
+          <button ref="previousRef" type="button" class="slide-arrow previous" aria-label="Previous page"
+            :disabled="activePage === 0" @click="step(-1)">
             <Icon icon="heroicons:arrow-left" />
           </button>
-          <button type="button" class="slide-arrow next" aria-label="Next page"
+          <button ref="nextRef" type="button" class="slide-arrow next" aria-label="Next page"
             :disabled="activePage === props.pageCount - 1" @click="step(1)">
             <Icon icon="heroicons:arrow-right" />
           </button>
@@ -243,8 +248,7 @@ onUnmounted(() => visibilityObserver?.disconnect());
 /*
  * Centered in the side margins, so showing them never moves the content. Only
  * with a mouse or trackpad on a wide screen; touch screens move the pages by
- * swiping up and down. Their fade and color come from --progress, so they
- * change exactly as the pages slide.
+ * swiping up and down. They fade with the sliding, out at either end.
  */
 .slide-arrow {
   --size: min(2.75rem, var(--gutter) - 0.5rem);
@@ -255,13 +259,13 @@ onUnmounted(() => visibilityObserver?.disconnect());
   justify-content: center;
   width: var(--size);
   height: var(--size);
-  border: 1px solid color-mix(in srgb, currentColor 55%, transparent);
+  border: 1px solid var(--neutral-600);
   border-radius: 50%;
-  background: color-mix(in srgb, var(--neutral-950), transparent 30%);
-  color: color-mix(in oklch, var(--arrow-from, var(--primary-400)), var(--arrow-to, var(--primary-400)) var(--arrow-mix, 0%));
+  background-color: color-mix(in srgb, var(--neutral-950), transparent 30%);
+  color: var(--neutral-300);
   cursor: pointer;
   translate: -50% -50%;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, scale 0.1s ease;
 }
 
 .slide-arrow svg {
@@ -270,7 +274,14 @@ onUnmounted(() => visibilityObserver?.disconnect());
 }
 
 .slide-arrow:hover {
-  background-color: color-mix(in srgb, currentColor 14%, var(--neutral-950));
+  border-color: var(--neutral-400);
+  background-color: var(--neutral-800);
+  color: var(--neutral-100);
+}
+
+.slide-arrow:active {
+  background-color: var(--neutral-700);
+  scale: 0.92;
 }
 
 .slide-arrow:disabled {
@@ -357,6 +368,7 @@ onUnmounted(() => visibilityObserver?.disconnect());
   @media (prefers-reduced-motion: reduce) {
     .multi-page .track,
     .multi-page .slide-arrow {
+      /* biome-ignore lint/complexity/noImportantStyles: overrides the global reduced-motion rule, itself !important */
       animation-duration: auto !important;
     }
   }

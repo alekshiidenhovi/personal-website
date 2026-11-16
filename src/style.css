@@ -107,6 +107,17 @@ html {
   }
 }
 
+/*
+ * A slide's progress through its pages, for browsers without scroll-driven
+ * animations (see PinnedSection). Not inherited, so writing it on the moving
+ * elements doesn't restyle everything inside them.
+ */
+@property --progress {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+
 /* The faint dotted grid behind cards and figures */
 .dot-grid {
   background-image: radial-gradient(color-mix(in srgb, var(--neutral-500), transparent 85%) 1px, transparent 1px);
