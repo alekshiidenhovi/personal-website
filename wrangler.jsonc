@@ -10,6 +10,8 @@
     // Static files would otherwise be served without running the Worker, skipping the redirect
     "run_worker_first": true
   },
+  // Kept on so links shared before the domain redirect instead of breaking; with routes set it would default to off
+  "workers_dev": true,
   // Wrangler creates the DNS records and certificates for these on deploy; www only redirects
   "routes": [
     { "pattern": "hiidenhovi.dev", "custom_domain": true },
