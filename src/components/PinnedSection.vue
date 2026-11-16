@@ -2,6 +2,8 @@
 import { onMounted, onUnmounted, ref } from "vue";
 import { useViewportUpdates } from "../composables/useViewportUpdates";
 import { SECTIONS, type SectionId } from "../data/sections";
+import { prefersReducedMotion } from "../lib/motion";
+import Icon from "./Icon.vue";
 import SectionTitle from "./SectionTitle.vue";
 
 /**
@@ -17,7 +19,9 @@ import SectionTitle from "./SectionTitle.vue";
  *
  * The default slot is rendered once per page with `{ page, active }`, where
  * `active` is the current page while the section is on screen, so visuals only
- * play while visible. Multi-page sections show a page indicator next to the title.
+ * play while visible. Multi-page sections show a page indicator next to the
+ * title and, with a mouse or trackpad on a wide screen, arrows in the side
+ * margins that fade and change color with the progress.
  */
 
 interface Props {
@@ -25,6 +29,8 @@ interface Props {
   pageCount?: number;
   /** Anchor ids for the pages, so in-page links can target a single page; numbered after the section by default */
   pageIds?: string[];
+  /** Each page's color, which the arrows blend between as the pages slide; blue by default */
+  pageColors?: string[];
   hideSubtitleOnPhones?: boolean;
 }
 const props = withDefaults(defineProps<Props>(), { pageCount: 1 });
@@ -40,15 +46,40 @@ const activePage = ref(0);
 const isInView = ref(false);
 let visibilityObserver: IntersectionObserver | null = null;
 
+/*
+ * Each arrow click moves one page on from the last click's target, not from
+ * wherever the pages are mid-slide, so quick clicks step one page each and
+ * never past the end.
+ */
+let targetPage: number | null = null;
+
 /** Reads progress from where the stops sit, so it matches the snapping exactly */
 const updateProgress = () => {
   const stops = stopRefs.slice(0, props.pageCount);
-  if (!sectionRef.value || !stops.length) return;
+  const section = sectionRef.value;
+  if (!section || !stops.length) return;
   const first = stops[0].getBoundingClientRect().top;
   const pageScroll = stops.length > 1 ? stops[1].getBoundingClientRect().top - first : 1;
   const progress = Math.min(Math.max(-first / pageScroll, 0), props.pageCount - 1);
-  sectionRef.value.style.setProperty("--progress", String(progress));
+  section.style.setProperty("--progress", String(progress));
   activePage.value = Math.round(progress);
+
+  // The arrows' color, partway from the page being left to the one coming in
+  const color = (page: number) => props.pageColors?.[page] ?? "var(--primary-400)";
+  section.style.setProperty("--arrow-from", color(Math.floor(progress)));
+  section.style.setProperty("--arrow-to", color(Math.ceil(progress)));
+  section.style.setProperty("--arrow-mix", `${(progress % 1) * 100}%`);
+  if (targetPage !== null && Math.abs(progress - targetPage) < 0.01) targetPage = null;
+};
+
+
+const step = (direction: 1 | -1) => {
+  const target = Math.min(Math.max((targetPage ?? activePage.value) + direction, 0), props.pageCount - 1);
+  targetPage = target;
+  window.scrollTo({
+    top: stopRefs[target].getBoundingClientRect().top + window.scrollY,
+    behavior: prefersReducedMotion ? "instant" : "smooth",
+  });
 };
 
 useViewportUpdates(updateProgress);
@@ -87,13 +118,26 @@ onUnmounted(() => visibilityObserver?.disconnect());
             }}</span>
         </nav>
       </SectionTitle>
-      <div class="pages">
-        <div class="track">
-          <!-- Pages off to the side can't be focused or clicked -->
-          <div v-for="n in props.pageCount" :key="n" class="page" :inert="n - 1 !== activePage">
-            <slot :page="n - 1" :active="isInView && n - 1 === activePage" />
+      <div class="pages-frame">
+        <div class="pages">
+          <div class="track">
+            <!-- Pages off to the side can't be focused or clicked -->
+            <div v-for="n in props.pageCount" :key="n" class="page" :inert="n - 1 !== activePage">
+              <slot :page="n - 1" :active="isInView && n - 1 === activePage" />
+            </div>
           </div>
         </div>
+        <template v-if="props.pageCount > 1">
+          <!-- Disabled at the ends, where they have faded out, so they can't be clicked or focused unseen -->
+          <button type="button" class="slide-arrow previous" aria-label="Previous page" :disabled="activePage === 0"
+            @click="step(-1)">
+            <Icon icon="heroicons:arrow-left" />
+          </button>
+          <button type="button" class="slide-arrow next" aria-label="Next page"
+            :disabled="activePage === props.pageCount - 1" @click="step(1)">
+            <Icon icon="heroicons:arrow-right" />
+          </button>
+        </template>
       </div>
     </div>
   </section>
@@ -169,11 +213,69 @@ onUnmounted(() => visibilityObserver?.disconnect());
   font-variant-numeric: tabular-nums;
 }
 
-/* Clipped, not hidden: a hidden overflow could still be scrolled sideways by focus or find-in-page */
-.pages {
+.pages-frame {
+  position: relative;
   flex-grow: 1;
   min-height: 0;
+}
+
+/* Clipped, not hidden: a hidden overflow could still be scrolled sideways by focus or find-in-page */
+.pages {
+  height: 100%;
   overflow: clip;
+}
+
+/*
+ * Centered in the side margins, so showing them never moves the content. Only
+ * with a mouse or trackpad on a wide screen; touch screens move the pages by
+ * swiping up and down. Their fade and color come from --progress, so they
+ * change exactly as the pages slide.
+ */
+.slide-arrow {
+  --size: min(2.75rem, var(--gutter) - 0.5rem);
+  position: absolute;
+  top: 50%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--size);
+  height: var(--size);
+  border: 1px solid color-mix(in srgb, currentColor 55%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--neutral-950), transparent 30%);
+  color: color-mix(in oklch, var(--arrow-from, var(--primary-400)), var(--arrow-to, var(--primary-400)) var(--arrow-mix, 0%));
+  cursor: pointer;
+  translate: -50% -50%;
+  transition: background-color 0.2s ease;
+}
+
+.slide-arrow svg {
+  width: 45%;
+  height: 45%;
+}
+
+.slide-arrow:hover {
+  background-color: color-mix(in srgb, currentColor 14%, var(--neutral-950));
+}
+
+.slide-arrow:disabled {
+  pointer-events: none;
+}
+
+.previous {
+  left: calc(var(--gutter) / -2);
+  opacity: min(1, var(--progress, 0));
+}
+
+.next {
+  left: calc(100% + var(--gutter) / 2);
+  opacity: min(1, calc(var(--page-count) - 1 - var(--progress, 0)));
+}
+
+@media (hover: hover) and (pointer: fine) and (width >= 64rem) {
+  .slide-arrow {
+    display: flex;
+  }
 }
 
 /* The pages side by side, moved one page width (plus the gap) per unit of progress */

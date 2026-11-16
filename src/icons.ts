@@ -16,6 +16,14 @@ export const ICONS = {
     viewBox: "0 0 24 24",
     body: "<path fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" d=\"M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3\"/>",
   },
+  "heroicons:arrow-left": {
+    viewBox: "0 0 24 24",
+    body: "<path fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" d=\"M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18\"/>",
+  },
+  "heroicons:arrow-right": {
+    viewBox: "0 0 24 24",
+    body: "<path fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" d=\"M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3\"/>",
+  },
   "heroicons:arrow-up-20-solid": {
     viewBox: "0 0 20 20",
     body: "<path fill=\"currentColor\" fill-rule=\"evenodd\" d=\"M10 17a.75.75 0 0 1-.75-.75V5.612L5.29 9.77a.75.75 0 0 1-1.08-1.04l5.25-5.5a.75.75 0 0 1 1.08 0l5.25 5.5a.75.75 0 1 1-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0 1 10 17\" clip-rule=\"evenodd\"/>",
