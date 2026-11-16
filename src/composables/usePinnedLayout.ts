@@ -41,12 +41,16 @@ const anyPageOverflows = () =>
 /**
  * Tries the pinned layout and keeps it only if every page fits, falling back
  * to the stacked, scrolling layout. Measuring forces layout synchronously, so
- * nothing paints in between.
+ * nothing paints in between. Screens outside the query skip measuring, so
+ * phones, whose toolbars resize the viewport while scrolling, do no work here.
  */
 const update = () => {
+  const fitsQuery = window.matchMedia(PINNED_LAYOUT_QUERY).matches;
+  if (!fitsQuery && !isPinned.value) return;
+
   const root = document.documentElement;
   root.classList.add(MEASURING_CLASS);
-  root.classList.toggle(PINNED_CLASS, window.matchMedia(PINNED_LAYOUT_QUERY).matches);
+  root.classList.toggle(PINNED_CLASS, fitsQuery);
   if (root.classList.contains(PINNED_CLASS) && anyPageOverflows()) root.classList.remove(PINNED_CLASS);
   // Apply the result before transitions come back, so it doesn't animate in
   root.getBoundingClientRect();

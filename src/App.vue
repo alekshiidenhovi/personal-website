@@ -31,7 +31,7 @@ main {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 100dvh;
+  min-height: 100svh;
   width: 100%;
   background-color: var(--neutral-950);
 }

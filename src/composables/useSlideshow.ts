@@ -1,4 +1,4 @@
-import { onMounted, onUnmounted } from "vue";
+import { onUnmounted, watch } from "vue";
 import { SLIDE_ATTRIBUTE } from "../lib/layout";
 import { pinnedLayout } from "./usePinnedLayout";
 import { jumpTo } from "../lib/scroll";
@@ -23,7 +23,7 @@ const WHEEL_RISE_MIN_PX = 6;
 const WHEEL_LINE_PX = 16;
 /*
  * Touch: on tablets in the pinned layout a vertical swipe moves one slide,
- * like a wheel gesture, instead of free scrolling past the snap points.
+ * like a wheel gesture, instead of free scrolling past the slides.
  */
 /** Vertical swipe distance in pixels that moves one slide */
 const SWIPE_THRESHOLD_PX = 40;
@@ -47,6 +47,10 @@ type Direction = 1 | -1;
  * wheel; Home/End crossfade once the target is more than a slide away. Narrow
  * screens keep normal scrolling. Swipes on touch screens move one slide too,
  * so tablets get the same slideshow as laptops.
+ *
+ * Its listeners are attached only while the pinned layout is on, so the
+ * stacked layout scrolls natively with no script in the way. Call once, from
+ * the root component.
  */
 export function useSlideshow() {
   let isAnimating = false;
@@ -107,7 +111,7 @@ export function useSlideshow() {
   };
 
   const onWheel = (event: WheelEvent) => {
-    if (!pinnedLayout.value || event.ctrlKey) return;
+    if (event.ctrlKey) return;
     event.preventDefault();
 
     clearTimeout(quietTimer);
@@ -141,7 +145,7 @@ export function useSlideshow() {
 
   const onTouchStart = (event: TouchEvent) => {
     // A second finger is a pinch, which stays the browser's
-    if (!pinnedLayout.value || event.touches.length !== 1) {
+    if (event.touches.length !== 1) {
       swipe = null;
       return;
     }
@@ -169,10 +173,10 @@ export function useSlideshow() {
   };
 
   const onClick = (event: MouseEvent) => {
-    if (!pinnedLayout.value || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
       return;
     const link = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>('a[href^="#"]') : null;
-    // A page of a pinned section is reached through its snap point
+    // A page of a pinned section is reached through its slide stop
     const id = link?.hash.slice(1);
     const target = id && (document.querySelector(`[data-slide-for="${CSS.escape(id)}"]`) ?? document.getElementById(id));
     if (!target) return;
@@ -194,7 +198,7 @@ export function useSlideshow() {
     target instanceof HTMLElement && ["BUTTON", "A"].includes(target.tagName);
 
   const onKeyDown = (event: KeyboardEvent) => {
-    if (!pinnedLayout.value || event.altKey || event.ctrlKey || event.metaKey) return;
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
     if (isTypingTarget(event.target)) return;
 
     const isSpace = event.key === " " && !isActivatableTarget(event.target);
@@ -209,7 +213,7 @@ export function useSlideshow() {
     else goTo(isNext ? 1 : -1);
   };
 
-  onMounted(() => {
+  const attach = () => {
     window.addEventListener("wheel", onWheel, { passive: false });
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("touchstart", onTouchStart, { passive: true });
@@ -218,10 +222,12 @@ export function useSlideshow() {
     window.addEventListener("touchend", onTouchEnd);
     window.addEventListener("touchcancel", onTouchEnd);
     document.addEventListener("click", onClick);
-  });
+  };
 
-  onUnmounted(() => {
+  const detach = () => {
     clearTimeout(quietTimer);
+    gesture = null;
+    swipe = null;
     window.removeEventListener("wheel", onWheel);
     window.removeEventListener("keydown", onKeyDown);
     window.removeEventListener("touchstart", onTouchStart);
@@ -229,5 +235,8 @@ export function useSlideshow() {
     window.removeEventListener("touchend", onTouchEnd);
     window.removeEventListener("touchcancel", onTouchEnd);
     document.removeEventListener("click", onClick);
-  });
+  };
+
+  watch(pinnedLayout, (isPinned) => (isPinned ? attach() : detach()));
+  onUnmounted(detach);
 }

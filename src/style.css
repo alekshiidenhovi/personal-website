@@ -43,15 +43,6 @@ html {
   background-color: var(--neutral-950);
 }
 
-/*
- * Snap points, the hero and each page of the pinned sections, only in the
- * pinned layout. Stacked layouts hide the section snap points, so the hero
- * would be the only one left and pull short scrolls back.
- */
-:root.pinned {
-  scroll-snap-type: y proximity;
-}
-
 /* While usePinnedLayout tries a layout, so trying it never starts transitions */
 .measuring-layout * {
   transition: none !important;

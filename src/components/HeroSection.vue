@@ -44,11 +44,10 @@ import EmbeddingSpace from "./EmbeddingSpace.vue";
 <style scoped>
 #hero {
   position: relative;
-  scroll-snap-align: start;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100dvh;
+  min-height: 100svh;
   width: 100%;
   overflow: hidden;
   padding: clamp(6rem, 10vh, 8rem) clamp(1.25rem, 5vw, 5rem) clamp(5rem, 10vh, 7rem);

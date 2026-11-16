@@ -406,7 +406,7 @@ const onPointerMove = (event: PointerEvent) => {
   flex-direction: column;
   flex-grow: 1;
   gap: 0.5rem;
-  min-height: clamp(9rem, 24dvh, 17rem);
+  min-height: clamp(9rem, 24svh, 17rem);
   cursor: crosshair;
   touch-action: none;
 }

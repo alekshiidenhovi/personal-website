@@ -7,7 +7,7 @@ import SectionTitle from "./SectionTitle.vue";
 
 /**
  * A full-viewport section: the title stays pinned at the top while the section
- * scrolls past, and scrolling snaps through its pages, which crossfade in place.
+ * scrolls past, and the slideshow steps through its pages, which crossfade in place.
  * Screens too small, or with a page too tall to fit, fall back to a normal
  * stacked layout (see usePinnedLayout), where the page closest to the middle of
  * the viewport counts as active.
@@ -90,10 +90,10 @@ onUnmounted(() => {
 
 <template>
   <section :id="props.id" class="pinned-section"
-    :style="{ '--page-count': props.pageCount, '--page-scroll': `${PAGE_SCROLL_RATIO * 100}dvh` }">
+    :style="{ '--page-count': props.pageCount, '--page-scroll': `${PAGE_SCROLL_RATIO * 100}svh` }">
     <div ref="scrollerRef" class="scroller">
-      <!-- In the slideshow a link to a page scrolls to its snap point (see useSlideshow) -->
-      <span v-for="n in props.pageCount" :key="n" class="snap-point" data-slide
+      <!-- Slideshow stops, one per page; a link to a page goes to its stop (see useSlideshow) -->
+      <span v-for="n in props.pageCount" :key="n" class="slide-stop" data-slide
         :data-slide-for="props.pageIds?.[n - 1]" :style="{ '--page': n - 1 }"></span>
       <div class="stage">
         <SectionTitle :index="props.index" :title="props.title" :subtitle="props.subtitle">
@@ -124,17 +124,12 @@ onUnmounted(() => {
 
 .scroller {
   position: relative;
-  height: calc(100dvh + (var(--page-count) - 1) * var(--page-scroll));
+  height: calc(100svh + (var(--page-count) - 1) * var(--page-scroll));
 }
 
-/* Chrome ignores zero-size snap areas, hence the 1px size */
-.snap-point {
+.slide-stop {
   position: absolute;
   top: calc(var(--page) * var(--page-scroll));
-  left: 0;
-  width: 1px;
-  height: 1px;
-  scroll-snap-align: start;
 }
 
 .stage {
@@ -143,13 +138,13 @@ onUnmounted(() => {
    * the slide instead of stretching it. The root font size follows
    * min(vw, vh), so a rem height caps the slide's aspect ratio.
    */
-  --letterbox: max(0px, (100dvh - 68rem) / 2);
+  --letterbox: max(0px, (100svh - 68rem) / 2);
   position: sticky;
   top: 0;
   display: flex;
   flex-direction: column;
   gap: clamp(1.25rem, 3vh, 2.5rem);
-  height: 100dvh;
+  height: 100svh;
   max-width: 96rem;
   margin: 0 auto;
   padding:
@@ -220,7 +215,7 @@ onUnmounted(() => {
   height: auto;
 }
 
-:root:not(.pinned) .snap-point {
+:root:not(.pinned) .slide-stop {
   display: none;
 }
 

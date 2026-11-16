@@ -90,7 +90,7 @@ const routeArc = computed(() => {
 .studies {
   container-type: inline-size;
   /* As large as the rail allows, and the same on every row */
-  --years-size: min(4.4cqi, 9dvh);
+  --years-size: min(4.4cqi, 9svh);
   display: flex;
   flex-direction: column;
   justify-content: center;

@@ -61,7 +61,7 @@ footer {
   align-items: center;
   gap: 0.15em;
   width: fit-content;
-  font-size: clamp(3.5rem, min(13vw, 22dvh), 12rem);
+  font-size: clamp(3.5rem, min(13vw, 22svh), 12rem);
   font-weight: 700;
   letter-spacing: -0.05em;
   line-height: 0.9;

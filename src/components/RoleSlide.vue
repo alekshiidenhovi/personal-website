@@ -115,7 +115,7 @@ const props = defineProps<Props>();
 }
 
 h3 {
-  font-size: clamp(1.75rem, min(3.5vw, 6dvh), 3rem);
+  font-size: clamp(1.75rem, min(3.5vw, 6svh), 3rem);
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.05;

@@ -33,7 +33,7 @@ const props = defineProps<Props>();
 }
 
 .index {
-  font-size: clamp(3.5rem, min(9vw, 14dvh), 8rem);
+  font-size: clamp(3.5rem, min(9vw, 14svh), 8rem);
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 0.8;
@@ -57,7 +57,7 @@ const props = defineProps<Props>();
 }
 
 h2 {
-  font-size: clamp(2rem, min(5vw, 7dvh), 4rem);
+  font-size: clamp(2rem, min(5vw, 7svh), 4rem);
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1;

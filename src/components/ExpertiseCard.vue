@@ -159,7 +159,7 @@ p {
   flex-grow: 1;
   display: flex;
   align-items: center;
-  min-height: min(40dvh, 24rem);
+  min-height: min(40svh, 24rem);
   padding: clamp(1.25rem, 2.5vw, 2rem);
 }
 
