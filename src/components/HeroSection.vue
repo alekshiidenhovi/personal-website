@@ -325,4 +325,33 @@ h1 {
     grid-column: 1 / -1;
   }
 }
+
+/* Short screens (phones in landscape): a smaller name, and the actions on one row, which the width allows */
+@media (height < 30rem) {
+  #hero {
+    padding-block: 1.25rem;
+  }
+
+  .intro {
+    gap: 0.75rem;
+  }
+
+  h1 {
+    font-size: min(clamp(2.5rem, 9vw, 9.5rem), 20cqi, 14svh);
+  }
+
+  .cta-container {
+    grid-template-columns: repeat(3, auto);
+    justify-content: start;
+    padding-top: 0;
+  }
+
+  .cta-primary {
+    grid-column: auto;
+  }
+
+  .cta {
+    padding: 0.625rem 1rem;
+  }
+}
 </style>

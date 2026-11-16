@@ -53,8 +53,8 @@ html {
  * queries use the range form, e.g. `(width < 40rem)` for below sm.
  */
 
-/* The phone nav bar is a single slim row; room for it plus a little air */
-@media (width < 40rem) {
+/* Room for the phone nav bar, a single slim row, plus a little air; also its height on short screens */
+@media (width < 40rem), (height < 30rem) {
   :root {
     --nav-height: 3.5rem;
   }

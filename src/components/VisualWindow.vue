@@ -55,7 +55,8 @@ defineProps<{ fileName: string }>();
   display: flex;
   align-items: center;
   min-height: min(40svh, 24rem);
-  padding: clamp(1.25rem, 2.5vw, 2rem);
+  /* Tighter on short windows, which need the height for the visual */
+  padding: clamp(1rem, min(2.5vw, 4svh), 2rem);
 }
 
 @media (width < 64rem) {

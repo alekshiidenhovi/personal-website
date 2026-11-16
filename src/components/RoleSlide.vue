@@ -206,6 +206,13 @@ figcaption {
   padding: 0.75rem;
 }
 
+/* Between lg and xl the text gets half the width, so it wraps onto fewer lines */
+@media (64rem <= width < 80rem) {
+  .slide {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
 /* Below lg the figure moves under the text and takes the height left over */
 @media (width < 64rem) {
   .slide {
@@ -247,6 +254,26 @@ figcaption {
 
   .info .stack {
     padding-top: 0.75rem;
+  }
+}
+
+/* Short screens (phones in landscape): a step smaller still */
+@media (height < 30rem) {
+  .info {
+    gap: 0.5rem;
+  }
+
+  h3 {
+    font-size: 1.25rem;
+  }
+
+  .highlights li {
+    font-size: 0.8125rem;
+    line-height: 1.45;
+  }
+
+  .info .stack {
+    padding-top: 0.5rem;
   }
 }
 </style>

@@ -299,9 +299,11 @@ const onPointerMove = (event: PointerEvent) => {
   flex-grow: 1;
 }
 
+/* Square, and capped by the screen's height too, so short laptop windows still fit the slide */
 .embedding-plot {
   grid-area: plot;
   position: relative;
+  width: min(100%, 31svh);
   aspect-ratio: 1;
   border: 1px solid var(--neutral-800);
 }

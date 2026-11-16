@@ -3,8 +3,8 @@ interface Props {
   index: number;
   title: string;
   subtitle?: string;
-  /** For sections whose cards already say what the subtitle does, on screens with no room to spare */
-  hideSubtitleOnPhones?: boolean;
+  /** Subtitles give way to the slide's content on phones, except where there's room, as on Contact */
+  keepSubtitleOnPhones?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -15,7 +15,7 @@ const props = defineProps<Props>();
     <span class="index" aria-hidden="true">{{ String(props.index).padStart(2, "0") }}</span>
     <div class="text">
       <h2>{{ props.title }}</h2>
-      <p v-if="props.subtitle" :class="{ 'hide-on-phones': props.hideSubtitleOnPhones }">{{ props.subtitle }}</p>
+      <p v-if="props.subtitle" :class="{ 'except-phones': !props.keepSubtitleOnPhones }">{{ props.subtitle }}</p>
     </div>
     <!-- Optional content aligned to the right end, such as a page indicator -->
     <div v-if="$slots.default" class="aside">
@@ -110,9 +110,27 @@ p {
   }
 }
 
-@media (width < 40rem), (height < 30rem) {
-  .hide-on-phones {
+/* Short screens (phones in landscape): number, title and page indicator on one compact row */
+@media (height < 30rem) {
+  .title-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .index,
+  h2 {
+    font-size: 1.75rem;
+  }
+
+  p {
     display: none;
+  }
+
+  .aside {
+    margin-left: auto;
+    padding-top: 0;
   }
 }
 </style>

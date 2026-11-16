@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useMatchMedia } from "../composables/useMatchMedia";
 import { computed, onUnmounted, ref } from "vue";
+import { useMatchMedia } from "../composables/useMatchMedia";
 import { STUDIES } from "../data/education";
 import { EXPERTISE_COLOR } from "../data/expertise";
 import { PHONE_QUERY } from "../lib/layout";
@@ -40,7 +40,7 @@ const routeArc = computed(() => {
 </script>
 
 <template>
-  <PinnedSection id="education" :page-count="isPhone ? STUDIES.length : 1" hide-subtitle-on-phones>
+  <PinnedSection id="education" :page-count="isPhone ? STUDIES.length : 1">
     <!-- Phones show one degree per page -->
     <template #default="{ page }">
       <ol class="studies">
@@ -325,10 +325,9 @@ h3 {
 }
 
 /*
- * Phones: close to the whole section on one screen. The thesis summary
- * repeats what the experience section already says (the subtitle is hidden
- * too, see hide-subtitle-on-phones), and the route adds nothing beyond the
- * exchange school's name.
+ * Phones: a degree per page, fitting one screen. The thesis summary repeats
+ * what the experience section already says, and the route adds nothing
+ * beyond the exchange school's name.
  */
 @media (width < 40rem), (height < 30rem) {
   .thesis .block-detail,

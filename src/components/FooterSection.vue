@@ -6,7 +6,7 @@ import PinnedSection from "./PinnedSection.vue";
 </script>
 
 <template>
-  <PinnedSection id="contact">
+  <PinnedSection id="contact" keep-subtitle-on-phones>
     <footer>
       <div class="cta-block">
         <a class="big-cta" :href="`mailto:${EMAIL}`">
@@ -163,5 +163,20 @@ footer {
 
 .back-to-top:hover {
   color: var(--primary-400);
+}
+
+/* Short screens (phones in landscape): a smaller call to action, closer together */
+@media (height < 30rem) {
+  footer {
+    gap: 1rem;
+  }
+
+  .cta-block {
+    gap: 1rem;
+  }
+
+  .big-cta {
+    font-size: 16svh;
+  }
 }
 </style>
