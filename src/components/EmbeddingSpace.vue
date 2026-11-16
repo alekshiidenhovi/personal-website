@@ -47,6 +47,8 @@ const LOOP_MS = PHASES.reduce((total, phase) => total + phase.duration, 0);
 const TRAIN_STAGGER = 0.45;
 const NEIGHBOUR_DRAW_MS = 200;
 const HOVER_RADIUS_PX = 14;
+/** Opacity levels a point's training fade is rounded to, so points can share a fill */
+const FADE_STEPS = 10;
 
 const containerRef = ref<HTMLElement | null>(null);
 const canvasRef = ref<HTMLCanvasElement | null>(null);
@@ -228,6 +230,36 @@ const drawDot = (ctx: CanvasRenderingContext2D, at: Vec, radius: number, color: 
   ctx.shadowBlur = 0;
 };
 
+/** Dots grouped by color, then by opacity, so each group is drawn with a single fill */
+const dotBatches = new Map<string, Map<number, Path2D>>();
+
+const addDot = (at: Vec, radius: number, color: string, alpha: number) => {
+  if (!alpha) return;
+  let byAlpha = dotBatches.get(color);
+  if (!byAlpha) {
+    byAlpha = new Map();
+    dotBatches.set(color, byAlpha);
+  }
+  let path = byAlpha.get(alpha);
+  if (!path) {
+    path = new Path2D();
+    byAlpha.set(alpha, path);
+  }
+  path.moveTo(at[0] + radius, at[1]);
+  path.arc(at[0], at[1], radius, 0, Math.PI * 2);
+};
+
+const fillDots = (ctx: CanvasRenderingContext2D) => {
+  for (const [color, byAlpha] of dotBatches) {
+    ctx.fillStyle = color;
+    for (const [alpha, path] of byAlpha) {
+      ctx.globalAlpha = alpha;
+      ctx.fill(path);
+    }
+  }
+  dotBatches.clear();
+};
+
 function draw(now: number) {
   const ctx = canvasRef.value?.getContext("2d");
   if (!ctx || !size.width) return;
@@ -241,12 +273,13 @@ function draw(now: number) {
 
   // Points: raw data in pink, turning into their cluster's blue as they train
   for (const [index, point] of points.entries()) {
-    const trained = trainedAmount(point, phase);
+    const trained = Math.round(trainedAmount(point, phase) * FADE_STEPS) / FADE_STEPS;
     const radius = unit * 0.0042 * point.radius;
     const clusterColor = point.cluster >= 0 ? colors.clusters[point.cluster % colors.clusters.length] : colors.grid;
-    drawDot(ctx, positions[index], radius, colors.raw, 0.55 * (1 - trained));
-    drawDot(ctx, positions[index], radius, clusterColor, 0.9 * trained);
+    addDot(positions[index], radius, colors.raw, 0.55 * (1 - trained));
+    addDot(positions[index], radius, clusterColor, 0.9 * trained);
   }
+  fillDots(ctx);
 
   // Retrieval: the query links to its nearest neighbours one by one
   if (phase.name === "query") {
