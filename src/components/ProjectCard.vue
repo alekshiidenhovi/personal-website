@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Icon } from '@iconify/vue';
 import { computed, ref } from "vue";
 import { usePointerVars } from "../composables/usePointerVars";
 import { PROJECT_TAG_COLOR, type Project } from "../data/projects";
+import Icon from "./Icon.vue";
 import "./covers/cover.css";
 
 interface Props {

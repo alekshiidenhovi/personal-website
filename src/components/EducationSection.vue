@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Icon } from "@iconify/vue";
 import { computed, onUnmounted, ref } from "vue";
 import { STUDIES } from "../data/education";
 import { EXPERTISE_COLOR } from "../data/expertise";
+import Icon from "./Icon.vue";
 import PinnedSection from "./PinnedSection.vue";
 
 /** "2024 – 26": the end year shortened, as the century repeats */

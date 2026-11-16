@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { Icon } from '@iconify/vue';
 import { EMAIL, PROFILES } from "../data/contact";
 import { HERO_ID } from "../data/sections";
+import Icon from "./Icon.vue";
 import PinnedSection from "./PinnedSection.vue";
 </script>
 

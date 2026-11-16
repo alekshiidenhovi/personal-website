@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Icon } from '@iconify/vue';
 import { PROFILES } from "../data/contact";
 import { COMPANY_NAMES, ROLES } from "../data/experience";
 import EmbeddingSpace from "./EmbeddingSpace.vue";
+import Icon from "./Icon.vue";
 
 /** Roles are listed newest first */
 const [currentRole] = ROLES;

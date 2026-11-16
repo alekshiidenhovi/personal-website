@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { Icon } from "@iconify/vue";
 import type { Component } from "vue";
 import { EXPERTISE_COLOR, type ExpertiseArea } from "../data/expertise";
 import type { Expertise } from "../types";
 import DataPipelineVisual from "./DataPipelineVisual.vue";
 import HighlightedText from "./HighlightedText.vue";
+import Icon from "./Icon.vue";
 import PretrainingRunVisual from "./PretrainingRunVisual.vue";
 import StackLine from "./StackLine.vue";
 import TicketDashboardVisual from "./TicketDashboardVisual.vue";
