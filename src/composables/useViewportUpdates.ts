@@ -1,21 +1,9 @@
-import { onMounted, onUnmounted, watch } from "vue";
-import { pinnedLayout } from "./usePinnedLayout";
+import { useEventListener } from "@vueuse/core";
+import { onMounted } from "vue";
 
-/**
- * Calls `update` once mounted and whenever what's in view can change:
- * scrolling, resizing and switching layouts.
- */
+/** Calls `update` once mounted and whenever what's in view can change: scrolling and resizing */
 export function useViewportUpdates(update: () => void) {
-  watch(pinnedLayout, update);
-
-  onMounted(() => {
-    window.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update);
-    update();
-  });
-
-  onUnmounted(() => {
-    window.removeEventListener("scroll", update);
-    window.removeEventListener("resize", update);
-  });
+  useEventListener(window, "scroll", update, { passive: true });
+  useEventListener(window, "resize", update, { passive: true });
+  onMounted(update);
 }

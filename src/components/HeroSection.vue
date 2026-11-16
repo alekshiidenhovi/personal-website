@@ -46,6 +46,8 @@ const [currentRole] = ROLES;
 <style scoped>
 #hero {
   position: relative;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
   display: flex;
   align-items: center;
   justify-content: center;

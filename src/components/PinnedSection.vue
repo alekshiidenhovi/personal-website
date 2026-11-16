@@ -1,17 +1,19 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from "vue";
-import { pinnedLayout } from "../composables/usePinnedLayout";
 import { useViewportUpdates } from "../composables/useViewportUpdates";
 import { SECTIONS, type SectionId } from "../data/sections";
-import { closestToViewportCenter } from "../lib/layout";
 import SectionTitle from "./SectionTitle.vue";
 
 /**
- * A full-viewport section: the title stays pinned at the top while the section
- * scrolls past, and the slideshow steps through its pages, which crossfade in place.
- * Touch and small screens get a normal stacked layout instead (see
- * usePinnedLayout), where the page closest to the middle of the viewport
- * counts as active.
+ * A full-screen slide: the title and stage stay pinned while the section
+ * scrolls past, and the section's pages slide sideways with the scroll. The
+ * page snaps (see `scroll-snap-type` in style.css) to one stop per page, so a
+ * swipe, wheel step or key press settles on a whole page, and a fast one can't
+ * skip any.
+ *
+ * Scroll progress through the section, from 0 on the first page to
+ * pageCount - 1 on the last, is written to `--progress` on the section, and
+ * everything that moves with the pages reads it, so nothing can fall out of step.
  *
  * The default slot is rendered once per page with `{ page, active }`, where
  * `active` is the current page while the section is on screen, so visuals only
@@ -32,28 +34,24 @@ const { title, subtitle } = SECTIONS[index];
 
 const pageId = (page: number) => props.pageIds?.[page] ?? `${props.id}-${page + 1}`;
 
-const scrollerRef = ref<HTMLElement | null>(null);
+const sectionRef = ref<HTMLElement | null>(null);
 const stopRefs: HTMLElement[] = [];
-const pageRefs: HTMLElement[] = [];
 const activePage = ref(0);
 const isInView = ref(false);
 let visibilityObserver: IntersectionObserver | null = null;
 
-const updateActivePage = () => {
-  const scroller = scrollerRef.value;
-  if (!scroller) return;
-
-  // Pinned, the current page is the one whose stop is nearest the top of the viewport
-  if (pinnedLayout.value) {
-    const distances = stopRefs.map((stop) => Math.abs(stop.getBoundingClientRect().top));
-    activePage.value = distances.indexOf(Math.min(...distances));
-    return;
-  }
-
-  activePage.value = closestToViewportCenter(pageRefs);
+/** Reads progress from where the stops sit, so it matches the snapping exactly */
+const updateProgress = () => {
+  const stops = stopRefs.slice(0, props.pageCount);
+  if (!sectionRef.value || !stops.length) return;
+  const first = stops[0].getBoundingClientRect().top;
+  const pageScroll = stops.length > 1 ? stops[1].getBoundingClientRect().top - first : 1;
+  const progress = Math.min(Math.max(-first / pageScroll, 0), props.pageCount - 1);
+  sectionRef.value.style.setProperty("--progress", String(progress));
+  activePage.value = Math.round(progress);
 };
 
-useViewportUpdates(updateActivePage);
+useViewportUpdates(updateProgress);
 
 const formatPageNumber = (page: number) => String(page).padStart(2, "0");
 
@@ -65,35 +63,34 @@ onMounted(() => {
     },
     { threshold: [0, 0.01] },
   );
-  if (scrollerRef.value) visibilityObserver.observe(scrollerRef.value);
+  if (sectionRef.value) visibilityObserver.observe(sectionRef.value);
 });
 
 onUnmounted(() => visibilityObserver?.disconnect());
 </script>
 
 <template>
-  <section :id="props.id" class="pinned-section"
-    :style="{ '--page-count': props.pageCount }">
-    <div ref="scrollerRef" class="scroller">
-      <!-- Slideshow stops, one per page; a link to a page goes to its stop (see useSlideshow) -->
-      <span v-for="n in props.pageCount" :key="n" :ref="(el) => { if (el) stopRefs[n - 1] = el as HTMLElement; }"
-        class="slide-stop" data-slide :data-slide-for="pageId(n - 1)" :style="{ '--page': n - 1 }"></span>
-      <div class="stage">
-        <SectionTitle :index="index + 1" :title="title" :subtitle="subtitle"
-          :hide-subtitle-on-phones="props.hideSubtitleOnPhones">
-          <nav v-if="pinnedLayout && props.pageCount > 1" class="page-indicator" :aria-label="`${title} pages`">
-            <!-- Links to the pages' stops, which the slideshow jumps to like the nav's links -->
-            <a v-for="n in props.pageCount" :key="n" :href="`#${pageId(n - 1)}`" class="page-tick"
-              :class="{ current: n - 1 === activePage }" :aria-label="`Page ${n}`"
-              :aria-current="n - 1 === activePage ? 'step' : undefined"></a>
-            <span class="page-number">{{ formatPageNumber(activePage + 1) }} / {{ formatPageNumber(props.pageCount)
-              }}</span>
-          </nav>
-        </SectionTitle>
-        <div class="pages">
-          <div v-for="n in props.pageCount" :id="pageId(n - 1)" :key="n"
-            :ref="(el) => { if (el) pageRefs[n - 1] = el as HTMLElement; }" class="page"
-            :class="{ current: n - 1 === activePage, past: n - 1 < activePage }">
+  <section :id="props.id" ref="sectionRef" class="pinned-section" :style="{ '--page-count': props.pageCount }">
+    <!-- Snap stops, one per page; each carries its page's anchor id, so links and loaded URLs land on it -->
+    <span v-for="n in props.pageCount" :id="props.pageCount > 1 ? pageId(n - 1) : undefined" :key="n"
+      :ref="(el) => { if (el) stopRefs[n - 1] = el as HTMLElement; }" class="slide-stop" data-slide
+      :style="{ '--page': n - 1 }"></span>
+    <div class="stage">
+      <SectionTitle :index="index + 1" :title="title" :subtitle="subtitle"
+        :hide-subtitle-on-phones="props.hideSubtitleOnPhones">
+        <nav v-if="props.pageCount > 1" class="page-indicator" :aria-label="`${title} pages`">
+          <!-- Links to the pages' stops, which crossfade like the nav's links -->
+          <a v-for="n in props.pageCount" :key="n" :href="`#${pageId(n - 1)}`" class="page-tick"
+            :class="{ current: n - 1 === activePage }" :aria-label="`Page ${n}`"
+            :aria-current="n - 1 === activePage ? 'step' : undefined"></a>
+          <span class="page-number">{{ formatPageNumber(activePage + 1) }} / {{ formatPageNumber(props.pageCount)
+            }}</span>
+        </nav>
+      </SectionTitle>
+      <div class="pages">
+        <div class="track">
+          <!-- Pages off to the side can't be focused or clicked -->
+          <div v-for="n in props.pageCount" :key="n" class="page" :inert="n - 1 !== activePage">
             <slot :page="n - 1" :active="isInView && n - 1 === activePage" />
           </div>
         </div>
@@ -104,19 +101,23 @@ onUnmounted(() => visibilityObserver?.disconnect());
 
 <style scoped>
 .pinned-section {
-  width: 100%;
-}
-
-.scroller {
   /* Scroll distance between pages */
   --page-scroll: 50svh;
+  --page-gap: var(--gutter);
   position: relative;
+  width: 100%;
   height: calc(100svh + (var(--page-count) - 1) * var(--page-scroll));
 }
 
+/* Chrome ignores zero-size snap areas, hence the 1px size */
 .slide-stop {
   position: absolute;
   top: calc(var(--page) * var(--page-scroll));
+  left: 0;
+  width: 1px;
+  height: 1px;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 
 .stage {
@@ -168,70 +169,26 @@ onUnmounted(() => visibilityObserver?.disconnect());
   font-variant-numeric: tabular-nums;
 }
 
-/* Pages share one grid cell and crossfade as the active page changes */
+/* Clipped, not hidden: a hidden overflow could still be scrolled sideways by focus or find-in-page */
 .pages {
   flex-grow: 1;
-  display: grid;
-  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
   min-height: 0;
+  overflow: clip;
 }
 
-.page {
-  grid-area: 1 / 1;
-  min-height: 0;
-  opacity: 0;
-  translate: 0 2.5rem;
-  pointer-events: none;
-  transition: opacity 0.5s ease, translate 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
-}
-
-.page.past {
-  translate: 0 -2.5rem;
-}
-
-.page.current {
-  opacity: 1;
-  translate: 0 0;
-  pointer-events: auto;
-}
-
-/* The stacked layout, for touch and small screens */
-
-/* Links to the section land with air between the nav bar and the title, which the stage's padding adds to */
-:root:not(.pinned) .pinned-section {
-  scroll-margin-top: calc(var(--nav-height) - 1.5rem);
-}
-
-:root:not(.pinned) .scroller {
-  height: auto;
-}
-
-:root:not(.pinned) .slide-stop {
-  display: none;
-}
-
-/* The slideshow's height cap doesn't apply to a normal scrolling page */
-:root:not(.pinned) .stage {
-  --letterbox: 0px;
-  position: static;
-  height: auto;
-  padding-top: 3rem;
-  padding-bottom: 1rem;
-}
-
-/* Sections can tighten this, e.g. so project cards flow as one list */
-:root:not(.pinned) .pages {
+/* The pages side by side, moved one page width (plus the gap) per unit of progress */
+.track {
   display: flex;
-  flex-direction: column;
-  gap: var(--stacked-page-gap, 3rem);
+  gap: var(--page-gap);
+  height: 100%;
+  transform: translateX(calc(var(--progress, 0) * (-100% - var(--page-gap))));
 }
 
-:root:not(.pinned) .page,
-:root:not(.pinned) .page.past {
-  /* Links to a page land below the fixed nav bar */
-  scroll-margin-top: var(--nav-height);
-  opacity: 1;
-  translate: none;
-  pointer-events: auto;
+/* A page too tall for the screen scrolls on its own, as a last resort; pages are designed to fit */
+.page {
+  flex: 0 0 100%;
+  height: 100%;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 </style>

@@ -101,8 +101,14 @@ p {
     grid-column: 1 / -1;
     padding-top: 0.75rem;
   }
-}
 
+  /* The page indicator gets its own row, so it doesn't widen the number's column */
+  .aside {
+    grid-column: 1 / -1;
+    margin-left: 0;
+    padding-top: 0.5rem;
+  }
+}
 
 @media (width < 40rem) {
   .hide-on-phones {

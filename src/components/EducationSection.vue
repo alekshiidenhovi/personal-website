@@ -302,10 +302,6 @@ h3 {
   justify-self: end;
 }
 
-:root:not(.pinned) .studies {
-  height: auto;
-}
-
 /* Below lg the years move above the degree */
 @media (width < 64rem) {
   .studies {

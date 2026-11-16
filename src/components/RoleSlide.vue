@@ -183,21 +183,17 @@ figcaption {
   color: var(--card-color);
 }
 
-/* Below lg the figure moves under the text */
+/* Below lg the figure moves under the text and takes the height left over */
 @media (width < 64rem) {
   .slide {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
   }
-}
 
-/* Scrolling, the figure takes the drawing's own shape instead of filling the slide's height */
-:root:not(.pinned) figure {
-  height: auto;
-}
-
-:root:not(.pinned) .figure-body {
-  flex-grow: 0;
-  aspect-ratio: 400 / 220;
+  figure {
+    flex: 1;
+  }
 }
 
 /*

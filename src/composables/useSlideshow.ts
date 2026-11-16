@@ -1,8 +1,8 @@
+import { useEventListener, useMediaQuery } from "@vueuse/core";
 import { onUnmounted, watch } from "vue";
-import { SLIDE_ATTRIBUTE } from "../lib/layout";
+import { FINE_POINTER_QUERY, SLIDE_ATTRIBUTE } from "../lib/layout";
 import { prefersReducedMotion } from "../lib/motion";
 import { jumpTo } from "../lib/scroll";
-import { pinnedLayout } from "./usePinnedLayout";
 
 /*
  * Wheel gestures: trackpad swipes ramp up from tiny deltas and trail off in a
@@ -35,14 +35,15 @@ const PREVIOUS_KEYS = new Set(["ArrowUp", "ArrowLeft", "PageUp"]);
 type Direction = 1 | -1;
 
 /**
- * Slideshow navigation for the pinned layout: each wheel gesture or arrow key
- * moves exactly one slide (any element marked with `data-slide`) forwards or
- * backwards, scrolling smoothly. In-page links always crossfade straight to
- * their slide, however near, unless marked `data-scroll` to scroll like the
- * wheel; Home/End crossfade once the target is more than a slide away.
+ * Slideshow navigation on top of the page's native snapping.
  *
- * Its listeners are attached only while the pinned layout is on, so the
- * stacked layout scrolls natively with no script in the way. Call once, from
+ * With a mouse or trackpad, each wheel gesture or arrow key moves exactly one
+ * slide (any element marked with `data-slide`) forwards or backwards, scrolling
+ * smoothly; Home/End crossfade once the target is more than a slide away.
+ * Touch screens scroll natively, where snapping alone settles on whole slides.
+ *
+ * On every device, in-page links crossfade straight to their target, however
+ * near, unless marked `data-scroll` to scroll there instead. Call once, from
  * the root component.
  */
 export function useSlideshow() {
@@ -138,9 +139,8 @@ export function useSlideshow() {
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
       return;
     const link = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>('a[href^="#"]') : null;
-    // A page of a pinned section is reached through its slide stop
     const id = link?.hash.slice(1);
-    const target = id && (document.querySelector(`[data-slide-for="${CSS.escape(id)}"]`) ?? document.getElementById(id));
+    const target = id && document.getElementById(id);
     if (!target) return;
 
     event.preventDefault();
@@ -175,10 +175,12 @@ export function useSlideshow() {
     else goTo(isNext ? 1 : -1);
   };
 
+  useEventListener(document, "click", onClick);
+
+  // Wheel and keys only with a mouse or trackpad; touch screens keep their native scrolling
   const attach = () => {
     window.addEventListener("wheel", onWheel, { passive: false });
     window.addEventListener("keydown", onKeyDown);
-    document.addEventListener("click", onClick);
   };
 
   const detach = () => {
@@ -186,9 +188,10 @@ export function useSlideshow() {
     gesture = null;
     window.removeEventListener("wheel", onWheel);
     window.removeEventListener("keydown", onKeyDown);
-    document.removeEventListener("click", onClick);
   };
 
-  watch(pinnedLayout, (isPinned) => (isPinned ? attach() : detach()));
+  watch(useMediaQuery(FINE_POINTER_QUERY), (hasFinePointer) => (hasFinePointer ? attach() : detach()), {
+    immediate: true,
+  });
   onUnmounted(detach);
 }

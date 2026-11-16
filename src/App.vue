@@ -7,11 +7,9 @@ import NavBar from "./components/NavBar.vue";
 import ProfessionalExperienceSection from "./components/ProfessionalExperienceSection.vue";
 import ProjectsSection from "./components/ProjectsSection.vue";
 import { useActiveSection } from "./composables/useActiveSection";
-import { usePinnedLayout } from "./composables/usePinnedLayout";
 import { useSlideshow } from "./composables/useSlideshow";
 
 useActiveSection();
-usePinnedLayout();
 useSlideshow();
 </script>
 
