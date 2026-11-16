@@ -96,9 +96,10 @@ p {
     font-size: 2.5rem;
   }
 
+  /* Clearly apart from the title, more than its own lines are from each other */
   p {
     grid-column: 1 / -1;
-    padding-top: 0.75rem;
+    padding-top: 1rem;
   }
 
   /* The page indicator gets its own row, so it doesn't widen the number's column */
@@ -109,14 +110,21 @@ p {
   }
 }
 
-/* Phones: a slightly smaller subtitle and a tighter row, leaving the slide its room */
+/* Phones: the title and subtitle a step smaller, the room going to the space between them */
 @media (width < 40rem) {
   .title-container {
     padding-bottom: 0.75rem;
   }
 
+  .index {
+    font-size: 2.5rem;
+  }
+
+  h2 {
+    font-size: 2.25rem;
+  }
+
   p {
-    padding-top: 0.5rem;
     font-size: 0.9375rem;
     line-height: 1.5;
   }

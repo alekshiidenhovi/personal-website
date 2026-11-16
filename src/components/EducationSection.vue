@@ -371,7 +371,7 @@ h3 {
 @container page (width < 36rem) or (height < 16rem) {
   .card {
     --years-size: 1.75rem;
-    row-gap: 0.375rem;
+    row-gap: 0.625rem;
     padding: 1.125rem 1.25rem;
   }
 
@@ -484,9 +484,10 @@ h3 {
     gap: 0.5rem;
   }
 
+  /* The years sit beside the degree here, so the rows can close up */
   .card {
     grid-template-columns: auto minmax(0, 1fr);
-    column-gap: 1rem;
+    gap: 0.375rem 1rem;
     padding: 0.625rem 1rem;
   }
 
