@@ -4,7 +4,8 @@ import Icon from "./Icon.vue";
 
 /**
  * A button that opens a visual in a modal dialog, for phones, where the page
- * has no room to show it. The visual is only rendered while open, and its slot
+ * has no room to show it. A compact expand icon, named by `label`, for the
+ * parent to place, such as in a card's corner. The visual is only rendered while open, and its slot
  * gets `{ active }` so it plays while shown. The native dialog handles focus,
  * the backdrop and closing with Esc.
  */
@@ -31,9 +32,8 @@ const onDialogClick = (event: MouseEvent) => {
 
 <template>
   <div class="visual-popup">
-    <button type="button" class="open-button" @click="open">
-      {{ props.label }}
-      <Icon icon="heroicons:arrow-up-right-20-solid" class="open-icon" />
+    <button type="button" class="open-button" :aria-label="props.label" :title="props.label" @click="open">
+      <Icon icon="heroicons:arrows-pointing-out-20-solid" />
     </button>
     <dialog ref="dialogRef" class="dialog" :aria-label="props.title" @close="isOpen = false" @click="onDialogClick">
       <div class="dialog-body">
@@ -50,23 +50,22 @@ const onDialogClick = (event: MouseEvent) => {
 </template>
 
 <style scoped>
+/* Square, with a touch target of 2.5rem */
 .open-button {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1rem;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
   border: 1px solid color-mix(in srgb, var(--card-color) 45%, var(--neutral-700));
   background-color: color-mix(in srgb, var(--card-color), var(--neutral-950) 90%);
-  font-family: var(--font-mono);
-  font-size: 0.8125rem;
-  color: var(--neutral-200);
+  color: var(--card-color);
   cursor: pointer;
 }
 
-.open-icon {
-  width: 1rem;
-  height: 1rem;
-  color: var(--card-color);
+.open-button svg {
+  width: 1.125rem;
+  height: 1.125rem;
 }
 
 .dialog {

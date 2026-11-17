@@ -2,7 +2,7 @@
 import type { Component } from "vue";
 import { useMatchMedia } from "../composables/useMatchMedia";
 import { EXPERTISE_COLOR, type ExpertiseArea } from "../data/expertise";
-import { PHONE_QUERY } from "../lib/layout";
+import { PHONE_QUERY, WIDE_QUERY } from "../lib/layout";
 import type { Expertise } from "../types";
 import DataPipelineVisual from "./DataPipelineVisual.vue";
 import HighlightedText from "./HighlightedText.vue";
@@ -28,12 +28,14 @@ const VISUALS: Record<Expertise, Component> = {
 
 // Phones show the visual in a popup instead, so the hidden one on the page stays still
 const isPhone = useMatchMedia(PHONE_QUERY);
+// Stacked below lg, the text becomes a card, grouping the item apart from the section's title and its visual
+const isWide = useMatchMedia(WIDE_QUERY);
 </script>
 
 <template>
   <article class="panel" :class="{ active: props.active }"
     :style="{ '--card-color': EXPERTISE_COLOR[props.area.expertise] }">
-    <div class="info">
+    <div class="info" :class="{ 'tinted-card dot-grid': !isWide }">
       <h3>{{ props.area.title }}</h3>
       <p><HighlightedText :text="props.area.text" /></p>
       <StackLine :items="props.area.tags" />
@@ -130,9 +132,59 @@ p {
   translate: 0.25rem 0;
 }
 
+/* Stacked below lg, the text as a card (see isWide) above the visual; the title a clear step below the section's */
 @media (width < 64rem) {
+  /* Close together, so the card and its visual read as one item */
   .panel {
     grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .info {
+    padding: 1.5rem;
+  }
+
+  h3 {
+    font-size: 1.75rem;
+  }
+}
+
+@media (width < 40rem), (height < 30rem) {
+  /* From the top, like the other sections' phone pages */
+  .panel {
+    align-content: start;
+  }
+
+  /* The visual's button in the card's top-right corner, the title clear of it */
+  .info .visual-popup {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+  }
+
+  h3 {
+    padding-right: 3rem;
+  }
+
+  .info {
+    padding: 1.25rem;
+  }
+
+  h3 {
+    font-size: 1.5rem;
+  }
+}
+
+/* Very short pages (phones in landscape): a compact card */
+@container page (height < 16rem) {
+  .info {
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .info .visual-popup {
+    top: 0.5rem;
+    right: 0.5rem;
   }
 }
 </style>

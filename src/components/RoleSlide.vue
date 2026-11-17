@@ -2,7 +2,7 @@
 import { useMatchMedia } from "../composables/useMatchMedia";
 import { COMPANY_NAMES, durationMonths, formatYearMonth, type Role } from "../data/experience";
 import { EXPERTISE_COLOR } from "../data/expertise";
-import { PHONE_QUERY } from "../lib/layout";
+import { PHONE_QUERY, WIDE_QUERY } from "../lib/layout";
 import "./covers/cover.css";
 import CropMarks from "./CropMarks.vue";
 import HighlightedText from "./HighlightedText.vue";
@@ -23,11 +23,13 @@ const props = defineProps<Props>();
 const figureNumber = `Fig. ${String(props.index + 1).padStart(2, "0")}`;
 // Phones show the figure in a popup instead, so the hidden one on the page stays still
 const isPhone = useMatchMedia(PHONE_QUERY);
+// Stacked below lg, the text becomes a card, grouping the item apart from the section's title and its visual
+const isWide = useMatchMedia(WIDE_QUERY);
 </script>
 
 <template>
   <article class="slide" :style="{ '--card-color': EXPERTISE_COLOR[props.role.discipline] }">
-    <div class="info">
+    <div class="info" :class="{ 'tinted-card dot-grid': !isWide }">
       <h3>{{ props.role.title }}</h3>
       <!-- Where and when on one row below the title, so the logo doesn't take a row of its own -->
       <div class="meta">
@@ -215,14 +217,21 @@ figcaption {
 
 /* Below lg the figure moves under the text and takes the height left over */
 @media (width < 64rem) {
+  /* Close together, so the card and its figure read as one item */
   .slide {
     display: flex;
     flex-direction: column;
     align-items: stretch;
+    gap: 1.25rem;
   }
 
   figure {
     flex: 1;
+  }
+
+  /* The text's card (see isWide) */
+  .info {
+    padding: 1.5rem;
   }
 }
 
@@ -231,12 +240,24 @@ figcaption {
  * iPhone 13 mini with Safari's toolbars showing.
  */
 @media (width < 40rem), (height < 30rem) {
+  /* The visual's button in the card's top-right corner, the title clear of it */
+  .info .visual-popup {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+  }
+
+  h3 {
+    padding-right: 3rem;
+  }
+
   .slide {
     gap: 1.25rem;
   }
 
   .info {
     gap: 0.75rem;
+    padding: 1.25rem;
   }
 
   h3 {
@@ -274,6 +295,52 @@ figcaption {
 
   .info .stack {
     padding-top: 0.5rem;
+  }
+}
+
+/*
+ * Short narrow pages give up size, then detail, a step at a time: the
+ * highlights a step smaller and the card closer, then the stack goes and the
+ * card tightens. The narrowest phones (360px) wrap the highlights onto more
+ * lines, so they take the second step sooner. Measured on the longest role to
+ * keep room spare at phone widths from 360 to 430px.
+ */
+@container page (width < 36rem) and (height < 26rem) {
+  .info {
+    gap: 0.5rem;
+    padding: 1.125rem;
+  }
+
+  .highlights li {
+    font-size: 0.8125rem;
+    line-height: 1.4;
+  }
+}
+
+@container page ((width < 36rem) and (height < 23rem)) or ((width < 20.5rem) and (height < 26rem)) {
+  .info {
+    padding: 1rem;
+  }
+
+  h3 {
+    font-size: 1.375rem;
+  }
+
+  .info .stack {
+    display: none;
+  }
+}
+
+/* Very short pages (phones in landscape): a compact card */
+@container page (height < 16rem) {
+  .info {
+    gap: 0.375rem;
+    padding: 0.625rem 1rem;
+  }
+
+  .info .visual-popup {
+    top: 0.5rem;
+    right: 0.5rem;
   }
 }
 </style>

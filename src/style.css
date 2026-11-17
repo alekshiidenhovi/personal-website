@@ -111,6 +111,30 @@ html {
   initial-value: 0;
 }
 
+/*
+ * A card in its discipline's color (`--card-color`): a faint tinted border, and
+ * a dim glow from the top-left corner. Clipped rather than hidden, so the card
+ * can't shrink below its content in a flex column.
+ */
+.tinted-card {
+  position: relative;
+  overflow: clip;
+  border: 1px solid color-mix(in srgb, var(--card-color) 18%, var(--neutral-800));
+  background-color: var(--neutral-900);
+}
+
+.tinted-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 50% 90% at 0% 0%, color-mix(in srgb, var(--card-color), transparent 86%), transparent);
+  pointer-events: none;
+}
+
+.tinted-card > * {
+  position: relative;
+}
+
 /* The faint dotted grid behind cards and figures */
 .dot-grid {
   background-image: radial-gradient(color-mix(in srgb, var(--neutral-500), transparent 85%) 1px, transparent 1px);

@@ -38,7 +38,7 @@ const routeArc = computed(() => {
 <template>
   <PinnedSection id="education">
     <ol class="studies">
-      <li v-for="study in STUDIES" :key="study.degree" class="card dot-grid"
+      <li v-for="study in STUDIES" :key="study.degree" class="card tinted-card dot-grid"
         :style="{ '--card-color': EXPERTISE_COLOR[study.discipline], '--selection-color': EXPERTISE_COLOR[study.discipline] }">
         <span class="years">{{ formatYears(study.start, study.end) }}</span>
 
@@ -103,30 +103,12 @@ const routeArc = computed(() => {
 .card {
   /* As large as the rail allows, and the same on every row; a share of the list's width (its container) */
   --years-size: min(5.5cqi, 9svh);
-  position: relative;
   display: grid;
   grid-template-columns: calc(var(--years-size) * 4.9) minmax(0, 1fr);
   /* The years centered on the degree's title and subtitle; the highlights below */
   align-items: center;
   gap: clamp(1rem, 2.5vh, 1.5rem) clamp(1.5rem, 3vw, 3rem);
   padding: clamp(1.25rem, 2.5vw, 2rem);
-  /* Clips the glow to the card. Clip rather than hidden: a hidden overflow would let the card shrink below its content and cut it off */
-  overflow: clip;
-  border: 1px solid color-mix(in srgb, var(--card-color) 18%, var(--neutral-800));
-  background-color: var(--neutral-900);
-}
-
-/* A dim glow in the discipline's color, behind the years */
-.card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse 50% 90% at 0% 0%, color-mix(in srgb, var(--card-color), transparent 86%), transparent);
-  pointer-events: none;
-}
-
-.card > * {
-  position: relative;
 }
 
 /*
