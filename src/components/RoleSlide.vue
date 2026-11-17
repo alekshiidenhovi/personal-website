@@ -2,7 +2,7 @@
 import { useMatchMedia } from "../composables/useMatchMedia";
 import { COMPANY_NAMES, durationMonths, formatYearMonth, type Role } from "../data/experience";
 import { EXPERTISE_COLOR } from "../data/expertise";
-import { PHONE_QUERY, WIDE_QUERY } from "../lib/layout";
+import { PHONE_QUERY } from "../lib/layout";
 import "./covers/cover.css";
 import CropMarks from "./CropMarks.vue";
 import HighlightedText from "./HighlightedText.vue";
@@ -23,13 +23,12 @@ const props = defineProps<Props>();
 const figureNumber = `Fig. ${String(props.index + 1).padStart(2, "0")}`;
 // Phones show the figure in a popup instead, so the hidden one on the page stays still
 const isPhone = useMatchMedia(PHONE_QUERY);
-// Stacked below lg, the text becomes a card, grouping the item apart from the section's title and its visual
-const isWide = useMatchMedia(WIDE_QUERY);
 </script>
 
 <template>
   <article class="slide" :style="{ '--card-color': EXPERTISE_COLOR[props.role.discipline] }">
-    <div class="info" :class="{ 'tinted-card dot-grid': !isWide }">
+    <!-- The text as a card, grouping the item apart from the section's title and beside or above its visual -->
+    <div class="info tinted-card dot-grid">
       <h3>{{ props.role.title }}</h3>
       <!-- Where and when on one row below the title, so the logo doesn't take a row of its own -->
       <div class="meta">
@@ -90,6 +89,7 @@ const isWide = useMatchMedia(WIDE_QUERY);
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  padding: clamp(1.5rem, 2.5vw, 2.5rem);
 }
 
 .meta {
@@ -131,7 +131,8 @@ const isWide = useMatchMedia(WIDE_QUERY);
 }
 
 h3 {
-  font-size: clamp(1.75rem, min(3.5vw, 6svh), 3rem);
+  /* A clear step below the section's title, the same for every item */
+  font-size: clamp(1.75rem, min(3.5vw, 6svh), 2.75rem);
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.05;
@@ -208,6 +209,33 @@ figcaption {
   padding: 0.75rem;
 }
 
+/*
+ * Side by side on wide screens, the card as tall as the figure's drawing: the
+ * figure spans two rows as a subgrid, its drawing sharing the card's row and
+ * the caption below.
+ */
+@media (width >= 64rem) {
+  .slide {
+    grid-template-rows: auto auto;
+    row-gap: 0.75rem;
+    align-content: center;
+    align-items: stretch;
+  }
+
+  .info {
+    grid-row: 1;
+    justify-content: center;
+  }
+
+  figure {
+    grid-row: 1 / 3;
+    display: grid;
+    grid-template-rows: subgrid;
+    height: auto;
+    max-height: none;
+  }
+}
+
 /* Between lg and xl the text gets half the width, so it wraps onto fewer lines */
 @media (64rem <= width < 80rem) {
   .slide {
@@ -227,11 +255,6 @@ figcaption {
 
   figure {
     flex: 1;
-  }
-
-  /* The text's card (see isWide) */
-  .info {
-    padding: 1.5rem;
   }
 }
 
@@ -295,6 +318,27 @@ figcaption {
 
   .info .stack {
     padding-top: 0.5rem;
+  }
+}
+
+/*
+ * Short wide pages (landscape tablets, short laptops): the card tightens, its
+ * text a step smaller. Very short ones (phones in landscape) have their own
+ * sizes, below.
+ */
+@container page (width >= 36rem) and (16rem <= height < 30rem) {
+  .info {
+    gap: 0.75rem;
+    padding: 1.25rem 1.5rem;
+  }
+
+  h3 {
+    font-size: 2rem;
+  }
+
+  .highlights li {
+    font-size: 0.9375rem;
+    line-height: 1.5;
   }
 }
 
