@@ -26,7 +26,8 @@ const props = defineProps<Props>();
   color: var(--card-color);
 }
 
-.stack li+li::before {
+/* After each item but the last, so a wrapped line ends with the separator instead of starting with it */
+.stack li:not(:last-child)::after {
   content: "/";
   margin: 0 0.625rem;
   color: var(--text-muted);
