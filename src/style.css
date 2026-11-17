@@ -101,17 +101,6 @@ html {
 }
 
 /*
- * A slide's progress through its pages, for browsers without scroll-driven
- * animations (see PinnedSection). Not inherited, so writing it on the moving
- * elements doesn't restyle everything inside them.
- */
-@property --progress {
-  syntax: "<number>";
-  inherits: false;
-  initial-value: 0;
-}
-
-/*
  * A card in its discipline's color (`--card-color`): a faint tinted border, and
  * a dim glow from the top-left corner. Clipped rather than hidden, so the card
  * can't shrink below its content in a flex column.

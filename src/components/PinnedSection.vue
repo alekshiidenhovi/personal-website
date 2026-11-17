@@ -2,30 +2,24 @@
 import { onMounted, onUnmounted, ref } from "vue";
 import { useViewportUpdates } from "../composables/useViewportUpdates";
 import { SECTIONS, type SectionId } from "../data/sections";
-import { getScroller } from "../lib/layout";
-import { prefersReducedMotion } from "../lib/motion";
-import Icon from "./Icon.vue";
 import SectionTitle from "./SectionTitle.vue";
 
 /**
- * A full-screen slide: the title and stage stay pinned while the section
- * scrolls past, and the section's pages slide sideways with the scroll. The
- * page snaps (see `scroll-snap-type` in style.css) to one stop per page, so a
- * swipe, wheel step or key press settles on a whole page, and a fast one can't
- * skip any.
+ * A full-screen section of one or more pages. The section's title stays
+ * pinned below the nav while its pages scroll up beneath it, a page a screen:
+ * each page fills the height the title leaves, and is a snap stop (see
+ * `scroll-snap-type` in App.vue), so a swipe, wheel step or key press settles
+ * on a whole page, and a fast one can't skip any.
  *
- * The sliding is a CSS scroll-driven animation on the section's own view
- * timeline, so the browser moves the pages in step with the scroll itself,
- * off the main thread, as smoothly as the scrolling. Browsers without scroll
- * timelines fall back to `--progress`, written from a scroll handler: 0 on the
- * first page to pageCount - 1 on the last.
+ * The title's height varies with the screen and how its subtitle wraps, so it
+ * is measured into `--header-height`, which sizes the pages and offsets where
+ * they snap, just below the title.
  *
  * The default slot is rendered once per page with `{ page, active }`, where
  * `active` is the current page while the section is on screen, so visuals only
  * play while visible. It turns on once the scrolling has settled, so a
- * visual's start-up work never lands in the middle of a slide. Multi-page sections show a page indicator next to the
- * title and, with a mouse or trackpad on a wide screen, arrows in the side
- * margins that fade out at the first and last page.
+ * visual's start-up work never lands in the middle of a scroll. Multi-page
+ * sections show a page indicator next to the title.
  */
 
 interface Props {
@@ -41,14 +35,9 @@ const { title, subtitle } = SECTIONS[index];
 
 const pageId = (page: number) => props.pageIds?.[page] ?? `${props.id}-${page + 1}`;
 
-/** Whether the browser slides the pages itself (see the scroll-driven animations below) */
-const hasScrollTimelines = CSS.supports("animation-timeline: view()");
-
 const sectionRef = ref<HTMLElement | null>(null);
-const trackRef = ref<HTMLElement | null>(null);
-const previousRef = ref<HTMLElement | null>(null);
-const nextRef = ref<HTMLElement | null>(null);
-const stopRefs: HTMLElement[] = [];
+const headerRef = ref<HTMLElement | null>(null);
+const pageRefs: HTMLElement[] = [];
 const activePage = ref(0);
 /** The page the scrolling last came to rest on, which `active` follows */
 const settledPage = ref(0);
@@ -57,24 +46,21 @@ const SETTLE_MS = 150;
 let settleTimer: ReturnType<typeof setTimeout> | undefined;
 const isInView = ref(false);
 let visibilityObserver: IntersectionObserver | null = null;
-
-/*
- * Each arrow click moves one page on from the last click's target, not from
- * wherever the pages are mid-slide, so quick clicks step one page each and
- * never past the end.
- */
-let targetPage: number | null = null;
+let headerObserver: ResizeObserver | null = null;
 
 /**
- * Reads progress from where the stops sit, so it matches the snapping
- * exactly, then hands back the changes to make from it (see useViewportUpdates).
+ * Reads how far the pages have scrolled up under the title, in pages, so it
+ * matches the snapping exactly, then hands back the changes to make from it
+ * (see useViewportUpdates).
  */
 const measureProgress = () => {
-  const stops = stopRefs.slice(0, props.pageCount);
-  if (!stops.length) return undefined;
-  const first = stops[0].getBoundingClientRect().top;
-  const pageScroll = stops.length > 1 ? stops[1].getBoundingClientRect().top - first : 1;
-  const progress = Math.min(Math.max(-first / pageScroll, 0), props.pageCount - 1);
+  const pages = pageRefs.slice(0, props.pageCount);
+  const header = headerRef.value;
+  if (!pages.length || !header) return undefined;
+  const first = pages[0].getBoundingClientRect().top;
+  const pageHeight = pages.length > 1 ? pages[1].getBoundingClientRect().top - first : 1;
+  const scrolled = header.getBoundingClientRect().bottom - first;
+  const progress = Math.min(Math.max(scrolled / pageHeight, 0), props.pageCount - 1);
 
   return () => {
     activePage.value = Math.round(progress);
@@ -82,25 +68,7 @@ const measureProgress = () => {
     settleTimer = setTimeout(() => {
       settledPage.value = activePage.value;
     }, SETTLE_MS);
-    if (targetPage !== null && Math.abs(progress - targetPage) < 0.01) targetPage = null;
-    // The fallback writes only to what moves; --progress doesn't inherit (see style.css), so nothing else restyles
-    if (!hasScrollTimelines) {
-      for (const element of [trackRef.value, previousRef.value, nextRef.value]) {
-        element?.style.setProperty("--progress", String(progress));
-      }
-    }
   };
-};
-
-
-const step = (direction: 1 | -1) => {
-  const target = Math.min(Math.max((targetPage ?? activePage.value) + direction, 0), props.pageCount - 1);
-  targetPage = target;
-  const scroller = getScroller();
-  scroller.scrollTo({
-    top: stopRefs[target].getBoundingClientRect().top + scroller.scrollTop,
-    behavior: prefersReducedMotion ? "instant" : "smooth",
-  });
 };
 
 useViewportUpdates(measureProgress);
@@ -116,100 +84,99 @@ onMounted(() => {
     { threshold: [0, 0.01] },
   );
   if (sectionRef.value) visibilityObserver.observe(sectionRef.value);
+
+  // Reported before the first paint, and again whenever the title's height changes
+  headerObserver = new ResizeObserver(([entry]) => {
+    sectionRef.value?.style.setProperty("--header-height", `${entry.borderBoxSize[0].blockSize}px`);
+  });
+  if (headerRef.value) headerObserver.observe(headerRef.value);
 });
 
 onUnmounted(() => {
   visibilityObserver?.disconnect();
+  headerObserver?.disconnect();
   clearTimeout(settleTimer);
 });
 </script>
 
 <template>
-  <section :id="props.id" ref="sectionRef" class="pinned-section" :class="{ 'multi-page': props.pageCount > 1 }"
-    :style="{ '--page-count': props.pageCount }">
-    <!-- Snap stops, one per page; each carries its page's anchor id, so links and loaded URLs land on it -->
-    <span v-for="n in props.pageCount" :id="props.pageCount > 1 ? pageId(n - 1) : undefined" :key="n"
-      :ref="(el) => { if (el) stopRefs[n - 1] = el as HTMLElement; }" class="slide-stop" data-slide
-      :style="{ '--page': n - 1 }"></span>
-    <div class="stage">
-      <SectionTitle :index="index + 1" :title="title" :subtitle="subtitle">
-        <!-- Passed only with several pages, so a single page's title doesn't keep an empty row for it -->
-        <template v-if="props.pageCount > 1" #default>
-          <nav class="page-indicator" :aria-label="`${title} pages`">
-            <!-- Links to the pages' stops, which crossfade like the nav's links -->
-            <a v-for="n in props.pageCount" :key="n" :href="`#${pageId(n - 1)}`" class="page-tick"
-              :class="{ current: n - 1 === activePage }" :aria-label="`Page ${n}`"
-              :aria-current="n - 1 === activePage ? 'step' : undefined"></a>
-            <span class="page-number">{{ formatPageNumber(activePage + 1) }} / {{ formatPageNumber(props.pageCount)
-              }}</span>
-          </nav>
-        </template>
-      </SectionTitle>
-      <div class="pages-frame">
-        <div class="pages">
-          <div ref="trackRef" class="track">
-            <!-- Pages off to the side can't be focused or clicked -->
-            <div v-for="n in props.pageCount" :key="n" class="page" :inert="n - 1 !== activePage">
-              <slot :page="n - 1" :active="isInView && n - 1 === settledPage" />
-            </div>
-          </div>
-        </div>
-        <template v-if="props.pageCount > 1">
-          <!-- Disabled at the ends, where they have faded out, so they can't be clicked or focused unseen -->
-          <button ref="previousRef" type="button" class="slide-arrow previous" aria-label="Previous page"
-            :disabled="activePage === 0" @click="step(-1)">
-            <Icon icon="heroicons:arrow-left" />
-          </button>
-          <button ref="nextRef" type="button" class="slide-arrow next" aria-label="Next page"
-            :disabled="activePage === props.pageCount - 1" @click="step(1)">
-            <Icon icon="heroicons:arrow-right" />
-          </button>
-        </template>
+  <section :id="props.id" ref="sectionRef" class="pinned-section">
+    <!-- Pinned below the nav, opaque, so the pages scroll up out of sight beneath it -->
+    <div ref="headerRef" class="section-header">
+      <div class="column">
+        <SectionTitle :index="index + 1" :title="title" :subtitle="subtitle">
+          <!-- Passed only with several pages, so a single page's title doesn't keep an empty row for it -->
+          <template v-if="props.pageCount > 1" #default>
+            <nav class="page-indicator" :aria-label="`${title} pages`">
+              <!-- Links to the pages, which crossfade like the nav's links -->
+              <a v-for="n in props.pageCount" :key="n" :href="`#${pageId(n - 1)}`" class="page-tick"
+                :class="{ current: n - 1 === activePage }" :aria-label="`Page ${n}`"
+                :aria-current="n - 1 === activePage ? 'step' : undefined"></a>
+              <span class="page-number">{{ formatPageNumber(activePage + 1) }} / {{ formatPageNumber(props.pageCount)
+                }}</span>
+            </nav>
+          </template>
+        </SectionTitle>
       </div>
+    </div>
+    <!--
+      A page a screen, each a snap stop carrying its page's anchor id, so links
+      and loaded URLs land on it. Pages other than the current one can't be
+      focused, so focus never lands on one half hidden under the title.
+    -->
+    <div v-for="n in props.pageCount" :id="props.pageCount > 1 ? pageId(n - 1) : undefined" :key="n"
+      :ref="(el) => { if (el) pageRefs[n - 1] = el as HTMLElement; }" class="page column" data-slide
+      :inert="n - 1 !== activePage">
+      <slot :page="n - 1" :active="isInView && n - 1 === settledPage" />
     </div>
   </section>
 </template>
 
 <style scoped>
 .pinned-section {
-  /* Scroll distance between pages */
-  --page-scroll: 50svh;
-  --page-gap: var(--gutter);
-  position: relative;
-  width: 100%;
-  height: calc(100svh + (var(--page-count) - 1) * var(--page-scroll));
-  /* Its scroll position, which the sliding and the arrows' fades follow */
-  view-timeline: --section block;
-}
-
-/* Chrome ignores zero-size snap areas, hence the 1px size */
-.slide-stop {
-  position: absolute;
-  top: calc(var(--page) * var(--page-scroll));
-  left: 0;
-  width: 1px;
-  height: 1px;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
-}
-
-.stage {
   /*
    * On screens taller than 16:10 the extra height is split above and below
-   * the slide instead of stretching it. The root font size follows
-   * min(vw, vh), so a rem height caps the slide's aspect ratio.
+   * each page instead of stretching it. The root font size follows
+   * min(vw, vh), so a rem height caps the page's aspect ratio.
    */
   --letterbox: max(0px, (100svh - 68rem) / 2);
-  position: sticky;
-  top: 0;
-  display: flex;
-  flex-direction: column;
-  gap: clamp(1.25rem, 3vh, 2.5rem);
-  height: 100svh;
+  /* Until measured (see headerObserver) */
+  --header-height: 14rem;
+  /* The space between the title and the page, and below the page */
+  --header-gap: clamp(1.25rem, 3vh, 2.5rem);
+  --page-end: clamp(1.5rem, 4vh, 3rem);
+  width: 100%;
+}
+
+/* The content column, centered within --content-width, with --gutter on each side */
+.column {
   max-width: var(--content-width);
   margin: 0 auto;
-  padding:
-    calc(var(--nav-height) + 1rem + var(--letterbox)) var(--gutter) calc(clamp(1.5rem, 4vh, 3rem) + var(--letterbox));
+  padding-inline: var(--gutter);
+}
+
+.section-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding-top: calc(var(--nav-height) + 1rem + var(--letterbox));
+  padding-bottom: var(--header-gap);
+  background-color: var(--neutral-950);
+}
+
+/*
+ * As tall as the screen leaves below the title, snapping just below it. A size
+ * container named `page`, so content can drop optional details when the page
+ * is short, whatever the screen: `@container page (height < …)`. Pages are
+ * designed to fit; in development, lib/fitCheck warns when one doesn't.
+ */
+.page {
+  container: page / size;
+  height: calc(100svh - var(--header-height));
+  padding-bottom: calc(var(--page-end) + var(--letterbox));
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  scroll-margin-top: var(--header-height);
 }
 
 .page-indicator {
@@ -242,184 +209,23 @@ onUnmounted(() => {
   font-variant-numeric: tabular-nums;
 }
 
-.pages-frame {
-  position: relative;
-  flex-grow: 1;
-  min-height: 0;
-}
-
-/* Clipped, not hidden: a hidden overflow could still be scrolled sideways by focus or find-in-page */
-.pages {
-  height: 100%;
-  overflow: clip;
-}
-
-/*
- * Centered in the side margins, so showing them never moves the content. Only
- * with a mouse or trackpad on a wide screen; touch screens move the pages by
- * swiping up and down. They fade with the sliding, out at either end.
- */
-.slide-arrow {
-  --size: min(2.75rem, var(--gutter) - 0.5rem);
-  position: absolute;
-  top: 50%;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  width: var(--size);
-  height: var(--size);
-  border: 1px solid var(--neutral-600);
-  border-radius: 50%;
-  background-color: color-mix(in srgb, var(--neutral-950), transparent 30%);
-  color: var(--neutral-300);
-  cursor: pointer;
-  translate: -50% -50%;
-  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, scale 0.1s ease;
-}
-
-.slide-arrow svg {
-  width: 45%;
-  height: 45%;
-}
-
-.slide-arrow:hover {
-  border-color: var(--neutral-400);
-  background-color: var(--neutral-800);
-  color: var(--neutral-100);
-}
-
-.slide-arrow:active {
-  background-color: var(--neutral-700);
-  scale: 0.92;
-}
-
-.slide-arrow:disabled {
-  pointer-events: none;
-}
-
-.previous {
-  left: calc(var(--gutter) / -2);
-  opacity: min(1, var(--progress, 0));
-}
-
-.next {
-  left: calc(100% + var(--gutter) / 2);
-  opacity: min(1, calc(var(--page-count) - 1 - var(--progress, 0)));
-}
-
 /* Phones: less space around the title row */
 @media (width < 40rem) {
-  .stage {
-    gap: 0.875rem;
-    padding-bottom: 1rem;
+  .pinned-section {
+    --header-gap: 0.875rem;
+    --page-end: 1rem;
   }
 }
 
-/* Short screens (phones in landscape) need every line for the slide */
+/* Short screens (phones in landscape) need every line for the page */
 @media (height < 30rem) {
-  .stage {
-    gap: 0.75rem;
+  .pinned-section {
+    --header-gap: 0.75rem;
+    --page-end: 0.75rem;
+  }
+
+  .section-header {
     padding-top: calc(var(--nav-height) + 0.5rem);
-    padding-bottom: 0.75rem;
-  }
-}
-
-@media (hover: hover) and (pointer: fine) and (width >= 64rem) {
-  .slide-arrow {
-    display: flex;
-  }
-}
-
-/*
- * The pages side by side, moved one page width (plus the gap) per unit of
- * progress. On a layer of its own, so moving it never repaints the pages.
- */
-.track {
-  display: flex;
-  gap: var(--page-gap);
-  height: 100%;
-  transform: translateX(calc(var(--progress, 0) * (-100% - var(--page-gap))));
-  will-change: transform;
-}
-
-/*
- * A page too tall for the screen scrolls on its own, as a last resort; pages
- * are designed to fit (in development, lib/fitCheck warns when one doesn't).
- * A size container named `page`, so content can drop optional details when
- * the page is short, whatever the screen: `@container page (height < …)`.
- */
-.page {
-  container: page / size;
-  flex: 0 0 100%;
-  height: 100%;
-  overflow-y: auto;
-  scrollbar-width: thin;
-}
-
-/*
- * Where supported, the browser runs the sliding and the arrows' fades on the
- * section's view timeline. The range starts as the section's top reaches the
- * top of the screen and spans one page scroll per page, exactly the snap
- * stops, whatever the screen's height.
- */
-@supports (animation-timeline: view()) {
-  .multi-page .track {
-    animation: slide-pages linear both;
-    animation-timeline: --section;
-    animation-range: exit-crossing 0px exit-crossing calc((var(--page-count) - 1) * var(--page-scroll));
-  }
-
-  .multi-page .previous {
-    opacity: 1;
-    animation: fade-in linear both;
-    animation-timeline: --section;
-    animation-range: exit-crossing 0px exit-crossing var(--page-scroll);
-  }
-
-  .multi-page .next {
-    opacity: 1;
-    animation: fade-out linear both;
-    animation-timeline: --section;
-    animation-range: exit-crossing calc((var(--page-count) - 2) * var(--page-scroll)) exit-crossing calc((var(--page-count) - 1) * var(--page-scroll));
-  }
-
-  /* These follow the user's own scrolling, so reduced motion doesn't shorten them like timed animations */
-  @media (prefers-reduced-motion: reduce) {
-    .multi-page .track,
-    .multi-page .slide-arrow {
-      /* biome-ignore lint/complexity/noImportantStyles: overrides the global reduced-motion rule, itself !important */
-      animation-duration: auto !important;
-    }
-  }
-}
-
-@keyframes slide-pages {
-  from {
-    transform: translateX(0);
-  }
-
-  to {
-    transform: translateX(calc((var(--page-count) - 1) * (-100% - var(--page-gap))));
-  }
-}
-
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes fade-out {
-  from {
-    opacity: 1;
-  }
-
-  to {
-    opacity: 0;
   }
 }
 </style>
