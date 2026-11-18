@@ -145,7 +145,17 @@ onUnmounted(() => {
   /* The space between the title and the page, and below the page */
   --header-gap: clamp(1.25rem, 3vh, 2.5rem);
   --page-end: clamp(1.5rem, 4vh, 3rem);
+  /* A page fills the height the title leaves */
+  --page-height: calc(100svh - var(--header-height));
   width: 100%;
+  /*
+   * The title is pinned only until the last page: it sticks within the
+   * section's content box, which the last page's negative margin ends where
+   * that page begins. On the last page the title moves with it, so from one
+   * section to the next the two move as whole blocks, either way. This
+   * padding gives the section back its full height.
+   */
+  padding-bottom: var(--page-height);
 }
 
 /* The content column, centered within --content-width, with --gutter on each side */
@@ -172,11 +182,16 @@ onUnmounted(() => {
  */
 .page {
   container: page / size;
-  height: calc(100svh - var(--header-height));
+  height: var(--page-height);
   padding-bottom: calc(var(--page-end) + var(--letterbox));
   scroll-snap-align: start;
   scroll-snap-stop: always;
   scroll-margin-top: var(--header-height);
+}
+
+/* Out of the section's content box, ending the title's pinned range (see .pinned-section) */
+.page:last-child {
+  margin-bottom: calc(-1 * var(--page-height));
 }
 
 .page-indicator {
