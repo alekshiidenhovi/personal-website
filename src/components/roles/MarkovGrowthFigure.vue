@@ -114,7 +114,7 @@ const LOOP_PATH = `M150 80 C124 72 ${LOOP_CONTROL.join(" ")} ${LOOP_END.lineEnd.
 const PLAYER_COUNT = 40;
 const TICK_MS = 1500;
 const MOVE_MS = 1000;
-const LABEL_SPACE = 13;
+const LABEL_SPACE = 15;
 const PADDING = 5;
 
 interface Player {
@@ -242,8 +242,8 @@ const counts = computed(() =>
     <g v-for="state in STATES" :key="state" :class="{ key: state === 'current' }">
       <rect :x="BOXES[state].x" :y="BOXES[state].y" :width="BOXES[state].width" :height="BOXES[state].height"
         rx="3" class="cover-line box" />
-      <text :x="BOXES[state].x + 5" :y="BOXES[state].y + 9" class="cover-text label">{{ BOXES[state].label }}</text>
-      <text :x="BOXES[state].x + BOXES[state].width - 5" :y="BOXES[state].y + 9" text-anchor="end"
+      <text :x="BOXES[state].x + 5" :y="BOXES[state].y + 11" class="cover-text label">{{ BOXES[state].label }}</text>
+      <text :x="BOXES[state].x + BOXES[state].width - 5" :y="BOXES[state].y + 11" text-anchor="end"
         class="cover-text count">{{ counts[state] }}</text>
     </g>
 
@@ -268,7 +268,7 @@ const counts = computed(() =>
 }
 
 .count {
-  font-size: 8px;
+  font-size: max(8px, var(--text-floor));
   fill: var(--cover-accent);
 }
 

@@ -76,8 +76,11 @@ const onDialogClick = (event: MouseEvent) => {
 }
 
 .dialog {
-  width: min(100% - 2rem, 40rem);
-  max-height: calc(100% - 2rem);
+  /* Almost the screen's full width, so the visual is drawn as large as a phone allows */
+  width: min(100% - 1rem, 40rem);
+  /* Lifts the browser's own limits on a modal dialog's size, which leave wider margins */
+  max-width: none;
+  max-height: calc(100% - 1rem);
   margin: auto;
   padding: 0;
   border: 1px solid color-mix(in srgb, var(--card-color), transparent 50%);
@@ -95,7 +98,7 @@ const onDialogClick = (event: MouseEvent) => {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  padding: 1rem;
+  padding: 0.75rem;
 }
 
 .dialog-header {

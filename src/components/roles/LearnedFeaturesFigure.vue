@@ -186,8 +186,15 @@ const gainArea = computed(
 }
 
 .feature-name {
-  font-size: 7.5px;
+  font-size: max(7.5px, var(--text-floor));
   fill: var(--neutral-500);
+}
+
+/* A step more contrast on phones, like the labels (see cover.css) */
+@media (width < 40rem), (height < 30rem) {
+  .feature-name {
+    fill: var(--neutral-400);
+  }
 }
 
 .track {
@@ -298,7 +305,7 @@ const gainArea = computed(
 
 /* Names the curve, in the corner below the chance line that a curve never reaches */
 .condition {
-  font-size: 8px;
+  font-size: max(8px, var(--text-floor));
   fill: var(--state-color);
   animation: reveal 0.4s ease;
 }

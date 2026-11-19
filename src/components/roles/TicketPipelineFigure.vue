@@ -241,7 +241,7 @@ const funnelGlass = computed(() => {
 }
 
 .status {
-  font-size: 8px;
+  font-size: max(8px, var(--text-floor));
 }
 
 .ticket {
@@ -331,7 +331,7 @@ const funnelGlass = computed(() => {
 }
 
 .topic-label {
-  font-size: 8px;
+  font-size: max(8px, var(--text-floor));
   fill: var(--topic-color);
 }
 
@@ -340,7 +340,7 @@ const funnelGlass = computed(() => {
 }
 
 .count {
-  font-size: 8px;
+  font-size: max(8px, var(--text-floor));
   fill: var(--topic-color);
   opacity: 0;
   transition: opacity 0.4s ease var(--row-delay);

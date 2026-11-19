@@ -2,6 +2,7 @@
 import { useMatchMedia } from "../composables/useMatchMedia";
 import { COMPANY_NAMES, durationMonths, formatYearMonth, type Role } from "../data/experience";
 import { EXPERTISE_COLOR } from "../data/expertise";
+import { vFigureScale } from "../directives/figureScale";
 import { PHONE_QUERY } from "../lib/layout";
 import "./covers/cover.css";
 import CropMarks from "./CropMarks.vue";
@@ -53,7 +54,7 @@ const isPhone = useMatchMedia(PHONE_QUERY);
         <template #default="{ active }">
           <div class="popup-figure dot-grid">
             <CropMarks />
-            <component :is="props.role.figure" :active="active" />
+            <component :is="props.role.figure" v-figure-scale :active="active" />
           </div>
         </template>
       </VisualPopup>
@@ -63,7 +64,7 @@ const isPhone = useMatchMedia(PHONE_QUERY);
     <figure class="except-phones">
       <div class="figure-body dot-grid">
         <CropMarks />
-        <component :is="props.role.figure" :active="props.active && !isPhone" />
+        <component :is="props.role.figure" v-figure-scale :active="props.active && !isPhone" />
       </div>
       <figcaption>
         <span class="figure-number">{{ figureNumber }}</span>
@@ -204,7 +205,7 @@ figcaption {
 .popup-figure {
   position: relative;
   aspect-ratio: 400 / 220;
-  padding: 0.75rem;
+  padding: 0.5rem;
 }
 
 /*
