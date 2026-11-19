@@ -218,7 +218,7 @@ const onPointerMove = (event: PointerEvent) => {
     <div class="body">
       <!-- What the losses act on: the embeddings, in two dimensions -->
       <div class="embedding-plot">
-          <span class="panel-label">embeddings</span>
+          <span class="panel-label">player embeddings</span>
           <svg viewBox="-3.2 -3.2 6.4 6.4" aria-hidden="true">
             <circle r="2" class="target" />
             <circle v-for="([x, y], index) in cloud.points" :key="index" :cx="x" :cy="y" r="0.05" class="embedding-point" />
@@ -230,8 +230,8 @@ const onPointerMove = (event: PointerEvent) => {
           </svg>
       </div>
       <div class="legend">
-        <span class="legend-item"><span class="legend-pair"></span>two views of one input</span>
-        <span class="legend-item"><span class="legend-target"></span>target Gaussian</span>
+        <span class="legend-item"><span class="legend-pair"></span>one player, two event windows&nbsp;→&nbsp;pulled&nbsp;together</span>
+        <span class="legend-item"><span class="legend-target"></span>target distribution&nbsp;→&nbsp;spread&nbsp;out&nbsp;to&nbsp;fill</span>
       </div>
 
       <!-- Two panels sharing the step axis, as in the thesis figures -->
@@ -308,9 +308,10 @@ const onPointerMove = (event: PointerEvent) => {
   border: 1px solid var(--neutral-800);
 }
 
+/* In the SIGReg curve's color, as that loss pulls the cloud to it; the pairs share the invariance curve's blue */
 .target {
   fill: none;
-  stroke: var(--neutral-600);
+  stroke: var(--neutral-200);
   stroke-width: 1;
   stroke-dasharray: 3 4;
   vector-effect: non-scaling-stroke;
@@ -358,7 +359,7 @@ const onPointerMove = (event: PointerEvent) => {
 
 .legend-target {
   width: 1rem;
-  border-top: 1px dashed var(--neutral-600);
+  border-top: 1px dashed var(--neutral-200);
 }
 
 .charts {
@@ -463,6 +464,18 @@ svg {
 
 .point-sigreg {
   background-color: var(--neutral-200);
+}
+
+/* Beside the curves, the legend runs on under them too, sharing its row with the steps caption at the far end */
+@media (width >= 40rem) {
+  .legend {
+    grid-column: 1 / -1;
+  }
+
+  .axis-x {
+    grid-row: 2;
+    grid-column: 2;
+  }
 }
 
 @media (width < 40rem) {
