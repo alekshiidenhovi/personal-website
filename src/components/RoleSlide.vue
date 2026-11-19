@@ -6,7 +6,6 @@ import { PHONE_QUERY } from "../lib/layout";
 import "./covers/cover.css";
 import CropMarks from "./CropMarks.vue";
 import HighlightedText from "./HighlightedText.vue";
-import StackLine from "./StackLine.vue";
 import SupercellLogo from "./SupercellLogo.vue";
 import VeriLogo from "./VeriLogo.vue";
 import VisualPopup from "./VisualPopup.vue";
@@ -49,7 +48,6 @@ const isPhone = useMatchMedia(PHONE_QUERY);
       <ul class="highlights">
         <li v-for="highlight in props.role.highlights" :key="highlight"><HighlightedText :text="highlight" /></li>
       </ul>
-      <StackLine :items="props.role.stack" />
       <!-- On phones in place of the figure; see .phone-only in style.css -->
       <VisualPopup class="phone-only" label="Open figure" :title="`${figureNumber} · ${props.role.figureCaption}`">
         <template #default="{ active }">
@@ -271,7 +269,7 @@ figcaption {
   }
 
   h3 {
-    padding-right: 3rem;
+    padding-right: 2.75rem;
   }
 
   .slide {
@@ -292,12 +290,8 @@ figcaption {
   }
 
   .highlights li {
-    font-size: 0.875rem;
+    font-size: 0.9375rem;
     line-height: 1.5;
-  }
-
-  .info .stack {
-    padding-top: 0.75rem;
   }
 }
 
@@ -314,10 +308,6 @@ figcaption {
   .highlights li {
     font-size: 0.8125rem;
     line-height: 1.45;
-  }
-
-  .info .stack {
-    padding-top: 0.5rem;
   }
 }
 
@@ -343,26 +333,26 @@ figcaption {
 }
 
 /*
- * Short narrow pages give up size, then detail, a step at a time: the
- * highlights a step smaller and the card closer, then the stack goes and the
- * card tightens. The narrowest phones (360px) wrap the highlights onto more
- * lines, so they take the second step sooner. Measured on the longest role to
+ * Short narrow pages set the highlights a step smaller at a time, the card
+ * closing up with them. The narrowest phones (360px) wrap the highlights onto
+ * more lines, so they take each step sooner. Measured on the longest role to
  * keep room spare at phone widths from 360 to 430px.
  */
-@container page (width < 36rem) and (height < 26rem) {
+@container page ((width < 36rem) and (height < 24rem)) or ((width < 20.5rem) and (height < 27rem)) {
   .info {
-    gap: 0.5rem;
+    gap: 0.625rem;
     padding: 1.125rem;
   }
 
   .highlights li {
-    font-size: 0.8125rem;
-    line-height: 1.4;
+    font-size: 0.875rem;
+    line-height: 1.45;
   }
 }
 
-@container page ((width < 36rem) and (height < 23rem)) or ((width < 20.5rem) and (height < 26rem)) {
+@container page ((width < 36rem) and (height < 21.5rem)) or ((width < 20.5rem) and (height < 24rem)) {
   .info {
+    gap: 0.5rem;
     padding: 1rem;
   }
 
@@ -370,8 +360,9 @@ figcaption {
     font-size: 1.375rem;
   }
 
-  .info .stack {
-    display: none;
+  .highlights li {
+    font-size: 0.8125rem;
+    line-height: 1.4;
   }
 }
 

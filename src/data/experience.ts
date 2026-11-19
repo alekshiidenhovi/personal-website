@@ -26,7 +26,6 @@ export interface Role {
   /** The discipline the role highlights; sets its accent color */
   discipline: Expertise;
   highlights: string[];
-  stack: string[];
   figure: Component;
   figureCaption: string;
 }
@@ -49,7 +48,6 @@ export const ROLES: Role[] = [
       "Trained a self-supervised player embedding on terabyte-scale game event streams, adapting LeJEPA to event sequences, so models can take player context off the shelf.",
       "Cut an in-game content recommender's **validation loss by 20%** when added to aggregated features, and matched them when used on its own.",
     ],
-    stack: ["PyTorch", "Ray", "Spark", "Databricks"],
     figure: LearnedFeaturesFigure,
     figureCaption: "Learned vs. aggregated features",
   },
@@ -65,7 +63,6 @@ export const ROLES: Role[] = [
       "Built an end-to-end ticket analysis platform to surface the issues players face daily across all games for Player Support and game teams.",
       "Replacing a manual reporting chain through hundreds of agents brought feedback in **minutes rather than days**, higher-quality analysis of every ticket, and more time to serve players.",
     ],
-    stack: ["React", "TypeScript", "FastAPI", "SQL"],
     figure: TicketPipelineFigure,
     figureCaption: "Ticket analysis pipeline",
   },
@@ -81,7 +78,6 @@ export const ROLES: Role[] = [
       "Designed a Markovian growth model where no shared model for growth and engagement existed; one game team adopted it and **still uses it today**.",
       "Prototyped AI support tools, such as semantic ticket search and LLM chatbots, which **led to the ticket analysis platform** I built next.",
     ],
-    stack: ["Python", "SQL", "Vector DBs"],
     figure: MarkovGrowthFigure,
     figureCaption: "Markovian growth model",
   },
@@ -96,7 +92,6 @@ export const ROLES: Role[] = [
     highlights: [
       "Applied GPT-3 to support ticket classification in a proof of concept, months before ChatGPT launched.",
     ],
-    stack: ["Python", "SQL", "GPT-3"],
     figure: LlmTriageFigure,
     figureCaption: "LLM ticket classification",
   },

@@ -190,7 +190,7 @@ p {
   }
 
   h3 {
-    padding-right: 3rem;
+    padding-right: 2.75rem;
   }
 
   .info {

@@ -50,22 +50,29 @@ const onDialogClick = (event: MouseEvent) => {
 </template>
 
 <style scoped>
-/* Square, with a touch target of 2.5rem */
+/* A small square, sized to the card's title, with a larger touch target around it */
 .open-button {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2rem;
+  height: 2rem;
   border: 1px solid color-mix(in srgb, var(--card-color) 45%, var(--neutral-700));
   background-color: color-mix(in srgb, var(--card-color), var(--neutral-950) 90%);
   color: var(--card-color);
   cursor: pointer;
 }
 
+.open-button::before {
+  content: "";
+  position: absolute;
+  inset: -0.25rem;
+}
+
 .open-button svg {
-  width: 1.125rem;
-  height: 1.125rem;
+  width: 1rem;
+  height: 1rem;
 }
 
 .dialog {
