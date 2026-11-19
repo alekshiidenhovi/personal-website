@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PROFILES } from "../data/contact";
+import { CV } from "../data/contact";
 import { COMPANY_NAMES, ROLES } from "../data/experience";
 import EmbeddingSpace from "./EmbeddingSpace.vue";
 import Icon from "./Icon.vue";
@@ -24,10 +24,10 @@ const [currentRole] = ROLES;
             See my work
             <Icon icon="heroicons:arrow-down-20-solid" class="cta-icon" />
           </a>
-          <a v-for="profile in PROFILES" :key="profile.href" class="cta cta-secondary" :href="profile.href"
-            target="_blank" rel="noreferrer">
-            <Icon :icon="profile.icon" class="cta-icon" />
-            {{ profile.label }}
+          <!-- Trailing like the primary's arrow; up-right as it opens in a new tab -->
+          <a class="cta cta-secondary" :href="CV.href" target="_blank">
+            View {{ CV.label }}
+            <Icon icon="heroicons:arrow-up-right-20-solid" class="cta-icon" />
           </a>
         </div>
         <a class="status" :href="`#${currentRole.slug}`">
@@ -288,7 +288,7 @@ h1 {
 
   .cta-container {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .cta {
@@ -302,7 +302,7 @@ h1 {
   }
 }
 
-/* Phones (see PHONE_QUERY): the introduction alone fills the screen; one full-width primary action, the two profiles side by side below it */
+/* Phones (see PHONE_QUERY): the introduction alone fills the screen; the two actions full width, one above the other */
 @media (width < 40rem), (height < 30rem) {
   #hero {
     padding-block: 4rem;
@@ -314,15 +314,10 @@ h1 {
 
   .cta-container {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .cta {
     justify-content: center;
-  }
-
-  .cta-primary {
-    grid-column: 1 / -1;
   }
 }
 
@@ -341,13 +336,9 @@ h1 {
   }
 
   .cta-container {
-    grid-template-columns: repeat(3, auto);
+    grid-template-columns: repeat(2, auto);
     justify-content: start;
     padding-top: 0;
-  }
-
-  .cta-primary {
-    grid-column: auto;
   }
 
   .cta {

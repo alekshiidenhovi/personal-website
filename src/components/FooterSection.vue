@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { EMAIL, PROFILES } from "../data/contact";
+import { CV, EMAIL, PROFILES } from "../data/contact";
 import { HERO_ID } from "../data/sections";
 import Icon from "./Icon.vue";
 import PinnedSection from "./PinnedSection.vue";
@@ -14,6 +14,10 @@ import PinnedSection from "./PinnedSection.vue";
           <Icon icon="heroicons:arrow-up-right-20-solid" class="big-arrow" />
         </a>
         <div class="social-container">
+          <a :href="CV.href" target="_blank" class="social-link cv">
+            <Icon :icon="CV.icon" class="social-icon" />
+            {{ CV.label }}
+          </a>
           <a v-for="link in PROFILES" :key="link.href" :href="link.href" target="_blank" rel="noreferrer"
             class="social-link">
             <Icon :icon="link.icon" class="social-icon" />
@@ -152,7 +156,7 @@ footer {
   color: var(--primary-400);
 }
 
-/* Narrow pages (phones): the profiles side by side as two equal buttons, a step smaller */
+/* Narrow pages (phones): the CV full width, the profiles side by side below it as two equal buttons, a step smaller */
 @container page (width < 36rem) {
   .social-container {
     display: grid;
@@ -165,6 +169,10 @@ footer {
     gap: 0.5rem;
     padding: 0.75rem 1rem;
     font-size: 0.875rem;
+  }
+
+  .cv {
+    grid-column: 1 / -1;
   }
 }
 
