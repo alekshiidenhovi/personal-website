@@ -25,15 +25,15 @@ export interface Project {
   coverDescription: string;
 }
 
-/** Research and work first; side projects (built for fun) on the second page */
+/** Ordered so each page mixes tags, and with them card colors */
 export const PROJECTS: Project[] = [
   {
-    title: "SISPA",
-    description: "End-to-end machine unlearning framework",
-    tag: "machine learning",
-    link: "https://github.com/alekshiidenhovi/SISPA",
-    cover: SispaCover,
-    coverDescription: "Sharded models aggregated into one prediction, with one shard unlearned",
+    title: "BASIC interpreter",
+    description: "Classic programming language, interactable in browser",
+    tag: "side project",
+    link: "https://basic-interpreter-web-editor.hiidenhovi-aleks.workers.dev",
+    cover: BasicCover,
+    coverDescription: "A CRT monitor running a BASIC program",
   },
   {
     title: "ColViT",
@@ -52,12 +52,12 @@ export const PROJECTS: Project[] = [
     coverDescription: "A wireframe of this website",
   },
   {
-    title: "BASIC interpreter",
-    description: "Classic programming language, interactable in browser",
-    tag: "side project",
-    link: "https://basic-interpreter-web-editor.hiidenhovi-aleks.workers.dev",
-    cover: BasicCover,
-    coverDescription: "A CRT monitor running a BASIC program",
+    title: "SISPA",
+    description: "End-to-end machine unlearning framework",
+    tag: "machine learning",
+    link: "https://github.com/alekshiidenhovi/SISPA",
+    cover: SispaCover,
+    coverDescription: "Sharded models aggregated into one prediction, with one shard unlearned",
   },
   {
     title: "C-- compiler",
