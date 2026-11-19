@@ -3,14 +3,6 @@
  * art at rest and light up in the card's color (`--card-color`) when active.
  */
 .cover {
-  /*
-   * The size text grows to as a drawing is shown smaller, in its own units:
-   * 10px on screen, but no larger than the drawings have room for without
-   * labels colliding (9.5 units); below that, contrast steps up instead. Set
-   * only on drawings that measure their scale (v-figure-scale); others keep
-   * their sizes. Every text size in a drawing is max(<size>, var(--text-floor)).
-   */
-  --text-floor: min(calc(10px * var(--units-per-px, 0)), 9.5px);
   --cover-ink: var(--neutral-500);
   --cover-muted: var(--neutral-700);
   --cover-accent: var(--neutral-400);
@@ -55,7 +47,7 @@
 
 .cover-text {
   font-family: var(--font-mono);
-  font-size: max(9px, var(--text-floor));
+  font-size: 9px;
   fill: var(--cover-ink);
 }
 
@@ -64,7 +56,7 @@
 }
 
 .cover-text.label {
-  font-size: max(7px, var(--text-floor));
+  font-size: 7px;
   letter-spacing: 1px;
   text-transform: uppercase;
   fill: var(--neutral-600);

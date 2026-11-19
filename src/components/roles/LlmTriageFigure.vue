@@ -103,7 +103,7 @@ useLiveTicker(
     <!-- Column titles, centered over each column -->
     <text :x="TICKET.x + TICKET.width / 2" y="16" text-anchor="middle" class="cover-text label">support inbox</text>
     <text :x="MODEL.x + MODEL.width / 2" y="16" text-anchor="middle" class="cover-text label">classifier</text>
-    <text :x="BIN.x + BIN.width / 2" y="16" text-anchor="middle" class="cover-text label">category</text>
+    <text :x="BIN.x + BIN.width / 2" y="16" text-anchor="middle" class="cover-text label">category · confidence</text>
 
     <!-- Inbox: tickets arrive from above, the active one is processed, then leaves to the left -->
     <g v-for="ticket in visibleTickets" :key="ticket.number" class="ticket" :class="ticket.position"
@@ -157,7 +157,7 @@ useLiveTicker(
 }
 
 .ticket-text {
-  font-size: max(8px, var(--text-floor));
+  font-size: 8px;
 }
 
 .marker {
@@ -237,7 +237,7 @@ useLiveTicker(
 }
 
 .model-name {
-  font-size: max(13px, var(--text-floor));
+  font-size: 13px;
   font-weight: 700;
 }
 

@@ -186,7 +186,7 @@ const gainArea = computed(
 }
 
 .feature-name {
-  font-size: max(7.5px, var(--text-floor));
+  font-size: 7.5px;
   fill: var(--neutral-500);
 }
 
@@ -305,7 +305,7 @@ const gainArea = computed(
 
 /* Names the curve, in the corner below the chance line that a curve never reaches */
 .condition {
-  font-size: max(8px, var(--text-floor));
+  font-size: 8px;
   fill: var(--state-color);
   animation: reveal 0.4s ease;
 }
