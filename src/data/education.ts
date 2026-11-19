@@ -23,7 +23,7 @@ export const STUDIES: Study[] = [
     discipline: "machine learning",
     thesis: {
       title: "Learning self-supervised player embeddings from game event streams",
-      summary: "Embeddings learned from raw event streams that cut an in-game content recommender's validation loss by 20%.",
+      summary: "Embeddings learned from raw event streams that cut a production in-game content recommender's validation loss by 20%.",
       href: "https://aaltodoc.aalto.fi/server/api/core/bitstreams/167423ba-5e84-4442-8468-ec644f9e8404/content",
     },
     exchange: { school: "University of Calgary", location: "Calgary, Canada", year: 2025 },

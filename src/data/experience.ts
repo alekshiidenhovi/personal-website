@@ -46,7 +46,7 @@ export const ROLES: Role[] = [
     discipline: "machine learning",
     highlights: [
       "Trained a self-supervised player embedding on terabyte-scale game event streams, adapting LeJEPA to event sequences, so models can take player context off the shelf.",
-      "Cut an in-game content recommender's **validation loss by 20%** when added to aggregated features, and matched them when used on its own.",
+      "Cut a production in-game content recommender's **validation loss by 20%** when added to aggregated features, and matched them when used on its own.",
     ],
     figure: LearnedFeaturesFigure,
     figureCaption: "Learned vs. aggregated features",
@@ -75,7 +75,7 @@ export const ROLES: Role[] = [
     end: { year: 2023, month: 8 },
     discipline: "data foundations",
     highlights: [
-      "Designed a Markovian growth model where no shared model for growth and engagement existed; one game team adopted it and **still uses it today**.",
+      "Designed a Markovian growth model where no shared model for growth and engagement existed; it is **still in use at the company today**.",
       "Prototyped AI support tools, such as semantic ticket search and LLM chatbots, which **led to the ticket analysis platform** I built next.",
     ],
     figure: MarkovGrowthFigure,
