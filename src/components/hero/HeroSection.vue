@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { CV } from "../../content/contact";
 import ButtonLink from "../ui/ButtonLink.vue";
+import EmbeddingSpace from "./EmbeddingSpace.vue";
 import HeroScrollCue from "./HeroScrollCue.vue";
 import HeroStatus from "./HeroStatus.vue";
 import HeroTitle from "./HeroTitle.vue";
@@ -21,8 +22,7 @@ import HeroTitle from "./HeroTitle.vue";
         </div>
         <HeroStatus href="#role-data-scientist">Data Scientist at Supercell</HeroStatus>
       </div>
-      <!-- Holds the embedding space's place until it's built (step 3b) -->
-      <div class="embedding embedding-placeholder" aria-hidden="true"></div>
+      <EmbeddingSpace class="embedding" />
     </div>
     <HeroScrollCue href="#expertise" label="Scroll to expertise" />
   </section>
@@ -91,11 +91,6 @@ import HeroTitle from "./HeroTitle.vue";
   flex-wrap: wrap;
   gap: 0.75rem;
   padding-top: 0.5rem;
-}
-
-.embedding-placeholder {
-  width: 100%;
-  aspect-ratio: 1 / 0.92;
 }
 
 /* Below lg the embedding space stacks below the introduction */
