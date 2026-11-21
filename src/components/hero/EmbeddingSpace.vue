@@ -1,198 +1,301 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
-import { toCanvasColor } from "../../lib/color";
-import { whenIdle } from "../../lib/idle";
-import { clamp, lerp } from "../../lib/math";
-import { easeInOut, prefersReducedMotion } from "../../lib/motion";
-import CropMarks from "../ui/CropMarks.vue";
-import { CanvasPainter } from "./CanvasPainter";
+import { computed, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue';
+import { useIsInViewport } from '../../composables/useIsInViewport';
+import { convertToCanvasColor } from '../../lib/color';
+import { runWhenIdle } from '../../lib/idle';
+import { clamp, interpolate } from '../../lib/math';
+import { easeInOut, prefersReducedMotion } from '../../lib/motion';
+import CropMarks from '../ui/CropMarks.vue';
+import { CanvasPainter } from './CanvasPainter';
 import {
-  type Cycle,
   createCycle,
+  getPhase,
+  getTrainedAmount,
+  getTrainingStep,
   LOOP_MS,
   PHASES,
   type Phase,
-  phaseAt,
-  positionAt,
-  RESTING_ELAPSED,
-  trainedAmount,
-  trainingStepAt,
-  type Vec,
-} from "./embeddingModel";
+  type PhaseName,
+  RESTING_ELAPSED_MS,
+  type Vector,
+  writePointPosition,
+} from './embeddingModel';
 
 /**
- * The hero visual: an embedding space that learns its structure on loop (see
- * embeddingModel). Raw data (Data Foundations pink) becomes a model (ML blue)
- * becomes a product (Web amber) as a query retrieves its nearest neighbours.
- * Plays while on screen, once the page has settled; without motion it rests
- * on a finished retrieval.
+ * The hero visual: an embedding space that learns its structure on loop (see embeddingModel). Raw data (Data
+ * Foundations pink) becomes a model (ML blue) becomes a product (Web amber) as a query retrieves its nearest
+ * neighbours. Plays while on screen, once the page has settled; without motion it rests on a finished retrieval.
  */
 
+/** The colors the visual paints with, as canvas-safe colors. */
+interface CanvasColors {
+  /** Points not yet trained. */
+  readonly raw: string;
+  /** Trained points, one color per cluster, repeating. */
+  readonly clusters: readonly string[];
+  /** Trained points outside every cluster. */
+  readonly outlier: string;
+  /** The query and its links. */
+  readonly query: string;
+}
+
+/** What drawing needs once the canvas is mounted. */
+interface Scene {
+  readonly painter: CanvasPainter;
+  readonly colors: CanvasColors;
+}
+
+const CLUSTER_COLOR_TOKENS = ['--primary-300', '--primary-400', '--primary-500', '--primary-200', '--primary-600'];
+/** How long the query takes to appear; its links start once it has. */
+const QUERY_APPEAR_MS = 400;
+const QUERY_PULSE_MS = 1600;
+/** How long each link to a neighbour takes to draw; they draw one after another. */
 const NEIGHBOUR_DRAW_MS = 200;
-/** Opacity levels a point's training fade is rounded to, so points can share a fill */
+/** How far through the retrieval the query and its links start to fade out. */
+const QUERY_FADE_OUT_START = 0.85;
+/** The opacity levels a point's training fade is rounded to, so points can share a fill. */
 const FADE_STEPS = 10;
+/** The phases in the legend; none is highlighted while the space dissolves back into the scatter. */
+const LEGEND_PHASES = PHASES.filter((phase) => phase.name !== 'dissolve');
 
-const containerRef = ref<HTMLElement | null>(null);
-const canvasRef = ref<HTMLCanvasElement | null>(null);
-const phaseLabel = ref<string>(PHASES[0].label);
-const step = ref(0);
+const figureRef = useTemplateRef<HTMLElement>('figure');
+const canvasRef = useTemplateRef<HTMLCanvasElement>('canvas');
+const currentPhaseName = ref<PhaseName>(PHASES[0].name);
+const trainingStep = ref(0);
+const isInViewport = useIsInViewport(figureRef);
+const isStarted = ref(false);
+const isPlaying = computed(() => isStarted.value && isInViewport.value);
 
-let painter: CanvasPainter | null = null;
-let cycle: Cycle = createCycle();
-let cycleStart = 0;
-/** The canvas size in CSS pixels */
-let size = { width: 0, height: 0 };
-/** The points' canvas positions this frame; reused across frames, so drawing doesn't allocate */
-const positions: Vec[] = cycle.points.map(() => [0, 0]);
-let colors = { raw: "", clusters: [] as string[], query: "", grid: "" };
+let scene: Scene | undefined;
+let cycle = createCycle();
+let cycleStartMs = 0;
+/** The canvas's size in CSS pixels. */
+let canvasSize = { width: 0, height: 0 };
+/** The points' canvas positions this frame; reused across frames, so drawing doesn't allocate. */
+const pointPositions: Vector[] = cycle.points.map(() => [0, 0]);
+let frameId = 0;
+let resizeObserver: ResizeObserver | undefined;
+let cancelIdleStart: (() => void) | undefined;
 
-const startCycle = (now: number) => {
-  cycle = createCycle(cycle);
-  cycleStart = now;
-};
+/**
+ * Reads a color token as a color a canvas can paint.
+ *
+ * @param styles The computed styles of an element the token applies to.
+ * @param token The custom property's name.
+ * @returns The token's color.
+ */
+function readTokenColor(styles: CSSStyleDeclaration, token: string): string {
+  return convertToCanvasColor(styles.getPropertyValue(token).trim());
+}
 
-/** Canvas colors from the design tokens, as rgb (see toCanvasColor) */
-const readColors = () => {
-  const styles = getComputedStyle(document.documentElement);
-  const read = (name: string) => toCanvasColor(styles.getPropertyValue(name).trim());
-  colors = {
-    raw: read("--accent-400"),
-    clusters: ["--primary-300", "--primary-400", "--primary-500", "--primary-200", "--primary-600"].map(read),
-    query: read("--warning-400"),
-    grid: read("--neutral-700"),
+/**
+ * Reads the colors to paint with from the design tokens.
+ *
+ * @param element An element the tokens apply to.
+ * @returns The colors.
+ */
+function readCanvasColors(element: Element): CanvasColors {
+  const styles = getComputedStyle(element);
+  return {
+    raw: readTokenColor(styles, '--accent-400'),
+    clusters: CLUSTER_COLOR_TOKENS.map((token) => readTokenColor(styles, token)),
+    outlier: readTokenColor(styles, '--neutral-700'),
+    query: readTokenColor(styles, '--warning-400'),
   };
-};
+}
 
-const clusterColor = (cluster: number) => (cluster >= 0 ? colors.clusters[cluster % colors.clusters.length] : colors.grid);
-const toCanvas = ([x, y]: Vec): Vec => [x * size.width, y * size.height];
+/**
+ * Gets the color of a trained point.
+ *
+ * @param colors The colors to paint with.
+ * @param cluster The point's cluster, or undefined for an outlier.
+ * @returns The color.
+ */
+function getClusterColor(colors: CanvasColors, cluster: number | undefined): string {
+  return cluster === undefined ? colors.outlier : colors.clusters[cluster % colors.clusters.length];
+}
 
-/** Points: raw data in pink, turning into their cluster's blue as they train */
-const drawPoints = (paint: CanvasPainter, phase: Phase, now: number, unit: number) => {
+/**
+ * Scales a position in the space to the canvas.
+ *
+ * @param position The position, from 0 to 1 on both axes.
+ * @returns The position in CSS pixels.
+ */
+function scaleToCanvas([x, y]: Vector): Vector {
+  return [x * canvasSize.width, y * canvasSize.height];
+}
+
+/**
+ * Starts a cycle training towards new clusters.
+ *
+ * @param timeMs The time the cycle starts, in milliseconds.
+ */
+function startNewCycle(timeMs: number) {
+  cycle = createCycle(cycle);
+  cycleStartMs = timeMs;
+}
+
+/**
+ * Draws the points: raw data in pink, turning into their cluster's blue as they train.
+ *
+ * @param scene The painter and colors.
+ * @param phase Where the loop is.
+ * @param timeMs The current time, in milliseconds.
+ * @param shortSide The canvas's shorter side, which sizes what's drawn.
+ */
+function drawPoints({ painter, colors }: Scene, phase: Phase, timeMs: number, shortSide: number) {
   for (const [index, point] of cycle.points.entries()) {
-    const exactTrained = trainedAmount(point, phase);
-    const at = positions[index];
-    positionAt(point, exactTrained, now, at);
-    at[0] *= size.width;
-    at[1] *= size.height;
-    const trained = Math.round(exactTrained * FADE_STEPS) / FADE_STEPS;
-    const radius = unit * 0.0042 * point.radius;
-    paint.batchDot(at, radius, colors.raw, 0.55 * (1 - trained));
-    paint.batchDot(at, radius, clusterColor(point.cluster), 0.9 * trained);
+    const trainedAmount = getTrainedAmount(point, phase);
+    const position = pointPositions[index];
+    writePointPosition(point, trainedAmount, timeMs, position);
+    position[0] *= canvasSize.width;
+    position[1] *= canvasSize.height;
+    const roundedTrainedAmount = Math.round(trainedAmount * FADE_STEPS) / FADE_STEPS;
+    const radius = shortSide * 0.0042 * point.radius;
+    painter.batchDot(position, radius, colors.raw, 0.55 * (1 - roundedTrainedAmount));
+    painter.batchDot(position, radius, getClusterColor(colors, point.cluster), 0.9 * roundedTrainedAmount);
   }
-  paint.fillBatchedDots();
-};
+  painter.fillBatchedDots();
+}
 
-/** Retrieval: the query appears, pulses, and links to its nearest neighbours one by one */
-const drawQuery = (paint: CanvasPainter, phase: Phase, unit: number) => {
-  const queryAt = toCanvas(cycle.query.position);
-  const fadeOut = 1 - clamp((phase.progress - 0.85) / 0.15, 0, 1);
-  for (const [order, index] of cycle.query.neighbours.entries()) {
-    const drawn = clamp((phase.time - 400 - order * NEIGHBOUR_DRAW_MS) / NEIGHBOUR_DRAW_MS, 0, 1);
-    if (!drawn) continue;
-    const end = positions[index];
-    paint.line(queryAt, [lerp(queryAt[0], end[0], drawn), lerp(queryAt[1], end[1], drawn)], colors.query, 0.55 * fadeOut);
-    if (drawn === 1) {
+/**
+ * Draws the retrieval: the query appears, pulses, and links to its nearest neighbours one by one.
+ *
+ * @param scene The painter and colors.
+ * @param phase Where the loop is, in the retrieval phase.
+ * @param shortSide The canvas's shorter side, which sizes what's drawn.
+ */
+function drawQuery({ painter, colors }: Scene, phase: Phase, shortSide: number) {
+  const queryPosition = scaleToCanvas(cycle.query.position);
+  const opacity = 1 - clamp((phase.progress - QUERY_FADE_OUT_START) / (1 - QUERY_FADE_OUT_START), 0, 1);
+  for (const [order, pointIndex] of cycle.query.neighbourIndexes.entries()) {
+    const linkStartMs = QUERY_APPEAR_MS + order * NEIGHBOUR_DRAW_MS;
+    const linkProgress = clamp((phase.elapsedMs - linkStartMs) / NEIGHBOUR_DRAW_MS, 0, 1);
+    if (linkProgress === 0) {
+      continue;
+    }
+    const neighbourPosition = pointPositions[pointIndex];
+    const linkEnd: Vector = [
+      interpolate(queryPosition[0], neighbourPosition[0], linkProgress),
+      interpolate(queryPosition[1], neighbourPosition[1], linkProgress),
+    ];
+    painter.drawLine(queryPosition, linkEnd, colors.query, 0.55 * opacity);
+    if (linkProgress === 1) {
       // A ring per retrieved neighbour keeps them distinct even when close together
-      paint.dot(end, unit * 0.005, colors.query, fadeOut);
-      paint.ring(end, unit * 0.011, colors.query, 0.8 * fadeOut);
+      painter.drawDot(neighbourPosition, shortSide * 0.005, colors.query, opacity);
+      painter.drawRing(neighbourPosition, shortSide * 0.011, colors.query, 0.8 * opacity);
     }
   }
-  const pulse = (phase.time % 1600) / 1600;
-  paint.ring(queryAt, unit * (0.012 + pulse * 0.05), colors.query, (1 - pulse) * 0.6 * fadeOut);
-  const appear = easeInOut(clamp(phase.time / 400, 0, 1));
-  paint.glowingDot(queryAt, unit * 0.01, colors.query, fadeOut, unit * 0.04, appear);
-};
+  const pulse = (phase.elapsedMs % QUERY_PULSE_MS) / QUERY_PULSE_MS;
+  painter.drawRing(queryPosition, shortSide * (0.012 + pulse * 0.05), colors.query, (1 - pulse) * 0.6 * opacity);
+  const appearance = easeInOut(clamp(phase.elapsedMs / QUERY_APPEAR_MS, 0, 1));
+  painter.drawGlowingDot(queryPosition, shortSide * 0.01, colors.query, opacity, shortSide * 0.04, appearance);
+}
 
-const draw = (now: number) => {
-  if (!painter || !size.width) return;
-  const phase = phaseAt(prefersReducedMotion ? RESTING_ELAPSED : (now - cycleStart) % LOOP_MS);
-  const unit = Math.min(size.width, size.height);
-  painter.clear();
-  drawPoints(painter, phase, now, unit);
-  if (phase.name === "query") drawQuery(painter, phase, unit);
-  phaseLabel.value = phase.label;
-  step.value = trainingStepAt(phase);
-};
+/**
+ * Draws the frame for a moment in the cycle, and updates the labels to match.
+ *
+ * @param timeMs The current time, in milliseconds.
+ */
+function drawFrame(timeMs: number) {
+  if (!scene || canvasSize.width === 0) {
+    return;
+  }
+  const phase = getPhase(prefersReducedMotion ? RESTING_ELAPSED_MS : (timeMs - cycleStartMs) % LOOP_MS);
+  const shortSide = Math.min(canvasSize.width, canvasSize.height);
+  scene.painter.clear();
+  drawPoints(scene, phase, timeMs, shortSide);
+  if (phase.name === 'query') {
+    drawQuery(scene, phase, shortSide);
+  }
+  currentPhaseName.value = phase.name;
+  trainingStep.value = getTrainingStep(phase);
+}
 
-/** Sizes the canvas buffer to its box and redraws, since resizing the buffer clears it */
-const resize = () => {
-  const canvas = canvasRef.value;
-  if (!canvas || !painter) return;
+/**
+ * Sizes the drawing buffer to the canvas's box and redraws, since resizing the buffer clears it.
+ *
+ * @param painter The canvas's painter.
+ * @param canvas The canvas.
+ */
+function resizeCanvas(painter: CanvasPainter, canvas: HTMLCanvasElement) {
   const { width, height } = canvas.getBoundingClientRect();
   // Observers report the initial size again; skip it rather than clear the canvas for nothing
-  if (width === size.width && height === size.height) return;
-  size = { width, height };
+  if (width === canvasSize.width && height === canvasSize.height) {
+    return;
+  }
+  canvasSize = { width, height };
   painter.resize(width, height);
-  draw(performance.now());
-};
+  drawFrame(performance.now());
+}
 
-/* The loop runs only once started (when the page is idle) and while the visual is on screen */
-let frameId = 0;
-let isStarted = false;
-let isVisible = false;
+/**
+ * Draws a frame of the animation, starting a new cycle when one ends, and schedules the next frame.
+ *
+ * @param timeMs The frame's time, in milliseconds.
+ */
+function animateFrame(timeMs: number) {
+  if (timeMs - cycleStartMs >= LOOP_MS) {
+    startNewCycle(timeMs);
+  }
+  drawFrame(timeMs);
+  frameId = requestAnimationFrame(animateFrame);
+}
 
-const loop = (now: number) => {
-  if (now - cycleStart >= LOOP_MS) startCycle(now);
-  draw(now);
-  frameId = requestAnimationFrame(loop);
-};
+/** Starts the animation from a new cycle; it then plays while the visual is in view. */
+function startPlaying() {
+  startNewCycle(performance.now());
+  isStarted.value = true;
+}
 
-const updateLoop = () => {
-  const shouldRun = isStarted && isVisible;
-  if (shouldRun && !frameId) frameId = requestAnimationFrame(loop);
-  if (!shouldRun && frameId) {
+watch(isPlaying, (isNowPlaying) => {
+  if (isNowPlaying) {
+    frameId = requestAnimationFrame(animateFrame);
+  } else {
     cancelAnimationFrame(frameId);
     frameId = 0;
   }
-};
-
-let resizeObserver: ResizeObserver | null = null;
-let visibilityObserver: IntersectionObserver | null = null;
-let cancelStart: (() => void) | null = null;
+});
 
 onMounted(() => {
-  if (!canvasRef.value) return;
-  painter = new CanvasPainter(canvasRef.value);
-  readColors();
-  cycleStart = performance.now();
-  // Draws the raw scatter straight away, and again whenever the canvas changes size
-  resizeObserver = new ResizeObserver(resize);
-  resizeObserver.observe(canvasRef.value);
-  resize();
-  if (prefersReducedMotion) return;
-
-  visibilityObserver = new IntersectionObserver(([entry]) => {
-    isVisible = entry.isIntersecting;
-    updateLoop();
-  });
-  if (containerRef.value) visibilityObserver.observe(containerRef.value);
-  cancelStart = whenIdle(() => {
-    startCycle(performance.now());
-    isStarted = true;
-    updateLoop();
-  });
+  const canvas = canvasRef.value;
+  if (!canvas) {
+    throw new Error('EmbeddingSpace needs its canvas mounted');
+  }
+  const painter = CanvasPainter.tryCreate(canvas);
+  if (!painter) {
+    // Without canvas 2D the visual stays an empty frame with its labels, which the layout is built around
+    return;
+  }
+  scene = { painter, colors: readCanvasColors(canvas) };
+  cycleStartMs = performance.now();
+  resizeObserver = new ResizeObserver(() => resizeCanvas(painter, canvas));
+  resizeObserver.observe(canvas);
+  resizeCanvas(painter, canvas);
+  if (!prefersReducedMotion) {
+    cancelIdleStart = runWhenIdle(startPlaying);
+  }
 });
 
 onUnmounted(() => {
-  cancelStart?.();
+  cancelIdleStart?.();
   cancelAnimationFrame(frameId);
   resizeObserver?.disconnect();
-  visibilityObserver?.disconnect();
 });
 </script>
 
 <template>
-  <figure ref="containerRef" class="embedding-space" aria-label="An embedding space learning clusters from raw data">
+  <figure ref="figure" class="embedding-space" aria-label="An embedding space learning clusters from raw data">
     <CropMarks />
     <div class="labels" aria-hidden="true">
       <span>embedding space</span>
-      <span class="step">step {{ step.toLocaleString("en-US") }}</span>
+      <span class="step">step {{ trainingStep.toLocaleString('en-US') }}</span>
     </div>
-    <canvas ref="canvasRef"></canvas>
+    <canvas ref="canvas"></canvas>
     <div class="labels" aria-hidden="true">
       <span class="phases">
-        <span v-for="phase in PHASES.slice(0, -1)" :key="phase.name" class="phase"
-          :class="[phase.name, { current: phase.label === phaseLabel }]">{{ phase.label }}</span>
+        <span v-for="phase in LEGEND_PHASES" :key="phase.name" class="phase"
+          :class="[phase.name, { current: phase.name === currentPhaseName }]">{{ phase.label }}</span>
       </span>
       <span>2-d projection</span>
     </div>

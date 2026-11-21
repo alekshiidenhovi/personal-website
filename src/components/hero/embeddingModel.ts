@@ -1,189 +1,348 @@
-import { clamp, gaussian, lerp } from '../../lib/math';
-import { easeInOut } from '../../lib/motion';
-
 /**
- * The simulation behind the hero's embedding space, in canvas-independent
- * coordinates (0..1 on both axes). Each cycle starts from the same raw
- * scatter, trains it into new clusters, retrieves a query's nearest
- * neighbours, and dissolves back into the scatter.
+ * @fileoverview The simulation behind the hero's embedding space, in canvas-independent coordinates (0 to 1 on
+ * both axes). Each cycle starts from the same raw scatter, trains it into new clusters, retrieves a query's
+ * nearest neighbours, and dissolves back into the scatter.
  */
 
-export type Vec = [x: number, y: number];
+import { clamp, interpolate, sampleGaussian } from '../../lib/math';
+import { easeInOut } from '../../lib/motion';
 
+/** A position in the space. */
+export type Vector = [x: number, y: number];
+
+/** One data point, and the path it takes through a cycle. */
 export interface Point {
-  /** The raw scatter: the same every cycle, so each run starts and ends here */
-  noise: Vec;
-  /** Where training puts the point; new clusters every cycle */
-  target: Vec;
-  /** Its cluster, or -1 for an outlier */
-  cluster: number;
-  /** 0 to 1: when the point starts moving during training, and again in the dissolve */
-  delay: number;
-  /** Phase of the idle drift, which every point keeps, scattered or trained */
-  wobble: number;
-  /** Relative size */
-  radius: number;
+  /** Where the point sits in the raw scatter: the same every cycle, so each run starts and ends there. */
+  readonly scatterPosition: Vector;
+  /** Where training puts the point; new every cycle. */
+  readonly trainedPosition: Vector;
+  /** The index of the point's cluster, or undefined for an outlier. */
+  readonly cluster: number | undefined;
+  /** From 0 to 1: when the point starts moving during training, and again in the dissolve. */
+  readonly delay: number;
+  /** The phase of the point's idle drift, which it keeps whether scattered or trained, in radians. */
+  readonly driftPhase: number;
+  /** The point's size, relative to the others. */
+  readonly radius: number;
 }
 
-export interface Cycle {
-  points: Point[];
-  /** A position just outside a cluster, and its nearest points */
-  query: { position: Vec; neighbours: number[] };
+/** A position just outside a cluster, and the points nearest to it. */
+export interface Query {
+  readonly position: Vector;
+  /** The indexes of the nearest points, nearest first. */
+  readonly neighbourIndexes: readonly number[];
 }
+
+/** One run of the loop: the points with their trained positions, and the query retrieving among them. */
+export interface Cycle {
+  readonly points: readonly Point[];
+  readonly query: Query;
+}
+
+/** The phases of a cycle, in loop order. */
+export const PHASES = [
+  { name: 'raw', label: 'raw events', durationMs: 1800 },
+  { name: 'train', label: 'training', durationMs: 5600 },
+  { name: 'query', label: 'retrieval', durationMs: 4600 },
+  { name: 'dissolve', label: 'next run', durationMs: 3600 },
+] as const;
+
+/** The name of a phase of the cycle. */
+export type PhaseName = (typeof PHASES)[number]['name'];
+
+/** Where the loop is at a moment in time. */
+export interface Phase {
+  readonly name: PhaseName;
+  /** How far through the phase, from 0 to 1. */
+  readonly progress: number;
+  /** How long the phase has run, in milliseconds. */
+  readonly elapsedMs: number;
+}
+
+/** The length of one cycle, in milliseconds. */
+export const LOOP_MS = PHASES.reduce((total, phase) => total + phase.durationMs, 0);
+/** The time in the cycle where the visual rests without motion: the end of the retrieval. */
+export const RESTING_ELAPSED_MS = LOOP_MS - PHASES[PHASES.length - 1].durationMs - 1;
 
 const POINT_COUNT = 420;
 const CLUSTER_COUNT = 7;
 const OUTLIER_SHARE = 0.06;
-const NEIGHBOURS = 8;
-/** How far a point drifts around its position, as a share of the canvas */
-const DRIFT = 0.004;
+const NEIGHBOUR_COUNT = 8;
 const TRAINING_STEPS = 24000;
+/** How far a point drifts around its position, as a share of the canvas. */
+const DRIFT_DISTANCE = 0.004;
+/** The share of the training and dissolve phases over which the points' start times are spread. */
+const STAGGER_SHARE = 0.45;
+/** Keeps scattered points and outliers off the canvas's edges. */
+const SCATTER_MARGIN = 0.04;
+/** Keeps cluster centers far enough from the edges that their clusters fit. */
+const CENTER_MARGIN = 0.16;
+const MIN_CENTER_DISTANCE = 0.22;
+const MAX_CENTER_ATTEMPTS = 500;
+/** How far outside its cluster the query sits. */
+const QUERY_OFFSET = 0.1;
 
-/** Phase durations in milliseconds, in loop order */
-export const PHASES = [
-  { name: 'raw', label: 'raw events', duration: 1800 },
-  { name: 'train', label: 'training', duration: 5600 },
-  { name: 'query', label: 'retrieval', duration: 4600 },
-  { name: 'dissolve', label: 'next run', duration: 3600 },
-] as const;
-type PhaseName = (typeof PHASES)[number]['name'];
-export const LOOP_MS = PHASES.reduce((total, phase) => total + phase.duration, 0);
-/** The end of the retrieval, where the visual rests without motion */
-export const RESTING_ELAPSED = LOOP_MS - PHASES[PHASES.length - 1].duration - 1;
-/** Share of the training and dissolve phases over which point start times are spread */
-const STAGGER = 0.45;
-
-/** Where the loop is: the current phase, how far through it, and how long it has run */
-export interface Phase {
-  name: PhaseName;
-  label: string;
-  progress: number;
-  time: number;
+/** The shape of a gaussian cluster: stretched along one axis, rotated, and weighted by how many points it gets. */
+interface ClusterShape {
+  readonly center: Vector;
+  readonly angle: number;
+  readonly spreadAlong: number;
+  readonly spreadAcross: number;
+  readonly weight: number;
 }
 
-const distance = (a: Vec, b: Vec) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+/** Where training puts a point, and in which cluster. */
+interface TrainedPlacement {
+  readonly trainedPosition: Vector;
+  readonly cluster: number | undefined;
+}
 
-const randomNoise = (): Vec => [0.04 + Math.random() * 0.92, 0.04 + Math.random() * 0.92];
+/**
+ * Measures the distance between two positions.
+ *
+ * @param from One position.
+ * @param to The other position.
+ * @returns The straight-line distance.
+ */
+function getDistance(from: Vector, to: Vector): number {
+  return Math.hypot(from[0] - to[0], from[1] - to[1]);
+}
 
-/** Cluster centers spread apart by rejection sampling */
-const createCenters = (): Vec[] => {
-  const centers: Vec[] = [];
-  for (let attempt = 0; centers.length < CLUSTER_COUNT && attempt < 500; attempt++) {
-    const candidate: Vec = [0.16 + Math.random() * 0.68, 0.16 + Math.random() * 0.68];
-    if (centers.every((center) => distance(center, candidate) > 0.22)) centers.push(candidate);
+/**
+ * Picks a uniformly random position, away from the edges.
+ *
+ * @param margin The distance to keep from every edge.
+ * @returns The position.
+ */
+function pickRandomPosition(margin: number): Vector {
+  const range = 1 - 2 * margin;
+  return [margin + Math.random() * range, margin + Math.random() * range];
+}
+
+/**
+ * Picks an index at random, each with a chance proportional to its weight.
+ *
+ * @param weights The weights, all positive.
+ * @returns The picked index.
+ */
+function pickWeightedIndex(weights: readonly number[]): number {
+  let roll = Math.random() * weights.reduce((total, weight) => total + weight, 0);
+  let index = 0;
+  while (index < weights.length - 1 && roll >= weights[index]) {
+    roll -= weights[index];
+    index++;
+  }
+  return index;
+}
+
+/**
+ * Places cluster centers spread apart, by rejection sampling.
+ *
+ * @returns The centers; fewer than the cluster count in the unlikely case that no more fit.
+ */
+function createClusterCenters(): Vector[] {
+  const centers: Vector[] = [];
+  for (let attempt = 0; centers.length < CLUSTER_COUNT && attempt < MAX_CENTER_ATTEMPTS; attempt++) {
+    const candidate = pickRandomPosition(CENTER_MARGIN);
+    if (centers.every((center) => getDistance(center, candidate) > MIN_CENTER_DISTANCE)) {
+      centers.push(candidate);
+    }
   }
   return centers;
-};
+}
 
-/** Anisotropic, rotated gaussian clusters of uneven size, plus a few outliers */
-const createTargets = (): { target: Vec; cluster: number }[] => {
-  const centers = createCenters();
-  const shapes = centers.map(() => ({
+/**
+ * Creates a cluster of random orientation, spread and weight, so the clusters vary in shape and size.
+ *
+ * @param center The cluster's center.
+ * @returns The cluster's shape.
+ */
+function createClusterShape(center: Vector): ClusterShape {
+  return {
+    center,
     angle: Math.random() * Math.PI,
-    spreadX: 0.025 + Math.random() * 0.045,
-    spreadY: 0.015 + Math.random() * 0.025,
+    spreadAlong: 0.025 + Math.random() * 0.045,
+    spreadAcross: 0.015 + Math.random() * 0.025,
     weight: 0.5 + Math.random(),
-  }));
-  const totalWeight = shapes.reduce((total, shape) => total + shape.weight, 0);
+  };
+}
 
+/**
+ * Samples a position from a cluster's gaussian distribution.
+ *
+ * @param shape The cluster's shape.
+ * @returns The position.
+ */
+function samplePositionInCluster({ center, angle, spreadAlong, spreadAcross }: ClusterShape): Vector {
+  const along = sampleGaussian() * spreadAlong;
+  const across = sampleGaussian() * spreadAcross;
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  return [center[0] + along * cos - across * sin, center[1] + along * sin + across * cos];
+}
+
+/**
+ * Places every point in a new set of clusters, with a few left over as outliers.
+ *
+ * @returns The trained placement of each point, by index.
+ */
+function createTrainedPlacements(): TrainedPlacement[] {
+  const shapes = createClusterCenters().map((center) => createClusterShape(center));
+  const weights = shapes.map((shape) => shape.weight);
   return Array.from({ length: POINT_COUNT }, () => {
-    if (Math.random() < OUTLIER_SHARE) return { target: randomNoise(), cluster: -1 };
-    let roll = Math.random() * totalWeight;
-    let cluster = 0;
-    while (cluster < shapes.length - 1 && roll >= shapes[cluster].weight) {
-      roll -= shapes[cluster].weight;
-      cluster++;
+    if (Math.random() < OUTLIER_SHARE) {
+      return { trainedPosition: pickRandomPosition(SCATTER_MARGIN), cluster: undefined };
     }
-    const { angle, spreadX, spreadY } = shapes[cluster];
-    const [dx, dy] = [gaussian() * spreadX, gaussian() * spreadY];
-    const [cx, cy] = centers[cluster];
-    return {
-      target: [cx + dx * Math.cos(angle) - dy * Math.sin(angle), cy + dx * Math.sin(angle) + dy * Math.cos(angle)],
-      cluster,
-    };
+    const cluster = pickWeightedIndex(weights);
+    return { trainedPosition: samplePositionInCluster(shapes[cluster]), cluster };
   });
-};
+}
 
-/** The `count` points whose trained positions are nearest `position`, by index */
-const nearestTo = (points: Point[], position: Vec, count: number) =>
-  points
-    .map((point, index) => ({ index, distance: distance(point.target, position) }))
-    .filter(({ distance: d }) => d > 0)
+/**
+ * Finds the points whose trained positions are nearest to a position, leaving out any point exactly on it.
+ *
+ * @param points The points to search.
+ * @param position The position to search around.
+ * @param count How many points to find.
+ * @returns The indexes of the nearest points, nearest first.
+ */
+function findNearestPointIndexes(points: readonly Point[], position: Vector, count: number): number[] {
+  return points
+    .map((point, index) => ({ index, distance: getDistance(point.trainedPosition, position) }))
+    .filter(({ distance }) => distance > 0)
     .sort((a, b) => a.distance - b.distance)
     .slice(0, count)
     .map(({ index }) => index);
-
-/** Just outside a cluster, so the links to its neighbours read as reaching in */
-const chooseQuery = (points: Point[]): Cycle['query'] => {
-  const clustered = points.filter((point) => point.cluster >= 0);
-  const anchor = clustered[Math.floor(Math.random() * clustered.length)].target;
-  const angle = Math.random() * Math.PI * 2;
-  const position: Vec = [
-    clamp(anchor[0] + Math.cos(angle) * 0.1, 0.04, 0.96),
-    clamp(anchor[1] + Math.sin(angle) * 0.1, 0.04, 0.96),
-  ];
-  return { position, neighbours: nearestTo(points, position, NEIGHBOURS) };
-};
+}
 
 /**
- * A new cycle training towards new clusters. The scatter, drift and size of
- * each point carry over from `previous`, so nothing jumps when a run restarts.
+ * Places a query just outside a random cluster, so the links to its neighbours read as reaching in.
+ *
+ * @param points The trained points.
+ * @returns The query and its nearest neighbours.
  */
-export const createCycle = (previous?: Cycle): Cycle => {
-  const points = createTargets().map(({ target, cluster }, index) => {
-    const before = previous?.points[index];
+function createQuery(points: readonly Point[]): Query {
+  const clusteredPoints = points.filter((point) => point.cluster !== undefined);
+  const anchor = clusteredPoints[Math.floor(Math.random() * clusteredPoints.length)].trainedPosition;
+  const angle = Math.random() * Math.PI * 2;
+  const position: Vector = [
+    clamp(anchor[0] + Math.cos(angle) * QUERY_OFFSET, SCATTER_MARGIN, 1 - SCATTER_MARGIN),
+    clamp(anchor[1] + Math.sin(angle) * QUERY_OFFSET, SCATTER_MARGIN, 1 - SCATTER_MARGIN),
+  ];
+  return { position, neighbourIndexes: findNearestPointIndexes(points, position, NEIGHBOUR_COUNT) };
+}
+
+/**
+ * Creates a cycle that trains towards new clusters. Each point's scatter position, drift and size carry over
+ * from the previous cycle, so nothing jumps when a run restarts.
+ *
+ * @param previous The cycle that just ended, if any.
+ * @returns The new cycle.
+ */
+export function createCycle(previous?: Cycle): Cycle {
+  const points = createTrainedPlacements().map(({ trainedPosition, cluster }, index): Point => {
+    const previousPoint = previous?.points[index];
     return {
-      noise: before?.noise ?? randomNoise(),
-      target,
+      scatterPosition: previousPoint?.scatterPosition ?? pickRandomPosition(SCATTER_MARGIN),
+      trainedPosition,
       cluster,
       delay: Math.random(),
-      wobble: before?.wobble ?? Math.random() * Math.PI * 2,
-      radius: before?.radius ?? 0.6 + Math.random() * 0.8,
+      driftPhase: previousPoint?.driftPhase ?? Math.random() * Math.PI * 2,
+      radius: previousPoint?.radius ?? 0.6 + Math.random() * 0.8,
     };
   });
-  return { points, query: chooseQuery(points) };
-};
+  return { points, query: createQuery(points) };
+}
 
-export const phaseAt = (elapsed: number): Phase => {
-  let start = 0;
-  for (const phase of PHASES) {
-    if (elapsed < start + phase.duration) {
-      return {
-        name: phase.name,
-        label: phase.label,
-        progress: (elapsed - start) / phase.duration,
-        time: elapsed - start,
-      };
+/**
+ * Finds where the loop is at a time in the cycle.
+ *
+ * @param elapsedMs The time since the cycle started, in milliseconds.
+ * @returns The phase, how far through it, and how long it has run.
+ */
+export function getPhase(elapsedMs: number): Phase {
+  let phaseStartMs = 0;
+  for (const { name, durationMs } of PHASES) {
+    if (elapsedMs < phaseStartMs + durationMs) {
+      const phaseElapsedMs = elapsedMs - phaseStartMs;
+      return { name, progress: phaseElapsedMs / durationMs, elapsedMs: phaseElapsedMs };
     }
-    start += phase.duration;
+    phaseStartMs += durationMs;
   }
-  const last = PHASES[PHASES.length - 1];
-  return { name: last.name, label: last.label, progress: 1, time: last.duration };
-};
+  const lastPhase = PHASES[PHASES.length - 1];
+  return { name: lastPhase.name, progress: 1, elapsedMs: lastPhase.durationMs };
+}
 
-/** 0 while scattered, 1 once trained */
-export const trainedAmount = (point: Point, phase: Phase) => {
-  if (phase.name === 'raw') return 0;
+/**
+ * Gets how far a point has trained, from its scatter position towards its trained position.
+ *
+ * @param point The point.
+ * @param phase Where the loop is.
+ * @returns 0 while scattered, 1 once trained.
+ */
+export function getTrainedAmount(point: Point, phase: Phase): number {
   // Each point moves in its own window of the phase, so the points don't set off or land all at once
-  const moved = easeInOut(clamp((phase.progress - point.delay * STAGGER) / (1 - STAGGER), 0, 1));
-  if (phase.name === 'train') return moved;
-  if (phase.name === 'dissolve') return 1 - moved;
-  return 1;
-};
+  const moved = easeInOut(clamp((phase.progress - point.delay * STAGGER_SHARE) / (1 - STAGGER_SHARE), 0, 1));
+  switch (phase.name) {
+    case 'raw':
+      return 0;
+    case 'train':
+      return moved;
+    case 'query':
+      return 1;
+    case 'dissolve':
+      return 1 - moved;
+    default:
+      throw new Error(`Unknown phase: ${phase.name satisfies never}`);
+  }
+}
 
-/** Writes the point's position at time `now` into `out`, so drawing a frame doesn't allocate */
-export const positionAt = (point: Point, trained: number, now: number, out: Vec) => {
-  out[0] = lerp(point.noise[0], point.target[0], trained) + Math.sin(now / 1400 + point.wobble) * DRIFT;
-  out[1] = lerp(point.noise[1], point.target[1], trained) + Math.cos(now / 1700 + point.wobble) * DRIFT;
-};
+/**
+ * Writes a point's position at a moment into a vector, so drawing a frame doesn't allocate.
+ *
+ * @param point The point.
+ * @param trainedAmount How far the point has trained, from 0 to 1.
+ * @param timeMs The current time, which drives the drift, in milliseconds.
+ * @param position The vector to write the position into.
+ */
+export function writePointPosition(point: Point, trainedAmount: number, timeMs: number, position: Vector) {
+  const [scatterX, scatterY] = point.scatterPosition;
+  const [trainedX, trainedY] = point.trainedPosition;
+  // A different rate on each axis, so a point drifts around a loop rather than along a line
+  const driftX = Math.sin(timeMs / 1400 + point.driftPhase) * DRIFT_DISTANCE;
+  const driftY = Math.cos(timeMs / 1700 + point.driftPhase) * DRIFT_DISTANCE;
+  position[0] = interpolate(scatterX, trainedX, trainedAmount) + driftX;
+  position[1] = interpolate(scatterY, trainedY, trainedAmount) + driftY;
+}
 
-/** The training step shown in the label; the dissolve rewinds it on the points' easing, reaching 0 at the scatter */
-export const trainingStepAt = (phase: Phase) => {
-  const steps = {
-    raw: 0,
-    train: phase.progress * TRAINING_STEPS,
-    query: TRAINING_STEPS,
-    dissolve: (1 - easeInOut(phase.progress)) * TRAINING_STEPS,
-  }[phase.name];
-  return Math.round(steps / 100) * 100;
-};
+/**
+ * Gets the training step shown in the label. The dissolve rewinds it on the points' easing, reaching 0 as they
+ * reach the scatter.
+ *
+ * @param phase Where the loop is.
+ * @returns The step, rounded to hundreds.
+ */
+export function getTrainingStep(phase: Phase): number {
+  return Math.round(getUnroundedTrainingStep(phase) / 100) * 100;
+}
+
+/**
+ * Gets the training step at a phase, before rounding.
+ *
+ * @param phase Where the loop is.
+ * @returns The step.
+ */
+function getUnroundedTrainingStep(phase: Phase): number {
+  switch (phase.name) {
+    case 'raw':
+      return 0;
+    case 'train':
+      return phase.progress * TRAINING_STEPS;
+    case 'query':
+      return TRAINING_STEPS;
+    case 'dissolve':
+      return (1 - easeInOut(phase.progress)) * TRAINING_STEPS;
+    default:
+      throw new Error(`Unknown phase: ${phase.name satisfies never}`);
+  }
+}
