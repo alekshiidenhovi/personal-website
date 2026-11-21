@@ -1,0 +1,53 @@
+/*
+ * A discipline's color, set on an element by its `data-discipline` attribute (see content/disciplines.ts). Cards
+ * and figures inside tint with `--card-color`, and text selects in it.
+ */
+[data-discipline] {
+  --selection-color: var(--card-color);
+}
+
+[data-discipline="machine-learning"] {
+  --card-color: var(--primary-500);
+}
+
+[data-discipline="data-foundations"] {
+  --card-color: var(--accent-500);
+}
+
+[data-discipline="web-development"] {
+  --card-color: var(--warning-500);
+}
+
+/*
+ * A card in its discipline's color: a faint tinted border, and a dim glow from the top-left corner. Clipped
+ * rather than hidden, so the card can't shrink below its content in a flex column.
+ */
+.tinted-card {
+  position: relative;
+  overflow: clip;
+  border: 1px solid color-mix(in srgb, var(--card-color) 18%, var(--neutral-800));
+  background-color: var(--neutral-900);
+}
+
+.tinted-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 50% 90% at 0% 0%,
+    color-mix(in srgb, var(--card-color), transparent 86%),
+    transparent
+  );
+  pointer-events: none;
+}
+
+/* Above the glow */
+.tinted-card > * {
+  position: relative;
+}
+
+/* The faint dotted grid behind cards and figures */
+.dot-grid {
+  background-image: radial-gradient(color-mix(in srgb, var(--neutral-500), transparent 85%) 1px, transparent 1px);
+  background-size: 1.25rem 1.25rem;
+}

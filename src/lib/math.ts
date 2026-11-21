@@ -50,3 +50,23 @@ export function pickWeightedIndex(weights: readonly number[]): number {
   }
   return index;
 }
+
+/**
+ * Eases a value from 0 to 1 along a smooth S-curve, flat at both ends.
+ *
+ * @param progress Linear progress, from 0 to 1.
+ * @returns The eased progress, from 0 to 1.
+ */
+export function smoothstep(progress: number): number {
+  return progress * progress * (3 - 2 * progress);
+}
+
+/**
+ * Picks an item at random, each equally likely.
+ *
+ * @param items The items, at least one.
+ * @returns The picked item.
+ */
+export function pickRandomItem<T>(items: readonly T[]): T {
+  return items[Math.floor(Math.random() * items.length)];
+}

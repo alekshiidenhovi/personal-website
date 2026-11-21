@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { CV } from '../../content/contact';
+import { getRoleHref } from '../../content/experience';
 import { getSectionHref, HERO_ID } from '../../content/sections';
 import ButtonLink from '../ui/ButtonLink.vue';
 import EmbeddingSpace from './EmbeddingSpace.vue';
@@ -22,7 +23,7 @@ import HeroTitle from './HeroTitle.vue';
             View {{ CV.label }}
           </ButtonLink>
         </div>
-        <HeroStatus href="#role-data-scientist">Data Scientist at Supercell</HeroStatus>
+        <HeroStatus :href="getRoleHref('role-data-scientist')">Data Scientist at Supercell</HeroStatus>
       </div>
       <EmbeddingSpace class="embedding" />
     </div>

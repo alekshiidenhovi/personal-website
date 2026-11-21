@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import ContactSection from './components/contact/ContactSection.vue';
+import ExperienceSection from './components/experience/ExperienceSection.vue';
+import ExpertiseSection from './components/expertise/ExpertiseSection.vue';
 import HeroSection from './components/hero/HeroSection.vue';
 import NavBar from './components/layout/NavBar.vue';
 import PinnedSection from './components/layout/PinnedSection.vue';
@@ -13,9 +15,9 @@ import FilmGrain from './components/ui/FilmGrain.vue';
     <NavBar />
     <main>
       <HeroSection />
+      <ExpertiseSection />
+      <ExperienceSection />
       <!-- Placeholders with each section's page count, until the sections are built -->
-      <PinnedSection id="expertise" :page-count="3" />
-      <PinnedSection id="professional-experience" :page-count="4" />
       <PinnedSection id="projects" :page-count="2" />
       <PinnedSection id="education" />
       <ContactSection />

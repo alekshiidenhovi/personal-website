@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
+import { type AnimationFrame, useAnimationFrame } from '../../composables/useAnimationFrame';
 import { useIsInViewport } from '../../composables/useIsInViewport';
 import { convertToCanvasColor } from '../../lib/color';
 import { runWhenIdle } from '../../lib/idle';
@@ -72,7 +73,6 @@ let cycleStartMs = 0;
 let canvasSize = { width: 0, height: 0 };
 /** The points' canvas positions this frame; reused across frames, so drawing doesn't allocate. */
 const pointPositions: Vector[] = cycle.points.map(() => [0, 0]);
-let frameId = 0;
 let resizeObserver: ResizeObserver | undefined;
 let cancelIdleStart: (() => void) | undefined;
 
@@ -229,16 +229,15 @@ function resizeCanvas(painter: CanvasPainter, canvas: HTMLCanvasElement) {
 }
 
 /**
- * Draws a frame of the animation, starting a new cycle when one ends, and schedules the next frame.
+ * Draws a frame of the animation, starting a new cycle when one ends.
  *
- * @param timeMs The frame's time, in milliseconds.
+ * @param frame The frame's timing.
  */
-function animateFrame(timeMs: number) {
+function animateFrame({ timeMs }: AnimationFrame) {
   if (timeMs - cycleStartMs >= LOOP_MS) {
     startNewCycle(timeMs);
   }
   drawFrame(timeMs);
-  frameId = requestAnimationFrame(animateFrame);
 }
 
 /** Starts the animation from a new cycle; it then plays while the visual is in view. */
@@ -247,14 +246,7 @@ function startPlaying() {
   isStarted.value = true;
 }
 
-watch(isPlaying, (isNowPlaying) => {
-  if (isNowPlaying) {
-    frameId = requestAnimationFrame(animateFrame);
-  } else {
-    cancelAnimationFrame(frameId);
-    frameId = 0;
-  }
-});
+useAnimationFrame(isPlaying, animateFrame);
 
 onMounted(() => {
   const canvas = canvasRef.value;
@@ -278,7 +270,6 @@ onMounted(() => {
 
 onUnmounted(() => {
   cancelIdleStart?.();
-  cancelAnimationFrame(frameId);
   resizeObserver?.disconnect();
 });
 </script>

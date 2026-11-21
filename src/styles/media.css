@@ -2,7 +2,7 @@
  * The site's breakpoints, defined once. Import this file at the top of any
  * style block that uses them: `@import "<path>/styles/media.css";` (it outputs
  * nothing, and a name used without it fails the build). Widths follow
- * Tailwind's: sm 40rem, md 48rem, lg 64rem.
+ * Tailwind's: sm 40rem, md 48rem, lg 64rem, xl 80rem.
  */
 
 /* Phones: narrow, or too short for more (phones in landscape) */
@@ -11,6 +11,11 @@
 @custom-media --below-sm (width < 40rem);
 @custom-media --below-md (width < 48rem);
 @custom-media --below-lg (width < 64rem);
+@custom-media --below-xl (width < 80rem);
+
+/* Wide screens: lg and up, the desktop compositions */
+@custom-media --wide (width >= 64rem);
+
 @custom-media --short (height < 30rem);
 @custom-media --tablet-portrait (40rem <= width < 64rem) and (orientation: portrait);
 

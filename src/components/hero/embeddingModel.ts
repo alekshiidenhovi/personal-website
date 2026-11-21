@@ -4,7 +4,7 @@
  * nearest neighbours, and dissolves back into the scatter.
  */
 
-import { clamp, interpolate, pickWeightedIndex, sampleGaussian, type Vector } from '../../lib/math';
+import { clamp, interpolate, pickRandomItem, pickWeightedIndex, sampleGaussian, type Vector } from '../../lib/math';
 import { easeInOut } from '../../lib/motion';
 
 /** One data point, and the path it takes through a cycle. */
@@ -204,7 +204,7 @@ function findNearestPointIndexes(points: readonly Point[], position: Vector, cou
  */
 function createQuery(points: readonly Point[]): Query {
   const clusteredPoints = points.filter((point) => point.cluster !== undefined);
-  const anchor = clusteredPoints[Math.floor(Math.random() * clusteredPoints.length)].trainedPosition;
+  const anchor = pickRandomItem(clusteredPoints).trainedPosition;
   const angle = Math.random() * Math.PI * 2;
   const position: Vector = [
     clamp(anchor[0] + Math.cos(angle) * QUERY_OFFSET, SCATTER_MARGIN, 1 - SCATTER_MARGIN),
