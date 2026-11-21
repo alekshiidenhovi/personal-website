@@ -4,6 +4,17 @@ import { prefersReducedMotion } from './motion';
 export const SCROLL_SETTLE_MS = 150;
 
 /**
+ * Reads an element's top scroll margin, falling back to none. The value comes from the browser, whose formatting of
+ * computed styles can vary, and one unreadable value mustn't stop every swipe and link from working.
+ *
+ * @param element The element.
+ * @returns The margin in pixels, or 0 when it can't be read.
+ */
+function readScrollMarginTopOrZero(element: Element): number {
+  return Number.parseFloat(getComputedStyle(element).scrollMarginTop) || 0;
+}
+
+/**
  * Gets the scroll offset at which an element rests at its snap position.
  *
  * @param scroller The scroll container.
@@ -11,11 +22,7 @@ export const SCROLL_SETTLE_MS = 150;
  * @returns The element's top edge less its scroll margin, capped at the scroller's furthest offset.
  */
 export function getSnapScrollTop(scroller: HTMLElement, element: Element): number {
-  const scrollMargin = Number(getComputedStyle(element).scrollMarginTop.replace(/px$/, ''));
-  if (Number.isNaN(scrollMargin)) {
-    throw new Error(`Unexpected scroll margin on ${element.tagName}`);
-  }
-  const top = Math.round(element.getBoundingClientRect().top + scroller.scrollTop - scrollMargin);
+  const top = Math.round(element.getBoundingClientRect().top + scroller.scrollTop - readScrollMarginTopOrZero(element));
   return Math.min(top, scroller.scrollHeight - scroller.clientHeight);
 }
 
