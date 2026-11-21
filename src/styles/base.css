@@ -1,0 +1,42 @@
+@import "./media.css";
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html {
+  /*
+   * Scale the whole design with the viewport so big screens show the same
+   * composition, only larger. 16px at the 1728×964 reference viewport (a 16"
+   * MacBook), growing with whichever dimension runs out first. Never below the
+   * user's font size, at most double it.
+   */
+  font-size: clamp(100%, min(0.926vw, 1.66vh), 200%);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  background-color: var(--neutral-950);
+}
+
+/* Blue by default; content in a discipline's color selects in that color */
+::selection {
+  color: var(--neutral-950);
+  background-color: var(--selection-color, var(--primary-400));
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary-400);
+  outline-offset: 4px;
+}
+
+@media (--reduced-motion) {
+  *,
+  *::before,
+  *::after {
+    /* biome-ignore-start lint/complexity/noImportantStyles: overrides every component's animations */
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    /* biome-ignore-end lint/complexity/noImportantStyles: overrides every component's animations */
+  }
+}

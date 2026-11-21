@@ -1,0 +1,11 @@
+/*
+ * The site's breakpoints, defined once. Import this file at the top of any
+ * style block that uses them: `@import "<path>/styles/media.css";` (it outputs
+ * nothing, and a name used without it fails the build). Widths follow
+ * Tailwind's: sm 40rem, lg 64rem.
+ */
+
+/* Phones: narrow, or too short for more (phones in landscape) */
+@custom-media --phone (width < 40rem), (height < 30rem);
+
+@custom-media --reduced-motion (prefers-reduced-motion: reduce);

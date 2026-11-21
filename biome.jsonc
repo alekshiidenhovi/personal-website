@@ -7,7 +7,7 @@
     "defaultBranch": "main"
   },
   "files": {
-    "includes": ["**", "!node_modules/**/*", "!.pnpm-store/**/*", "!src/style.css"]
+    "includes": ["**", "!node_modules/**/*", "!.pnpm-store/**/*"]
   },
   "html": {
     "experimentalFullSupportEnabled": true,
@@ -24,7 +24,14 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "recommended": true,
+      // The breakpoints are custom media (see src/styles/media.css), which Lightning CSS compiles
+      "suspicious": {
+        "noUnknownAtRules": { "level": "error", "options": { "ignore": ["custom-media"] } }
+      },
+      "correctness": {
+        "noUnknownMediaFeatureName": "off"
+      }
     }
   },
   "assist": {
@@ -36,6 +43,11 @@
     }
   },
   "overrides": [
+    {
+      // Real media features are only written here, so check their names here
+      "includes": ["src/styles/media.css"],
+      "linter": { "rules": { "correctness": { "noUnknownMediaFeatureName": "error" } } }
+    },
     {
       "includes": ["**/*.astro", "**/*.vue"],
       "linter": {
