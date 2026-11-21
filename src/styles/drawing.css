@@ -86,6 +86,26 @@
   filter: drop-shadow(0 0 4px var(--card-color));
 }
 
+/* Appears in sequence while active, each element after its own `--delay` */
+.drawing-sequence {
+  opacity: 0;
+}
+
+.drawing.active .drawing-sequence {
+  animation: drawing-appear 0.3s ease both;
+  animation-delay: var(--delay, 0s);
+}
+
+@keyframes drawing-appear {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
 /* A connector line with something flowing along it while active */
 .drawing-flow {
   stroke-dasharray: 3 4;

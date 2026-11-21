@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useLiveTicker } from '../../../composables/useLiveTicker';
+import FlowArrow from '../../ui/FlowArrow.vue';
 
 /**
  * Support tickets classified by GPT-3. Tickets queue up from above; the active ticket, level with the model, is
@@ -65,9 +66,6 @@ const TICKET = { x: 10, width: 136, height: 24, slot: 30 };
 const ACTIVE_TICKET_Y = MODEL_CENTER_Y - TICKET.height / 2;
 const BIN = { x: 272, y: 40, width: 118, height: 28, gap: 8 };
 const EXIT_OFFSET_X = -24;
-const ARROW_START_X = TICKET.x + TICKET.width + 2;
-const ARROW_TIP_X = MODEL.x - 2;
-const ARROW_HEAD_SIZE = 4;
 
 /**
  * Gets the top edge of a category's bin.
@@ -158,12 +156,7 @@ useLiveTicker(() => props.active, advance, STEP_MS);
         :y2="ACTIVE_TICKET_Y + TICKET.height - 2" class="drawing-line accent scan" />
     </g>
 
-    <!-- The active ticket goes to the model: the shaft flows while active, the head stays solid -->
-    <line :x1="ARROW_START_X" :y1="MODEL_CENTER_Y" :x2="ARROW_TIP_X - 1" :y2="MODEL_CENTER_Y"
-      class="drawing-line drawing-flow" />
-    <path
-      :d="`M${ARROW_TIP_X - ARROW_HEAD_SIZE} ${MODEL_CENTER_Y - ARROW_HEAD_SIZE} L${ARROW_TIP_X} ${MODEL_CENTER_Y} L${ARROW_TIP_X - ARROW_HEAD_SIZE} ${MODEL_CENTER_Y + ARROW_HEAD_SIZE}`"
-      class="drawing-line accent" />
+    <FlowArrow :x1="TICKET.x + TICKET.width + 2" :x2="MODEL.x - 2" :y="MODEL_CENTER_Y" />
 
     <rect :x="MODEL.x" :y="MODEL.y" :width="MODEL.width" :height="MODEL.height" rx="6"
       class="drawing-line accent model glow" />

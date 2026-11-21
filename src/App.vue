@@ -6,6 +6,7 @@ import HeroSection from './components/hero/HeroSection.vue';
 import NavBar from './components/layout/NavBar.vue';
 import PinnedSection from './components/layout/PinnedSection.vue';
 import SlideshowScroller from './components/layout/SlideshowScroller.vue';
+import ProjectsSection from './components/projects/ProjectsSection.vue';
 import FilmGrain from './components/ui/FilmGrain.vue';
 </script>
 
@@ -17,8 +18,8 @@ import FilmGrain from './components/ui/FilmGrain.vue';
       <HeroSection />
       <ExpertiseSection />
       <ExperienceSection />
-      <!-- Placeholders with each section's page count, until the sections are built -->
-      <PinnedSection id="projects" :page-count="2" />
+      <ProjectsSection />
+      <!-- A placeholder, until the section is built -->
       <PinnedSection id="education" />
       <ContactSection />
     </main>
