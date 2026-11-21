@@ -40,3 +40,9 @@ html {
     /* biome-ignore-end lint/complexity/noImportantStyles: overrides every component's animations */
   }
 }
+
+/* Long jumps between slides crossfade in place (see lib/scroll jumpTo) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.4s;
+}

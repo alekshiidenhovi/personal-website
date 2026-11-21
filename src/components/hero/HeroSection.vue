@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { CV } from "../../content/contact";
+import { getSectionHref, HERO_ID } from "../../content/sections";
 import ButtonLink from "../ui/ButtonLink.vue";
 import EmbeddingSpace from "./EmbeddingSpace.vue";
 import HeroScrollCue from "./HeroScrollCue.vue";
@@ -8,13 +9,14 @@ import HeroTitle from "./HeroTitle.vue";
 </script>
 
 <template>
-  <section id="hero" class="hero">
+  <!-- A slide stop of its own, like each page of the sections -->
+  <section :id="HERO_ID" class="hero" data-slide>
     <div class="glow"></div>
     <div class="content">
       <div class="intro">
         <HeroTitle />
         <div class="actions">
-          <ButtonLink href="#professional-experience" icon="heroicons:arrow-down-20-solid">See my work</ButtonLink>
+          <ButtonLink :href="getSectionHref('professional-experience')" icon="heroicons:arrow-down-20-solid">See my work</ButtonLink>
           <!-- Trailing like the primary's arrow; up-right as it opens in a new tab -->
           <ButtonLink :href="CV.href" variant="secondary" icon="heroicons:arrow-up-right-20-solid" external>
             View {{ CV.label }}
@@ -24,7 +26,7 @@ import HeroTitle from "./HeroTitle.vue";
       </div>
       <EmbeddingSpace class="embedding" />
     </div>
-    <HeroScrollCue href="#expertise" label="Scroll to expertise" />
+    <HeroScrollCue :href="getSectionHref('expertise')" label="Scroll to expertise" />
   </section>
 </template>
 
@@ -33,6 +35,8 @@ import HeroTitle from "./HeroTitle.vue";
 
 .hero {
   position: relative;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
   display: flex;
   align-items: center;
   justify-content: center;

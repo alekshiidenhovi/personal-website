@@ -2,6 +2,8 @@
   "extends": "@vue/tsconfig/tsconfig.dom.json",
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    // Vite 7 builds for baseline browsers (Safari 16.4+), which have ES2023's built-ins, such as findLast
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
