@@ -1,4 +1,4 @@
-import type { Vector } from './embeddingModel';
+import type { Vector } from '../../lib/math';
 
 /** The highest pixel density drawn at; denser screens gain little detail for the cost. */
 const MAX_PIXEL_RATIO = 2;

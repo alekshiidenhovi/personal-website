@@ -1,3 +1,6 @@
+/** A position in two dimensions. */
+export type Vector = [x: number, y: number];
+
 /**
  * Limits a value to a range.
  *
@@ -30,4 +33,20 @@ export function interpolate(from: number, to: number, amount: number): number {
 export function sampleGaussian(): number {
   // 1 - random() is in (0, 1], so the logarithm never sees 0
   return Math.sqrt(-2 * Math.log(1 - Math.random())) * Math.cos(2 * Math.PI * Math.random());
+}
+
+/**
+ * Picks an index at random, each with a chance proportional to its weight.
+ *
+ * @param weights The weights, all positive.
+ * @returns The picked index.
+ */
+export function pickWeightedIndex(weights: readonly number[]): number {
+  let roll = Math.random() * weights.reduce((total, weight) => total + weight, 0);
+  let index = 0;
+  while (index < weights.length - 1 && roll >= weights[index]) {
+    roll -= weights[index];
+    index++;
+  }
+  return index;
 }

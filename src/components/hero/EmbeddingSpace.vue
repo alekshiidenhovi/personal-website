@@ -3,7 +3,7 @@ import { computed, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vu
 import { useIsInViewport } from '../../composables/useIsInViewport';
 import { convertToCanvasColor } from '../../lib/color';
 import { runWhenIdle } from '../../lib/idle';
-import { clamp, interpolate } from '../../lib/math';
+import { clamp, interpolate, type Vector } from '../../lib/math';
 import { easeInOut, prefersReducedMotion } from '../../lib/motion';
 import CropMarks from '../ui/CropMarks.vue';
 import { CanvasPainter } from './CanvasPainter';
@@ -17,7 +17,6 @@ import {
   type Phase,
   type PhaseName,
   RESTING_ELAPSED_MS,
-  type Vector,
   writePointPosition,
 } from './embeddingModel';
 

@@ -4,11 +4,8 @@
  * nearest neighbours, and dissolves back into the scatter.
  */
 
-import { clamp, interpolate, sampleGaussian } from '../../lib/math';
+import { clamp, interpolate, pickWeightedIndex, sampleGaussian, type Vector } from '../../lib/math';
 import { easeInOut } from '../../lib/motion';
-
-/** A position in the space. */
-export type Vector = [x: number, y: number];
 
 /** One data point, and the path it takes through a cycle. */
 export interface Point {
@@ -117,22 +114,6 @@ function getDistance(from: Vector, to: Vector): number {
 function pickRandomPosition(margin: number): Vector {
   const range = 1 - 2 * margin;
   return [margin + Math.random() * range, margin + Math.random() * range];
-}
-
-/**
- * Picks an index at random, each with a chance proportional to its weight.
- *
- * @param weights The weights, all positive.
- * @returns The picked index.
- */
-function pickWeightedIndex(weights: readonly number[]): number {
-  let roll = Math.random() * weights.reduce((total, weight) => total + weight, 0);
-  let index = 0;
-  while (index < weights.length - 1 && roll >= weights[index]) {
-    roll -= weights[index];
-    index++;
-  }
-  return index;
 }
 
 /**
