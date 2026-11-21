@@ -8,4 +8,8 @@
 /* Phones: narrow, or too short for more (phones in landscape) */
 @custom-media --phone (width < 40rem), (height < 30rem);
 
+@custom-media --below-lg (width < 64rem);
+@custom-media --short (height < 30rem);
+@custom-media --tablet-portrait (40rem <= width < 64rem) and (orientation: portrait);
+
 @custom-media --reduced-motion (prefers-reduced-motion: reduce);
