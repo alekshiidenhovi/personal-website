@@ -1,16 +1,17 @@
 <script setup lang="ts">
-import Icon from "./Icon.vue";
-import type { IconName } from "./icons";
+import Icon from './Icon.vue';
+import type { IconName } from './icons';
 
-/** A link styled as a button: solid for the main action, outlined otherwise, with an optional trailing icon */
+/** A link styled as a button: solid for the main action, outlined otherwise, with an optional trailing icon. */
 interface Props {
   href: string;
-  variant?: "primary" | "secondary";
+  variant?: 'primary' | 'secondary';
+  /** An icon after the label. */
   icon?: IconName;
-  /** Opens in a new tab */
+  /** Whether the link opens in a new tab. */
   external?: boolean;
 }
-const props = withDefaults(defineProps<Props>(), { variant: "primary", icon: undefined, external: false });
+const props = withDefaults(defineProps<Props>(), { variant: 'primary', icon: undefined, external: false });
 </script>
 
 <template>

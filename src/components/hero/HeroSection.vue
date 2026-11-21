@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { CV } from "../../content/contact";
-import { getSectionHref, HERO_ID } from "../../content/sections";
-import ButtonLink from "../ui/ButtonLink.vue";
-import EmbeddingSpace from "./EmbeddingSpace.vue";
-import HeroScrollCue from "./HeroScrollCue.vue";
-import HeroStatus from "./HeroStatus.vue";
-import HeroTitle from "./HeroTitle.vue";
+import { CV } from '../../content/contact';
+import { getSectionHref, HERO_ID } from '../../content/sections';
+import ButtonLink from '../ui/ButtonLink.vue';
+import EmbeddingSpace from './EmbeddingSpace.vue';
+import HeroScrollCue from './HeroScrollCue.vue';
+import HeroStatus from './HeroStatus.vue';
+import HeroTitle from './HeroTitle.vue';
 </script>
 
 <template>

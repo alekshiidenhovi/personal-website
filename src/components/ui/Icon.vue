@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ICONS, type IconName } from "./icons";
+import { ICONS, type IconName } from './icons';
 
-/** An inline SVG icon, sized to the text (1em) and colored with it */
+/** An inline SVG icon, sized to the text (1em) and colored with it. */
 const props = defineProps<{ icon: IconName }>();
 </script>
 

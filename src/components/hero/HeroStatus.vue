@@ -1,6 +1,10 @@
 <script setup lang="ts">
-/** The current position, after a glowing "online" dot, linking to it */
-defineProps<{ href: string }>();
+/** The current position, after a glowing "online" dot, linking to it. */
+interface Props {
+  /** Where the position is described. */
+  href: string;
+}
+defineProps<Props>();
 </script>
 
 <template>

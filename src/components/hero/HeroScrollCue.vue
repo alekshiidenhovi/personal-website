@@ -1,8 +1,14 @@
 <script setup lang="ts">
-import Icon from "../ui/Icon.vue";
+import Icon from '../ui/Icon.vue';
 
-/** A bobbing arrow at the bottom of the hero, scrolling (rather than jumping) to what follows */
-defineProps<{ href: string; label: string }>();
+/** A bobbing arrow at the bottom of the hero, scrolling (rather than jumping) to what follows. */
+interface Props {
+  /** The in-page link to what follows. */
+  href: string;
+  /** The accessible name, as the arrow has no text. */
+  label: string;
+}
+defineProps<Props>();
 </script>
 
 <template>
