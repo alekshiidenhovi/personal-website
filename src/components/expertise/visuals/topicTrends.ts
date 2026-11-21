@@ -24,18 +24,21 @@ export interface Spike {
   readonly step: number;
 }
 
+/**
+ * Where a topic is heading: newly found, spiking within the last week, or the last week busier or quieter than the
+ * week before.
+ */
+export type TopicTrend = 'new' | 'spike' | 'rising' | 'falling';
+
 /** A topic's row in the dashboard. */
 export interface TopicRow extends Topic {
   /** The volume over the last week, relative to the busiest topic's. */
   readonly share: number;
-  /** Whether the last week was busier than the week before. */
-  readonly isRising: boolean;
+  readonly trend: TopicTrend;
   /** The trend line's `points` attribute, on a 100 by 100 chart. */
   readonly trendPoints: string;
   /** The anomalies on the trend line, by day and chart position. */
   readonly anomalies: readonly { readonly day: number; readonly x: number; readonly y: number }[];
-  /** Whether the topic spiked within the last week. */
-  readonly hasRecentSpike: boolean;
 }
 
 const TOPICS: readonly Topic[] = [
@@ -180,6 +183,26 @@ function getChartPosition(day: number, volume: number): Vector {
 }
 
 /**
+ * Gets where a topic is heading.
+ *
+ * @param topic The topic.
+ * @param volumes The topic's volumes, oldest first.
+ * @param anomalies The topic's anomalous days.
+ * @returns The trend.
+ */
+function getTrend(topic: Topic, volumes: readonly number[], anomalies: readonly number[]): TopicTrend {
+  if (topic.isEmerging) {
+    return 'new';
+  }
+  if (anomalies.some((day) => day >= DAYS - BASELINE_DAYS)) {
+    return 'spike';
+  }
+  const lastWeek = sumVolumes(volumes.slice(-BASELINE_DAYS));
+  const weekBefore = sumVolumes(volumes.slice(-2 * BASELINE_DAYS, -BASELINE_DAYS));
+  return lastWeek >= weekBefore ? 'rising' : 'falling';
+}
+
+/**
  * Ranks the topics by their volume over the last week, for the dashboard's rows.
  *
  * @param histories The volumes by topic name.
@@ -193,13 +216,12 @@ export function rankTopics(histories: Readonly<Record<string, readonly number[]>
     return {
       ...topic,
       lastWeek,
-      isRising: lastWeek >= sumVolumes(volumes.slice(-2 * BASELINE_DAYS, -BASELINE_DAYS)),
+      trend: getTrend(topic, volumes, anomalies),
       trendPoints: formatPoints(volumes.map((volume, day) => getChartPosition(day, volume))),
       anomalies: anomalies.map((day) => {
         const [x, y] = getChartPosition(day, volumes[day]);
         return { day, x, y };
       }),
-      hasRecentSpike: anomalies.some((day) => day >= DAYS - BASELINE_DAYS),
     };
   }).sort((a, b) => b.lastWeek - a.lastWeek);
   const busiest = Math.max(...ranked.map((row) => row.lastWeek));

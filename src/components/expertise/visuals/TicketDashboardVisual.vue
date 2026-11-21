@@ -2,7 +2,15 @@
 import { computed, ref } from 'vue';
 import { useLiveTicker } from '../../../composables/useLiveTicker';
 import StatusBadge from '../StatusBadge.vue';
-import { advanceDay, BASELINE_DAYS, createHistories, DAYS, rankTopics, type Spike } from './topicTrends';
+import {
+  advanceDay,
+  BASELINE_DAYS,
+  createHistories,
+  DAYS,
+  rankTopics,
+  type Spike,
+  type TopicTrend,
+} from './topicTrends';
 
 /**
  * A miniature of the ticket analysis dashboard (see topicTrends): the topics' volumes over time with their
@@ -29,6 +37,13 @@ const SAMPLE_TICKETS = [
   { text: 'Stuck on the login screen again', topic: 'login loop' },
   { text: 'Matches take forever to start', topic: 'matchmaking' },
   { text: 'Rewards missing after the update', topic: 'bugs' },
+];
+/** How each trend is marked in the table: a tag, or an arrow. */
+const TREND_MARKS: readonly { readonly trend: TopicTrend; readonly label: string; readonly kind: string }[] = [
+  { trend: 'new', label: 'new', kind: 'badge' },
+  { trend: 'spike', label: 'spike', kind: 'badge spike' },
+  { trend: 'rising', label: '▲', kind: 'arrow' },
+  { trend: 'falling', label: '▼', kind: 'arrow' },
 ];
 /** Each tick moves the trend on a day. */
 const TICK_MS = 1100;
@@ -112,9 +127,12 @@ useLiveTicker(() => props.active, advance, TICK_MS);
                 <span class="volume-bar" :style="{ width: `${row.share * 100}%`, backgroundColor: row.color }"></span>
               </td>
               <td class="trend-cell">
-                <span v-if="row.isEmerging" class="badge">new</span>
-                <span v-else-if="row.hasRecentSpike" class="badge spike">spike</span>
-                <span v-else class="arrow">{{ row.isRising ? '▲' : '▼' }}</span>
+                <!-- Every mark is laid out and only the topic's shown, so the column keeps the width of the widest
+                  and the volume bars don't shift as a trend changes -->
+                <span class="trend-marks">
+                  <span v-for="mark in TREND_MARKS" :key="mark.trend" :class="[mark.kind, { shown: mark.trend === row.trend }]">{{
+                    mark.label }}</span>
+                </span>
               </td>
             </tr>
           </tbody>
@@ -294,6 +312,8 @@ td {
   white-space: nowrap;
 }
 
+/* The same gap before every column but the first, in the header as in the rows, so each lines up with its title */
+th + th,
 td + td {
   padding-left: 0.625rem;
 }
@@ -319,6 +339,20 @@ td + td {
 
 .trend-cell {
   text-align: right;
+}
+
+.trend-marks {
+  display: inline-grid;
+  justify-items: end;
+}
+
+.trend-marks > * {
+  grid-area: 1 / 1;
+  visibility: hidden;
+}
+
+.trend-marks > .shown {
+  visibility: visible;
 }
 
 /* Neutral: for support tickets, fewer is good news, so red and green would mislead */
