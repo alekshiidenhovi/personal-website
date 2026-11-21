@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import ContactSection from './components/contact/ContactSection.vue';
+import EducationSection from './components/education/EducationSection.vue';
 import ExperienceSection from './components/experience/ExperienceSection.vue';
 import ExpertiseSection from './components/expertise/ExpertiseSection.vue';
 import HeroSection from './components/hero/HeroSection.vue';
 import NavBar from './components/layout/NavBar.vue';
-import PinnedSection from './components/layout/PinnedSection.vue';
 import SlideshowScroller from './components/layout/SlideshowScroller.vue';
 import ProjectsSection from './components/projects/ProjectsSection.vue';
 import FilmGrain from './components/ui/FilmGrain.vue';
@@ -19,8 +19,7 @@ import FilmGrain from './components/ui/FilmGrain.vue';
       <ExpertiseSection />
       <ExperienceSection />
       <ProjectsSection />
-      <!-- A placeholder, until the section is built -->
-      <PinnedSection id="education" />
+      <EducationSection />
       <ContactSection />
     </main>
   </SlideshowScroller>

@@ -45,3 +45,14 @@ export function countMonths(start: YearMonth, end: YearMonth | undefined): numbe
 export function formatYearMonth(date: YearMonth | undefined): string {
   return date ? `${date.year}/${String(date.month).padStart(2, '0')}` : 'present';
 }
+
+/**
+ * Formats a span of years as "2024 – 26", the end year shortened, as the century repeats.
+ *
+ * @param start The first year.
+ * @param end The last year.
+ * @returns The formatted span.
+ */
+export function formatYearSpan(start: number, end: number): string {
+  return `${start} – ${String(end).slice(2)}`;
+}
