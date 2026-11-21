@@ -5,11 +5,11 @@
  * including preview versions (`<alias>-personal-website.<subdomain>.workers.dev`),
  * is served from the build as is.
  */
-const CANONICAL_HOST = "hiidenhovi.dev";
-const WORKER_NAME = "personal-website";
+const CANONICAL_HOST = 'hiidenhovi.dev';
+const WORKER_NAME = 'personal-website';
 
 const redirectsToCanonical = (host: string) =>
-  host === `www.${CANONICAL_HOST}` || (host.startsWith(`${WORKER_NAME}.`) && host.endsWith(".workers.dev"));
+  host === `www.${CANONICAL_HOST}` || (host.startsWith(`${WORKER_NAME}.`) && host.endsWith('.workers.dev'));
 
 interface Env {
   /** The static build */

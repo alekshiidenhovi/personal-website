@@ -14,15 +14,15 @@ export function whenIdle(callback: () => void) {
     if (!isCancelled) callback();
   };
   const schedule = () => {
-    if ("requestIdleCallback" in window) requestIdleCallback(run, { timeout: IDLE_TIMEOUT_MS });
+    if ('requestIdleCallback' in window) requestIdleCallback(run, { timeout: IDLE_TIMEOUT_MS });
     else setTimeout(run, FALLBACK_DELAY_MS);
   };
 
-  if (document.readyState === "complete") schedule();
-  else window.addEventListener("load", schedule, { once: true });
+  if (document.readyState === 'complete') schedule();
+  else window.addEventListener('load', schedule, { once: true });
 
   return () => {
     isCancelled = true;
-    window.removeEventListener("load", schedule);
+    window.removeEventListener('load', schedule);
   };
 }

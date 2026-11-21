@@ -1,5 +1,5 @@
-import { clamp, gaussian, lerp } from "../../lib/math";
-import { easeInOut } from "../../lib/motion";
+import { clamp, gaussian, lerp } from '../../lib/math';
+import { easeInOut } from '../../lib/motion';
 
 /**
  * The simulation behind the hero's embedding space, in canvas-independent
@@ -41,12 +41,12 @@ const TRAINING_STEPS = 24000;
 
 /** Phase durations in milliseconds, in loop order */
 export const PHASES = [
-  { name: "raw", label: "raw events", duration: 1800 },
-  { name: "train", label: "training", duration: 5600 },
-  { name: "query", label: "retrieval", duration: 4600 },
-  { name: "dissolve", label: "next run", duration: 3600 },
+  { name: 'raw', label: 'raw events', duration: 1800 },
+  { name: 'train', label: 'training', duration: 5600 },
+  { name: 'query', label: 'retrieval', duration: 4600 },
+  { name: 'dissolve', label: 'next run', duration: 3600 },
 ] as const;
-type PhaseName = (typeof PHASES)[number]["name"];
+type PhaseName = (typeof PHASES)[number]['name'];
 export const LOOP_MS = PHASES.reduce((total, phase) => total + phase.duration, 0);
 /** The end of the retrieval, where the visual rests without motion */
 export const RESTING_ELAPSED = LOOP_MS - PHASES[PHASES.length - 1].duration - 1;
@@ -114,7 +114,7 @@ export const nearestTo = (points: Point[], position: Vec, count: number, exclude
     .map(({ index }) => index);
 
 /** Just outside a cluster, so the links to its neighbours read as reaching in */
-const chooseQuery = (points: Point[]): Cycle["query"] => {
+const chooseQuery = (points: Point[]): Cycle['query'] => {
   const clustered = points.filter((point) => point.cluster >= 0);
   const anchor = clustered[Math.floor(Math.random() * clustered.length)].target;
   const angle = Math.random() * Math.PI * 2;
@@ -163,11 +163,11 @@ export const phaseAt = (elapsed: number): Phase => {
 
 /** 0 while scattered, 1 once trained */
 export const trainedAmount = (point: Point, phase: Phase) => {
-  if (phase.name === "raw") return 0;
+  if (phase.name === 'raw') return 0;
   // Each point moves in its own window of the phase, so the points don't set off or land all at once
   const moved = easeInOut(clamp((phase.progress - point.delay * STAGGER) / (1 - STAGGER), 0, 1));
-  if (phase.name === "train") return moved;
-  if (phase.name === "dissolve") return 1 - moved;
+  if (phase.name === 'train') return moved;
+  if (phase.name === 'dissolve') return 1 - moved;
   return 1;
 };
 

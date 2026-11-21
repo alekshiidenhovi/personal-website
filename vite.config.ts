@@ -1,13 +1,13 @@
-import { cloudflare } from "@cloudflare/vite-plugin";
-import vue from "@vitejs/plugin-vue";
-import { Features } from "lightningcss";
-import { defineConfig } from "vite";
+import { cloudflare } from '@cloudflare/vite-plugin';
+import vue from '@vitejs/plugin-vue';
+import { Features } from 'lightningcss';
+import { defineConfig } from 'vite';
 
 export default defineConfig({
   plugins: [vue(), cloudflare()],
   css: {
     // Lightning CSS, for the shared breakpoints in styles/media.css (`@custom-media`)
-    transformer: "lightningcss",
+    transformer: 'lightningcss',
     lightningcss: {
       drafts: { customMedia: true },
       /*
@@ -17,5 +17,5 @@ export default defineConfig({
       exclude: Features.Colors,
     },
   },
-  build: { cssMinify: "lightningcss" },
+  build: { cssMinify: 'lightningcss' },
 });

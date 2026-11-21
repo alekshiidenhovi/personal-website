@@ -1,4 +1,4 @@
-import type { Vec } from "./embeddingModel";
+import type { Vec } from './embeddingModel';
 
 /**
  * Drawing on a 2D canvas in CSS pixels, with the two optimizations the
@@ -14,8 +14,8 @@ export class CanvasPainter {
   private readonly glowSprites = new Map<string, { image: HTMLCanvasElement; extent: number }>();
 
   constructor(canvas: HTMLCanvasElement) {
-    const ctx = canvas.getContext("2d");
-    if (!ctx) throw new Error("Canvas 2D is not supported");
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas 2D is not supported');
     this.canvas = canvas;
     this.ctx = ctx;
   }
@@ -107,9 +107,9 @@ export class CanvasPainter {
     if (cached) return cached;
     // Half the sprite's width in CSS pixels, with room for the blur's falloff
     const extent = Math.ceil(radius + glow);
-    const image = document.createElement("canvas");
+    const image = document.createElement('canvas');
     image.width = image.height = extent * 2 * this.dpr;
-    const ctx = image.getContext("2d");
+    const ctx = image.getContext('2d');
     if (ctx) {
       ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
       ctx.shadowColor = color;
