@@ -34,7 +34,7 @@ export interface Cycle {
 const POINT_COUNT = 420;
 const CLUSTER_COUNT = 7;
 const OUTLIER_SHARE = 0.06;
-export const NEIGHBOURS = 8;
+const NEIGHBOURS = 8;
 /** How far a point drifts around its position, as a share of the canvas */
 const DRIFT = 0.004;
 const TRAINING_STEPS = 24000;
@@ -61,7 +61,7 @@ export interface Phase {
   time: number;
 }
 
-export const distance = (a: Vec, b: Vec) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+const distance = (a: Vec, b: Vec) => Math.hypot(a[0] - b[0], a[1] - b[1]);
 
 const randomNoise = (): Vec => [0.04 + Math.random() * 0.92, 0.04 + Math.random() * 0.92];
 
@@ -105,10 +105,10 @@ const createTargets = (): { target: Vec; cluster: number }[] => {
 };
 
 /** The `count` points whose trained positions are nearest `position`, by index */
-export const nearestTo = (points: Point[], position: Vec, count: number, exclude?: number) =>
+const nearestTo = (points: Point[], position: Vec, count: number) =>
   points
     .map((point, index) => ({ index, distance: distance(point.target, position) }))
-    .filter(({ index, distance: d }) => index !== exclude && d > 0)
+    .filter(({ distance: d }) => d > 0)
     .sort((a, b) => a.distance - b.distance)
     .slice(0, count)
     .map(({ index }) => index);

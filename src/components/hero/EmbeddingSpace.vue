@@ -9,10 +9,7 @@ import { CanvasPainter } from "./CanvasPainter";
 import {
   type Cycle,
   createCycle,
-  distance,
   LOOP_MS,
-  NEIGHBOURS,
-  nearestTo,
   PHASES,
   type Phase,
   phaseAt,
@@ -27,12 +24,11 @@ import {
  * The hero visual: an embedding space that learns its structure on loop (see
  * embeddingModel). Raw data (Data Foundations pink) becomes a model (ML blue)
  * becomes a product (Web amber) as a query retrieves its nearest neighbours.
- * Hover a point to see its neighbours. Plays while on screen, once the page
- * has settled; without motion it rests on a finished retrieval.
+ * Plays while on screen, once the page has settled; without motion it rests
+ * on a finished retrieval.
  */
 
 const NEIGHBOUR_DRAW_MS = 200;
-const HOVER_RADIUS_PX = 14;
 /** Opacity levels a point's training fade is rounded to, so points can share a fill */
 const FADE_STEPS = 10;
 
@@ -49,12 +45,10 @@ let size = { width: 0, height: 0 };
 /** The points' canvas positions this frame; reused across frames, so drawing doesn't allocate */
 const positions: Vec[] = cycle.points.map(() => [0, 0]);
 let colors = { raw: "", clusters: [] as string[], query: "", grid: "" };
-let hovered: { index: number; neighbours: number[] } | null = null;
 
 const startCycle = (now: number) => {
   cycle = createCycle(cycle);
   cycleStart = now;
-  hovered = null;
 };
 
 /** Canvas colors from the design tokens, as rgb (see toCanvasColor) */
@@ -109,15 +103,6 @@ const drawQuery = (paint: CanvasPainter, phase: Phase, unit: number) => {
   paint.glowingDot(queryAt, unit * 0.01, colors.query, fadeOut, unit * 0.04, appear);
 };
 
-/** Hover: the hovered point's nearest neighbours, once the space has structure */
-const drawHover = (paint: CanvasPainter, phase: Phase, unit: number) => {
-  if (!hovered || trainedAmount(cycle.points[hovered.index], phase) <= 0.9) return;
-  const at = positions[hovered.index];
-  const color = clusterColor(Math.max(cycle.points[hovered.index].cluster, 0));
-  for (const index of hovered.neighbours) paint.line(at, positions[index], color, 0.6);
-  paint.glowingDot(at, unit * 0.009, color, 1, unit * 0.04);
-};
-
 const draw = (now: number) => {
   if (!painter || !size.width) return;
   const phase = phaseAt(prefersReducedMotion ? RESTING_ELAPSED : (now - cycleStart) % LOOP_MS);
@@ -125,7 +110,6 @@ const draw = (now: number) => {
   painter.clear();
   drawPoints(painter, phase, now, unit);
   if (phase.name === "query") drawQuery(painter, phase, unit);
-  drawHover(painter, phase, unit);
   phaseLabel.value = phase.label;
   step.value = trainingStepAt(phase);
 };
@@ -160,23 +144,6 @@ const updateLoop = () => {
     cancelAnimationFrame(frameId);
     frameId = 0;
   }
-};
-
-const onPointerMove = (event: PointerEvent) => {
-  const rect = canvasRef.value?.getBoundingClientRect();
-  if (!rect) return;
-  const pointer: Vec = [(event.clientX - rect.left) / size.width, (event.clientY - rect.top) / size.height];
-  const [nearest] = nearestTo(cycle.points, pointer, 1);
-  const isClose =
-    nearest !== undefined && distance(cycle.points[nearest].target, pointer) * Math.min(size.width, size.height) < HOVER_RADIUS_PX;
-  hovered = isClose ? { index: nearest, neighbours: nearestTo(cycle.points, cycle.points[nearest].target, NEIGHBOURS, nearest) } : null;
-  // Without the loop, redraw here
-  if (!frameId) draw(performance.now());
-};
-
-const onPointerLeave = () => {
-  hovered = null;
-  if (!frameId) draw(performance.now());
 };
 
 let resizeObserver: ResizeObserver | null = null;
@@ -221,7 +188,7 @@ onUnmounted(() => {
       <span>embedding space</span>
       <span class="step">step {{ step.toLocaleString("en-US") }}</span>
     </div>
-    <canvas ref="canvasRef" @pointermove="onPointerMove" @pointerleave="onPointerLeave"></canvas>
+    <canvas ref="canvasRef"></canvas>
     <div class="labels" aria-hidden="true">
       <span class="phases">
         <span v-for="phase in PHASES.slice(0, -1)" :key="phase.name" class="phase"
@@ -256,7 +223,6 @@ canvas {
   flex-grow: 1;
   min-height: 0;
   width: 100%;
-  cursor: crosshair;
 }
 
 /* A fixed height, so the canvas gets the same space whichever font the labels render in */
