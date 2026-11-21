@@ -2,7 +2,21 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "compatibility_date": "2026-01-08",
   "name": "personal-website",
+  // Redirects other hosts to hiidenhovi.dev, then serves the static build
+  "main": "./worker/index.ts",
+  // The Vite plugin sets the directory to the client build
   "assets": {
-    "directory": "./dist"
-  }
+    "binding": "ASSETS",
+    // Static files would otherwise be served without running the Worker, skipping the redirect
+    "run_worker_first": true
+  },
+  // Kept on so links shared before the domain redirect instead of breaking; with routes set it would default to off
+  "workers_dev": true,
+  // Preview versions (`pnpm deploy:preview`) get their own URL without touching production
+  "preview_urls": true,
+  // Wrangler creates the DNS records and certificates for these on deploy; www only redirects
+  "routes": [
+    { "pattern": "hiidenhovi.dev", "custom_domain": true },
+    { "pattern": "www.hiidenhovi.dev", "custom_domain": true }
+  ]
 }
